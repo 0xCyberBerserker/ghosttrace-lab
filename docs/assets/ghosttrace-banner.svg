@@ -27,15 +27,9 @@
   <circle cx="646" cy="332" r="8" fill="#A6FF47"/>
   <circle cx="1012" cy="332" r="8" fill="#FF4FD8"/>
 
-  <g transform="translate(170 176)">
-    <path d="M96 26C58.445 26 28 56.445 28 94V184C28 192.837 35.163 200 44 200C52.837 200 60 192.837 60 184V176L84 200L108 176L132 200L156 176L180 200L204 176V184C204 192.837 211.163 200 220 200C228.837 200 236 192.837 236 184V94C236 56.445 205.555 26 168 26H96Z" fill="#DDFBFF" fill-opacity="0.97"/>
-    <path d="M96 26C58.445 26 28 56.445 28 94V184C28 192.837 35.163 200 44 200C52.837 200 60 192.837 60 184V176L84 200L108 176L132 200L156 176L180 200L204 176V184C204 192.837 211.163 200 220 200C228.837 200 236 192.837 236 184V94C236 56.445 205.555 26 168 26H96Z" stroke="#46F3FF" stroke-opacity="0.45" stroke-width="4"/>
-    <circle cx="101" cy="100" r="11" fill="#09121F"/>
-    <circle cx="162" cy="100" r="11" fill="#09121F"/>
-    <path d="M90 144C104 156 122 162 140 162C158 162 176 156 190 144" stroke="#09121F" stroke-width="8" stroke-linecap="round"/>
-    <path d="M218 74C252 88 276 110 292 136" stroke="#46F3FF" stroke-width="7" stroke-linecap="round"/>
-    <circle cx="300" cy="148" r="10" fill="#46F3FF"/>
-  </g>
+  <text x="178" y="380" font-family="'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif" font-size="210">👻</text>
+  <path d="M386 250C424 266 452 290 470 324" stroke="#46F3FF" stroke-width="7" stroke-linecap="round"/>
+  <circle cx="478" cy="336" r="10" fill="#46F3FF"/>
 
   <text x="534" y="250" fill="#EAFBFF" font-family="'Segoe UI', Arial, sans-serif" font-size="88" font-weight="700" letter-spacing="-2">Ghost Trace</text>
   <text x="538" y="306" fill="#8CB2C2" font-family="Consolas, 'Courier New', monospace" font-size="24" letter-spacing="2">AI REVERSE ENGINEERING WORKBENCH</text>
