@@ -12,6 +12,10 @@
     <img alt="sandbox" src="https://img.shields.io/badge/lab-windows%20sandbox-0a1324?style=for-the-badge&logo=windows11&logoColor=46f3ff&labelColor=07111d">
     <img alt="debugger" src="https://img.shields.io/badge/debugger-x64dbg%20bridge-0a1324?style=for-the-badge&logo=gnubash&logoColor=a6ff47&labelColor=07111d">
   </p>
+  <p>
+    Made with 🖤 in Barcelona City
+    <img alt="Flag of Spain" src="./docs/assets/spain-flag.svg" height="16">
+  </p>
 </div>
 
 - [English](#english)

@@ -365,6 +365,23 @@
       background: rgba(7, 12, 24, 0.88);
       box-shadow: var(--shadow);
     }
+    .maker-line {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-top: 0.65rem;
+      color: var(--muted);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .maker-line img {
+      width: 24px;
+      height: 16px;
+      border-radius: 3px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
     @media (max-width: 980px) {
       .hero, .grid-3, .grid-2 {
         grid-template-columns: 1fr;
@@ -575,6 +592,10 @@
           <span data-i18n="footer_copy">GhostTrace is an opinionated RE workspace built for iterative, evidence-first analysis.</span>
           <br>
           <span data-i18n="footer_by">Built by</span> <a href="https://github.com/0xCyberBerserker">0xCyberBerserker</a>.
+          <div class="maker-line">
+            <span data-i18n="footer_made">Made with 🖤 in Barcelona City</span>
+            <img src="assets/spain-flag.svg" alt="Flag of Spain">
+          </div>
         </div>
         <div>
           <a href="https://github.com/0xCyberBerserker/ghosttrace-lab">GitHub</a>
@@ -648,7 +669,8 @@
         faq4_q: "Why are some Windows tools marked optional?",
         faq4_a: "Because upstream packaging is inconsistent on Windows for a few tools. The lab now completes successfully even when `r2ai` or `PE-bear` are unavailable, instead of failing the whole bootstrap.",
         footer_copy: "GhostTrace is an opinionated RE workspace built for iterative, evidence-first analysis.",
-        footer_by: "Built by"
+        footer_by: "Built by",
+        footer_made: "Made with 🖤 in Barcelona City"
       },
       es: {
         nav_why: "Por qué existe",
@@ -712,7 +734,8 @@
         faq4_q: "¿Por qué algunas herramientas Windows aparecen como opcionales?",
         faq4_a: "Porque el empaquetado upstream en Windows es inconsistente para algunas herramientas. El laboratorio ahora termina correctamente aunque `r2ai` o `PE-bear` no estén disponibles, en vez de romper todo el bootstrap.",
         footer_copy: "GhostTrace es un entorno de RE con una visión clara: análisis iterativo y guiado por evidencia.",
-        footer_by: "Creado por"
+        footer_by: "Creado por",
+        footer_made: "Hecho con 🖤 en Barcelona City"
       }
     };
 
