@@ -1,0 +1,86 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="148" y1="76" x2="1144" y2="644" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#091120"/>
+      <stop offset="0.48" stop-color="#07162A"/>
+      <stop offset="1" stop-color="#04070F"/>
+    </linearGradient>
+    <linearGradient id="cyanPink" x1="236" y1="167" x2="956" y2="602" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3CF7FF"/>
+      <stop offset="1" stop-color="#FF4FD8"/>
+    </linearGradient>
+    <radialGradient id="glowCyan" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(970 162) rotate(112.067) scale(392.254 373.981)">
+      <stop stop-color="#3CF7FF" stop-opacity="0.28"/>
+      <stop offset="1" stop-color="#3CF7FF" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="glowPink" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(243 108) rotate(52.1872) scale(493.41 378.072)">
+      <stop stop-color="#FF4FD8" stop-opacity="0.22"/>
+      <stop offset="1" stop-color="#FF4FD8" stop-opacity="0"/>
+    </radialGradient>
+    <filter id="soft" x="0" y="0" width="1280" height="720" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="24"/>
+    </filter>
+    <pattern id="grid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" stroke="#47F5FF" stroke-opacity="0.08"/>
+    </pattern>
+  </defs>
+
+  <rect width="1280" height="720" rx="28" fill="url(#bg)"/>
+  <rect width="1280" height="720" rx="28" fill="url(#grid)"/>
+  <ellipse cx="970" cy="162" rx="294" ry="236" fill="url(#glowCyan)" filter="url(#soft)"/>
+  <ellipse cx="247" cy="104" rx="318" ry="238" fill="url(#glowPink)" filter="url(#soft)"/>
+
+  <rect x="54" y="52" width="1172" height="616" rx="28" fill="#07101F" fill-opacity="0.78" stroke="url(#cyanPink)" stroke-opacity="0.26" stroke-width="2"/>
+  <rect x="78" y="82" width="526" height="556" rx="24" fill="#050B17" fill-opacity="0.95" stroke="#3CF7FF" stroke-opacity="0.16"/>
+  <rect x="630" y="82" width="572" height="556" rx="24" fill="#081223" fill-opacity="0.95" stroke="#FF4FD8" stroke-opacity="0.16"/>
+
+  <rect x="98" y="110" width="124" height="30" rx="15" fill="#0C1B2E" stroke="#3CF7FF" stroke-opacity="0.38"/>
+  <text x="128" y="131" fill="#9FFBFF" font-family="'IBM Plex Mono', monospace" font-size="14" letter-spacing="2.8">OPEN SOURCE</text>
+  <rect x="238" y="110" width="180" height="30" rx="15" fill="#0F152B" stroke="#FF4FD8" stroke-opacity="0.34"/>
+  <text x="268" y="131" fill="#FFD4F6" font-family="'IBM Plex Mono', monospace" font-size="14" letter-spacing="2.3">SANDBOX-READY</text>
+
+  <text x="99" y="220" fill="#F4FCFF" font-family="'Space Grotesk', sans-serif" font-size="88" font-weight="700" letter-spacing="-2">
+    GhostTrace
+  </text>
+  <text x="100" y="280" fill="#89AFC0" font-family="'Space Grotesk', sans-serif" font-size="28">
+    AI reverse engineering workbench for static triage,
+  </text>
+  <text x="100" y="318" fill="#89AFC0" font-family="'Space Grotesk', sans-serif" font-size="28">
+    guided decompilation, and sandbox-assisted workflows.
+  </text>
+
+  <g fill="#D8F9FF" font-family="'Space Grotesk', sans-serif" font-size="24">
+    <text x="100" y="402">- Ghidraaas backend with cached imports, strings, functions and decompilation</text>
+    <text x="100" y="446">- Ollama-powered assistant with triage reports and debugger guidance</text>
+    <text x="100" y="490">- Windows sandbox lab with SSH, x64dbg bridge and reproducible tooling</text>
+  </g>
+
+  <rect x="98" y="548" width="222" height="54" rx="27" fill="url(#cyanPink)"/>
+  <text x="142" y="583" fill="#06111F" font-family="'IBM Plex Mono', monospace" font-size="22" font-weight="700" letter-spacing="2.4">GHOSTTRACE LAB</text>
+
+  <rect x="670" y="118" width="492" height="314" rx="22" fill="#050A14" stroke="#3CF7FF" stroke-opacity="0.18"/>
+  <rect x="698" y="148" width="146" height="26" rx="13" fill="#10223C"/>
+  <text x="725" y="166" fill="#A7FAFF" font-family="'IBM Plex Mono', monospace" font-size="13" letter-spacing="2.1">TRIAGE REPORT</text>
+
+  <text x="700" y="218" fill="#FF70E1" font-family="'IBM Plex Mono', monospace" font-size="18">[static]</text>
+  <text x="792" y="218" fill="#DDFBFF" font-family="'IBM Plex Mono', monospace" font-size="18">Installer-like PE with updater, registry and telemetry clues</text>
+
+  <text x="700" y="262" fill="#47F5FF" font-family="'IBM Plex Mono', monospace" font-size="18">[dynamic]</text>
+  <text x="804" y="262" fill="#DDFBFF" font-family="'IBM Plex Mono', monospace" font-size="18">Windows sandbox bridge reports debugger state and findings</text>
+
+  <text x="700" y="306" fill="#A6FF47" font-family="'IBM Plex Mono', monospace" font-size="18">[next]</text>
+  <text x="785" y="306" fill="#DDFBFF" font-family="'IBM Plex Mono', monospace" font-size="18">Decompile priority functions and trace API-heavy paths</text>
+
+  <rect x="670" y="460" width="492" height="140" rx="22" fill="#070E1C" stroke="#FF4FD8" stroke-opacity="0.18"/>
+  <text x="700" y="496" fill="#FFCF5A" font-family="'IBM Plex Mono', monospace" font-size="14" letter-spacing="2.2">X64DBG BRIDGE</text>
+  <text x="700" y="538" fill="#F7FCFF" font-family="'Space Grotesk', sans-serif" font-size="28" font-weight="700">Debugger-aware by design.</text>
+  <text x="700" y="574" fill="#8EAFC0" font-family="'Space Grotesk', sans-serif" font-size="21">Queue requests from the web UI, sync findings from the VM,</text>
+  <text x="700" y="604" fill="#8EAFC0" font-family="'Space Grotesk', sans-serif" font-size="21">and keep static and dynamic evidence in one operator flow.</text>
+
+  <g opacity="0.72" stroke="#47F5FF" stroke-opacity="0.22">
+    <path d="M629 192H602" />
+    <path d="M629 238H602" />
+    <path d="M629 284H602" />
+    <path d="M629 330H602" />
+  </g>
+</svg>

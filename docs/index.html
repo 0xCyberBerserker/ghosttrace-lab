@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GhostTrace — AI Reverse Engineering Workbench</title>
+  <meta name="description" content="GhostTrace is an AI-assisted reverse engineering workbench that combines Ghidraaas, Ollama, triage reporting, and a Windows sandbox lab.">
+  <meta property="og:title" content="GhostTrace — AI Reverse Engineering Workbench">
+  <meta property="og:description" content="AI-assisted reverse engineering workbench with Ghidraaas, local Ollama reasoning, triage reports, and a Windows sandbox lab.">
+  <meta property="og:type" content="website">
+  <meta property="og:image" content="assets/ghosttrace-banner.svg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="GhostTrace — AI Reverse Engineering Workbench">
+  <meta name="twitter:description" content="Static triage, guided decompilation, debugger-aware workflows, and a Windows sandbox lab in one operator-focused stack.">
+  <link rel="icon" type="image/svg+xml" href="favicon.svg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #07111d;
+      --bg-1: #04070f;
+      --panel: rgba(8, 14, 29, 0.82);
+      --panel-strong: rgba(9, 17, 33, 0.94);
+      --text: #e9fbff;
+      --muted: #8bb3c2;
+      --cyan: #46f3ff;
+      --pink: #ff4fd8;
+      --lime: #a6ff47;
+      --amber: #ffc95f;
+      --border: rgba(70, 243, 255, 0.16);
+      --shadow: 0 0 0 1px rgba(70, 243, 255, 0.06), 0 28px 80px rgba(0, 0, 0, 0.42);
+      --max: 1160px;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: "Space Grotesk", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(255, 79, 216, 0.17), transparent 28%),
+        radial-gradient(circle at top right, rgba(70, 243, 255, 0.15), transparent 30%),
+        linear-gradient(160deg, var(--bg-0), var(--bg-1) 58%, #03050b);
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      pointer-events: none;
+      background-image:
+        linear-gradient(rgba(70, 243, 255, 0.04) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(70, 243, 255, 0.04) 1px, transparent 1px);
+      background-size: 28px 28px;
+      mask-image: radial-gradient(circle at center, black, transparent 85%);
+      opacity: 0.5;
+    }
+    a { color: inherit; text-decoration: none; }
+    .shell { width: min(var(--max), calc(100vw - 32px)); margin: 0 auto; }
+    .eyebrow {
+      display: inline-flex;
+      gap: 0.55rem;
+      align-items: center;
+      padding: 0.45rem 0.8rem;
+      border: 1px solid rgba(70, 243, 255, 0.22);
+      border-radius: 999px;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.76rem;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: #aafaff;
+      background: rgba(10, 19, 37, 0.78);
+    }
+    .site-nav {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      backdrop-filter: blur(16px);
+      background: rgba(4, 8, 16, 0.78);
+      border-bottom: 1px solid rgba(70, 243, 255, 0.08);
+    }
+    .site-nav .shell {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 0;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      font-weight: 700;
+    }
+    .brand-mark {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
+      display: grid;
+      place-items: center;
+      background: linear-gradient(135deg, rgba(255, 79, 216, 0.22), rgba(70, 243, 255, 0.22));
+      border: 1px solid rgba(70, 243, 255, 0.24);
+      box-shadow: var(--shadow);
+      font-family: "IBM Plex Mono", monospace;
+      letter-spacing: 0.08em;
+    }
+    .nav-links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      color: var(--muted);
+      font-size: 0.96rem;
+    }
+    .nav-links a:hover { color: var(--text); }
+    .footer a:hover { color: var(--text); }
+    .hero {
+      padding: 5.8rem 0 4rem;
+      display: grid;
+      grid-template-columns: 1.02fr 0.98fr;
+      gap: 2.4rem;
+      align-items: center;
+    }
+    .hero h1 {
+      margin: 1rem 0 1rem;
+      font-size: clamp(2.9rem, 7vw, 5.2rem);
+      line-height: 0.96;
+      letter-spacing: -0.05em;
+    }
+    .hero-copy {
+      color: var(--muted);
+      font-size: 1.12rem;
+      line-height: 1.7;
+      max-width: 64ch;
+    }
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.9rem;
+      margin-top: 1.8rem;
+    }
+    .cta, .cta-secondary {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 54px;
+      padding: 0 1.2rem;
+      border-radius: 999px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      font-size: 0.84rem;
+      transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+    }
+    .cta {
+      background: linear-gradient(90deg, rgba(255, 79, 216, 0.96), rgba(70, 243, 255, 0.96));
+      color: #06111c;
+      box-shadow: 0 0 34px rgba(70, 243, 255, 0.18);
+    }
+    .cta-secondary {
+      color: var(--text);
+      background: rgba(8, 14, 29, 0.74);
+      border: 1px solid rgba(70, 243, 255, 0.18);
+    }
+    .cta:hover, .cta-secondary:hover { transform: translateY(-1px); }
+    .hero-card {
+      border-radius: 28px;
+      border: 1px solid var(--border);
+      background: var(--panel-strong);
+      box-shadow: var(--shadow);
+      padding: 1.1rem;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-card img {
+      display: block;
+      width: 100%;
+      border-radius: 22px;
+      border: 1px solid rgba(70, 243, 255, 0.12);
+    }
+    section {
+      padding: 1.4rem 0 4rem;
+    }
+    section h2 {
+      margin: 0 0 1rem;
+      font-size: clamp(2rem, 4vw, 3rem);
+      letter-spacing: -0.04em;
+    }
+    .lede {
+      color: var(--muted);
+      font-size: 1.05rem;
+      line-height: 1.75;
+      max-width: 70ch;
+      margin-bottom: 1.6rem;
+    }
+    .grid-3, .grid-2 {
+      display: grid;
+      gap: 1.1rem;
+    }
+    .grid-3 { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .grid-2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .card {
+      border-radius: 24px;
+      border: 1px solid var(--border);
+      background: var(--panel);
+      box-shadow: var(--shadow);
+      padding: 1.25rem 1.25rem 1.3rem;
+    }
+    .card h3 {
+      margin: 0 0 0.7rem;
+      font-size: 1.16rem;
+    }
+    .card p, .card li {
+      color: var(--muted);
+      line-height: 1.7;
+    }
+    .card ul {
+      margin: 0;
+      padding-left: 1rem;
+    }
+    .flow {
+      display: grid;
+      gap: 1rem;
+      margin-top: 1.2rem;
+    }
+    .step {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      gap: 1rem;
+      align-items: start;
+      padding: 1rem 1rem 1rem 0.95rem;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: rgba(8, 14, 29, 0.74);
+      box-shadow: var(--shadow);
+    }
+    .step-num {
+      width: 56px;
+      height: 56px;
+      border-radius: 18px;
+      display: grid;
+      place-items: center;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 1rem;
+      color: #08111d;
+      background: linear-gradient(135deg, rgba(70, 243, 255, 0.98), rgba(255, 79, 216, 0.98));
+    }
+    .faq {
+      display: grid;
+      gap: 0.9rem;
+    }
+    details {
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: rgba(8, 14, 29, 0.74);
+      padding: 1rem 1rem 1rem 1.1rem;
+      box-shadow: var(--shadow);
+    }
+    summary {
+      cursor: pointer;
+      font-weight: 600;
+      list-style: none;
+    }
+    summary::-webkit-details-marker { display: none; }
+    details p {
+      color: var(--muted);
+      line-height: 1.75;
+      margin: 0.9rem 0 0;
+    }
+    .footer {
+      padding: 0 0 3rem;
+      color: var(--muted);
+    }
+    .footer-card {
+      display: flex;
+      justify-content: space-between;
+      gap: 1rem;
+      flex-wrap: wrap;
+      padding: 1.1rem 1.15rem;
+      border-radius: 22px;
+      border: 1px solid var(--border);
+      background: rgba(7, 12, 24, 0.88);
+      box-shadow: var(--shadow);
+    }
+    @media (max-width: 980px) {
+      .hero, .grid-3, .grid-2 {
+        grid-template-columns: 1fr;
+      }
+      .hero { padding-top: 4.8rem; }
+    }
+    @media (max-width: 640px) {
+      .site-nav .shell {
+        align-items: flex-start;
+        flex-direction: column;
+      }
+      .nav-links {
+        gap: 0.75rem;
+        font-size: 0.9rem;
+      }
+      .hero-copy {
+        font-size: 1rem;
+      }
+      .card, .step, details {
+        border-radius: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="shell">
+      <a class="brand" href="#top">
+        <div class="brand-mark">GT</div>
+        <div>GhostTrace</div>
+      </a>
+      <div class="nav-links">
+        <a href="#why">Why it exists</a>
+        <a href="#workflow">Workflow</a>
+        <a href="#stack">Stack</a>
+        <a href="#faq">FAQ</a>
+        <a href="https://github.com/0xCyberBerserker/ghosttrace-lab">GitHub</a>
+      </div>
+    </div>
+  </nav>
+
+  <main id="top" class="shell">
+    <section class="hero">
+      <div>
+        <div class="eyebrow">Open source · Sandbox-aware · Ollama-native</div>
+        <h1>Reverse engineering that feels like an operator console, not a bag of scripts.</h1>
+        <p class="hero-copy">
+          GhostTrace combines a cyberpunk web workspace, a Ghidraaas backend, an Ollama-driven analyst, and a reproducible Windows lab with SSH and x64dbg bridge tooling.
+          It is designed for fast static triage, guided deep dives, and dynamic evidence workflows without losing the thread between tools.
+        </p>
+        <div class="hero-actions">
+          <a class="cta" href="https://github.com/0xCyberBerserker/ghosttrace-lab">Open the repo</a>
+          <a class="cta-secondary" href="#workflow">See the workflow</a>
+        </div>
+      </div>
+      <div class="hero-card">
+        <img src="assets/ghosttrace-banner.svg" alt="GhostTrace banner artwork">
+      </div>
+    </section>
+
+    <section id="why">
+      <div class="eyebrow">Why GhostTrace</div>
+      <h2>An integrated RE workbench for people who want one command surface and one memory model.</h2>
+      <p class="lede">
+        Most reverse engineering setups degenerate into tabs, folders, shell history and screenshots. GhostTrace tries to collapse that into one loop:
+        upload a sample, let the assistant triage it, preserve evidence, and carry that context into debugging and sandbox work.
+      </p>
+      <div class="grid-3">
+        <article class="card">
+          <h3>Static-first, evidence-aware</h3>
+          <p>Imports, strings, function indices, decompilation, and triage reports are cached and reused so the analysis gets richer instead of noisier.</p>
+        </article>
+        <article class="card">
+          <h3>Sandbox that is actually reachable</h3>
+          <p>The Windows lab ships with noVNC, RDP, SSH, OEM provisioning, x64dbg autostart bridge and host-side helpers for command execution and file transfer.</p>
+        </article>
+        <article class="card">
+          <h3>Operator-friendly UI</h3>
+          <p>The web app is built around jobs, triage, debugger state and guided next steps, with a design language that looks deliberate instead of generic.</p>
+        </article>
+        <article class="card">
+          <h3>Docs that can ship with the repo</h3>
+          <p>The project includes a GitHub Pages-ready landing page so GhostTrace can present the platform clearly outside the operator UI itself.</p>
+        </article>
+      </div>
+    </section>
+
+    <section id="workflow">
+      <div class="eyebrow">Workflow</div>
+      <h2>One sample, one trail of evidence.</h2>
+      <p class="lede">
+        The shape is inspired by good offensive and defensive RE workflows: start broad, shrink uncertainty fast, keep the expensive steps targeted, and always preserve what you learned for the next pass.
+      </p>
+      <div class="flow">
+        <div class="step">
+          <div class="step-num">01</div>
+          <div>
+            <h3>Upload and analyze</h3>
+            <p>The Flask web UI hashes the sample, forwards it to Ghidraaas, and tracks the resulting analysis job in a persistent sidebar.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">02</div>
+          <div>
+            <h3>Auto triage the target</h3>
+            <p>GhostTrace generates structured reports from imports, strings, functions and optional evidence so the assistant can recommend a sensible next move immediately.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">03</div>
+          <div>
+            <h3>Escalate into debugging</h3>
+            <p>The x64dbg bridge exposes debugger state, queued requests and findings back into the same workspace, instead of sending you off to a disconnected side tool.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">04</div>
+          <div>
+            <h3>Use the sandbox as a lab, not a black hole</h3>
+            <p>The Windows VM is provisioned reproducibly, reachable over SSH, and fed through host-side copy helpers so you can script it instead of babysitting it.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="stack">
+      <div class="eyebrow">Stack</div>
+      <h2>What ships with the project.</h2>
+      <div class="grid-2">
+        <article class="card">
+          <h3>Core platform</h3>
+          <ul>
+            <li>Flask web UI with job management, chat, triage and x64dbg views</li>
+            <li>Ghidraaas backend with cached imports, strings, functions and decompilation</li>
+            <li>Ollama-compatible assistant orchestration for local model usage</li>
+            <li>Persistent triage reports and dynamic evidence ingestion</li>
+          </ul>
+        </article>
+        <article class="card">
+          <h3>Windows lab</h3>
+          <ul>
+            <li>dockurr/windows profile with OEM first-boot provisioning</li>
+            <li>OpenSSH, noVNC and RDP exposed for real operator access</li>
+            <li>x64dbg with MCP plugin bundle and bridge autostart</li>
+            <li>Sysinternals, Wireshark, Cutter, Rizin, radare2 and more</li>
+          </ul>
+        </article>
+      </div>
+    </section>
+
+    <section id="faq">
+      <div class="eyebrow">FAQ</div>
+      <h2>Questions the repo should answer up front.</h2>
+      <div class="faq">
+        <details>
+          <summary>Is this meant to replace Ghidra, x64dbg or radare2?</summary>
+          <p>No. GhostTrace is the workbench that orchestrates them. The point is to keep context, triage and debugger evidence flowing through one operator-facing surface.</p>
+        </details>
+        <details>
+          <summary>Does the project depend on cloud AI?</summary>
+          <p>No. The default path is Ollama running on the host. The Windows sandbox does not run its own model stack by default.</p>
+        </details>
+        <details>
+          <summary>Is the Windows lab mandatory?</summary>
+          <p>No. The main stack works without it. The sandbox profile is optional and only matters when you want the Windows-side tooling and debugger bridge.</p>
+        </details>
+        <details>
+          <summary>Why are some Windows tools marked optional?</summary>
+          <p>Because upstream packaging is inconsistent on Windows for a few tools. The lab now completes successfully even when `r2ai` or `PE-bear` are unavailable, instead of failing the whole bootstrap.</p>
+        </details>
+      </div>
+    </section>
+
+    <footer class="footer">
+      <div class="footer-card">
+        <div>GhostTrace is an opinionated RE workspace built for iterative, evidence-first analysis.</div>
+        <div>
+          <a href="https://github.com/0xCyberBerserker/ghosttrace-lab">GitHub</a>
+          ·
+          <a href="https://github.com/0xCyberBerserker/ghosttrace-lab/blob/main/README.md">README</a>
+        </div>
+      </div>
+    </footer>
+  </main>
+</body>
+</html>
