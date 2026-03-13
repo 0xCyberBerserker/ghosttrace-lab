@@ -37,6 +37,12 @@ GhostTrace combines a cyberpunk web UI, `Ghidraaas` for static analysis, `Ollama
 - Windows sandbox profile with `noVNC`, `RDP`, and `SSH`
 - `x64dbg` bridge for debugger-aware workflows
 
+### Responsibility Note
+
+GhostTrace is built for legitimate reverse engineering, malware analysis, DFIR, research, and defensive engineering workflows.
+
+Like any serious binary-analysis stack, it can technically be misused. That decision belongs to the operator, not the project. If you run GhostTrace against targets, software, or environments without proper authorization, you assume full responsibility for the legal, ethical, and operational consequences. Use it smart. Use it lawfully. Keep it sharp, not stupid.
+
 ### Architecture
 
 ```text
@@ -202,6 +208,12 @@ GhostTrace combina una interfaz web con estética cyberpunk, `Ghidraaas` para an
 - Gestión persistente de jobs en la UI
 - Perfil de sandbox Windows con `noVNC`, `RDP` y `SSH`
 - Puente `x64dbg` para flujos de depuración asistidos
+
+### Nota de responsabilidad
+
+GhostTrace está pensado para reverse engineering legítimo, análisis de malware, DFIR, investigación y trabajo defensivo.
+
+Como cualquier stack serio de análisis binario, técnicamente puede usarse mal. Esa decisión pertenece al operador, no al proyecto. Si ejecutas GhostTrace contra objetivos, software o entornos sin la debida autorización, asumes toda la responsabilidad por las consecuencias legales, éticas y operativas. Úsalo con cabeza. Úsalo dentro de la ley. Mantén el filo, no la torpeza.
 
 ### Arquitectura
 
