@@ -111,8 +111,41 @@
       color: var(--muted);
       font-size: 0.96rem;
     }
+    .nav-meta {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
     .nav-links a:hover { color: var(--text); }
     .footer a:hover { color: var(--text); }
+    .lang-switch {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      padding: 0.26rem;
+      border-radius: 999px;
+      border: 1px solid rgba(70, 243, 255, 0.16);
+      background: rgba(8, 14, 29, 0.7);
+    }
+    .lang-switch button {
+      min-width: 44px;
+      height: 34px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--muted);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      cursor: pointer;
+    }
+    .lang-switch button.active {
+      background: linear-gradient(90deg, rgba(255, 79, 216, 0.92), rgba(70, 243, 255, 0.92));
+      color: #07111d;
+      font-weight: 700;
+    }
     .hero {
       padding: 5.8rem 0 4rem;
       display: grid;
@@ -343,6 +376,10 @@
         align-items: flex-start;
         flex-direction: column;
       }
+      .nav-meta {
+        width: 100%;
+        justify-content: space-between;
+      }
       .nav-links {
         gap: 0.75rem;
         font-size: 0.9rem;
@@ -363,12 +400,18 @@
         <div class="brand-mark">GT</div>
         <div>GhostTrace</div>
       </a>
-      <div class="nav-links">
-        <a href="#why">Why it exists</a>
-        <a href="#workflow">Workflow</a>
-        <a href="#stack">Stack</a>
-        <a href="#faq">FAQ</a>
-        <a href="https://github.com/0xCyberBerserker/ghosttrace-lab">GitHub</a>
+      <div class="nav-meta">
+        <div class="nav-links">
+          <a href="#why" data-i18n="nav_why">Why it exists</a>
+          <a href="#workflow" data-i18n="nav_workflow">Workflow</a>
+          <a href="#stack" data-i18n="nav_stack">Stack</a>
+          <a href="#faq" data-i18n="nav_faq">FAQ</a>
+          <a href="https://github.com/0xCyberBerserker/ghosttrace-lab">GitHub</a>
+        </div>
+        <div class="lang-switch" aria-label="Language switcher">
+          <button type="button" data-lang="en" class="active">EN</button>
+          <button type="button" data-lang="es">ES</button>
+        </div>
       </div>
     </div>
   </nav>
@@ -376,22 +419,22 @@
   <main id="top" class="shell">
     <section class="hero">
       <div>
-        <div class="eyebrow">Open source · Sandbox-aware · Ollama-native</div>
-        <h1>Reverse engineering that feels like an operator console, not a bag of scripts.</h1>
-        <p class="hero-copy">
+        <div class="eyebrow" data-i18n="hero_eyebrow">Open source · Sandbox-aware · Ollama-native</div>
+        <h1 data-i18n="hero_title">Reverse engineering that feels like an operator console, not a bag of scripts.</h1>
+        <p class="hero-copy" data-i18n="hero_copy">
           GhostTrace combines a cyberpunk web workspace, a Ghidraaas backend, an Ollama-driven analyst, and a reproducible Windows lab with SSH and x64dbg bridge tooling.
           It is designed for fast static triage, guided deep dives, and dynamic evidence workflows without losing the thread between tools.
         </p>
         <div class="hero-badges">
-          <div class="hero-badge">Live Pages</div>
-          <div class="hero-badge">Ollama Local</div>
+          <div class="hero-badge" data-i18n="badge_live">Live Pages</div>
+          <div class="hero-badge" data-i18n="badge_ollama">Ollama Local</div>
           <div class="hero-badge">Ghidraaas</div>
-          <div class="hero-badge">Windows Sandbox</div>
-          <div class="hero-badge">x64dbg Bridge</div>
+          <div class="hero-badge" data-i18n="badge_sandbox">Windows Sandbox</div>
+          <div class="hero-badge" data-i18n="badge_x64dbg">x64dbg Bridge</div>
         </div>
         <div class="hero-actions">
-          <a class="cta" href="https://github.com/0xCyberBerserker/ghosttrace-lab">Open the repo</a>
-          <a class="cta-secondary" href="#workflow">See the workflow</a>
+          <a class="cta" href="https://github.com/0xCyberBerserker/ghosttrace-lab" data-i18n="hero_cta_repo">Open the repo</a>
+          <a class="cta-secondary" href="#workflow" data-i18n="hero_cta_flow">See the workflow</a>
         </div>
       </div>
       <div class="hero-card">
@@ -400,13 +443,13 @@
           <div style="font-family:'IBM Plex Mono',monospace;font-size:0.82rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);">
             GhostTrace Lab
           </div>
-          <div style="font-size:1.05rem;color:var(--text);max-width:30ch;line-height:1.6;">
+          <div style="font-size:1.05rem;color:var(--text);max-width:30ch;line-height:1.6;" data-i18n="card_copy">
             AI-assisted reverse engineering workbench for static triage, guided decompilation, and sandbox-aware workflows.
           </div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.76rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--cyan);">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.76rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--cyan);" data-i18n="card_model">
             Default Ollama model: huihui_ai/qwen3.5-abliterated:4b
           </div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.76rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);">
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.76rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);" data-i18n="card_author">
             By 0xCyberBerserker
           </div>
         </div>
@@ -414,114 +457,114 @@
     </section>
 
     <section id="why">
-      <div class="eyebrow">Why GhostTrace</div>
-      <h2>An integrated RE workbench for people who want one command surface and one memory model.</h2>
-      <p class="lede">
+      <div class="eyebrow" data-i18n="why_eyebrow">Why GhostTrace</div>
+      <h2 data-i18n="why_title">An integrated RE workbench for people who want one command surface and one memory model.</h2>
+      <p class="lede" data-i18n="why_copy">
         Most reverse engineering setups degenerate into tabs, folders, shell history and screenshots. GhostTrace tries to collapse that into one loop:
         upload a sample, let the assistant triage it, preserve evidence, and carry that context into debugging and sandbox work.
       </p>
       <div class="grid-3">
         <article class="card">
-          <h3>Static-first, evidence-aware</h3>
-          <p>Imports, strings, function indices, decompilation, and triage reports are cached and reused so the analysis gets richer instead of noisier.</p>
+          <h3 data-i18n="why_card1_title">Static-first, evidence-aware</h3>
+          <p data-i18n="why_card1_copy">Imports, strings, function indices, decompilation, and triage reports are cached and reused so the analysis gets richer instead of noisier.</p>
         </article>
         <article class="card">
-          <h3>Sandbox that is actually reachable</h3>
-          <p>The Windows lab ships with noVNC, RDP, SSH, OEM provisioning, x64dbg autostart bridge and host-side helpers for command execution and file transfer.</p>
+          <h3 data-i18n="why_card2_title">Sandbox that is actually reachable</h3>
+          <p data-i18n="why_card2_copy">The Windows lab ships with noVNC, RDP, SSH, OEM provisioning, x64dbg autostart bridge and host-side helpers for command execution and file transfer.</p>
         </article>
         <article class="card">
-          <h3>Operator-friendly UI</h3>
-          <p>The web app is built around jobs, triage, debugger state and guided next steps, with a design language that looks deliberate instead of generic.</p>
+          <h3 data-i18n="why_card3_title">Operator-friendly UI</h3>
+          <p data-i18n="why_card3_copy">The web app is built around jobs, triage, debugger state and guided next steps, with a design language that looks deliberate instead of generic.</p>
         </article>
         <article class="card">
-          <h3>Docs that can ship with the repo</h3>
-          <p>The project includes a GitHub Pages-ready landing page so GhostTrace can present the platform clearly outside the operator UI itself.</p>
+          <h3 data-i18n="why_card4_title">Docs that can ship with the repo</h3>
+          <p data-i18n="why_card4_copy">The project includes a GitHub Pages-ready landing page so GhostTrace can present the platform clearly outside the operator UI itself.</p>
         </article>
       </div>
     </section>
 
     <section id="workflow">
-      <div class="eyebrow">Workflow</div>
-      <h2>One sample, one trail of evidence.</h2>
-      <p class="lede">
+      <div class="eyebrow" data-i18n="workflow_eyebrow">Workflow</div>
+      <h2 data-i18n="workflow_title">One sample, one trail of evidence.</h2>
+      <p class="lede" data-i18n="workflow_copy">
         The shape is inspired by good offensive and defensive RE workflows: start broad, shrink uncertainty fast, keep the expensive steps targeted, and always preserve what you learned for the next pass.
       </p>
       <div class="flow">
         <div class="step">
           <div class="step-num">01</div>
           <div>
-            <h3>Upload and analyze</h3>
-            <p>The Flask web UI hashes the sample, forwards it to Ghidraaas, and tracks the resulting analysis job in a persistent sidebar.</p>
+            <h3 data-i18n="step1_title">Upload and analyze</h3>
+            <p data-i18n="step1_copy">The Flask web UI hashes the sample, forwards it to Ghidraaas, and tracks the resulting analysis job in a persistent sidebar.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-num">02</div>
           <div>
-            <h3>Auto triage the target</h3>
-            <p>GhostTrace generates structured reports from imports, strings, functions and optional evidence so the assistant can recommend a sensible next move immediately.</p>
+            <h3 data-i18n="step2_title">Auto triage the target</h3>
+            <p data-i18n="step2_copy">GhostTrace generates structured reports from imports, strings, functions and optional evidence so the assistant can recommend a sensible next move immediately.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-num">03</div>
           <div>
-            <h3>Escalate into debugging</h3>
-            <p>The x64dbg bridge exposes debugger state, queued requests and findings back into the same workspace, instead of sending you off to a disconnected side tool.</p>
+            <h3 data-i18n="step3_title">Escalate into debugging</h3>
+            <p data-i18n="step3_copy">The x64dbg bridge exposes debugger state, queued requests and findings back into the same workspace, instead of sending you off to a disconnected side tool.</p>
           </div>
         </div>
         <div class="step">
           <div class="step-num">04</div>
           <div>
-            <h3>Use the sandbox as a lab, not a black hole</h3>
-            <p>The Windows VM is provisioned reproducibly, reachable over SSH, and fed through host-side copy helpers so you can script it instead of babysitting it.</p>
+            <h3 data-i18n="step4_title">Use the sandbox as a lab, not a black hole</h3>
+            <p data-i18n="step4_copy">The Windows VM is provisioned reproducibly, reachable over SSH, and fed through host-side copy helpers so you can script it instead of babysitting it.</p>
           </div>
         </div>
       </div>
     </section>
 
     <section id="stack">
-      <div class="eyebrow">Stack</div>
-      <h2>What ships with the project.</h2>
+      <div class="eyebrow" data-i18n="stack_eyebrow">Stack</div>
+      <h2 data-i18n="stack_title">What ships with the project.</h2>
       <div class="grid-2">
         <article class="card">
-          <h3>Core platform</h3>
+          <h3 data-i18n="stack_core_title">Core platform</h3>
           <ul>
-            <li>Flask web UI with job management, chat, triage and x64dbg views</li>
-            <li>Ghidraaas backend with cached imports, strings, functions and decompilation</li>
-            <li>Ollama-compatible assistant orchestration using `huihui_ai/qwen3.5-abliterated:4b` by default</li>
-            <li>Persistent triage reports and dynamic evidence ingestion</li>
+            <li data-i18n="stack_core_1">Flask web UI with job management, chat, triage and x64dbg views</li>
+            <li data-i18n="stack_core_2">Ghidraaas backend with cached imports, strings, functions and decompilation</li>
+            <li data-i18n="stack_core_3">Ollama-compatible assistant orchestration using `huihui_ai/qwen3.5-abliterated:4b` by default</li>
+            <li data-i18n="stack_core_4">Persistent triage reports and dynamic evidence ingestion</li>
           </ul>
         </article>
         <article class="card">
-          <h3>Windows lab</h3>
+          <h3 data-i18n="stack_lab_title">Windows lab</h3>
           <ul>
-            <li>dockurr/windows profile with OEM first-boot provisioning</li>
-            <li>OpenSSH, noVNC and RDP exposed for real operator access</li>
-            <li>x64dbg with MCP plugin bundle and bridge autostart</li>
-            <li>Sysinternals, Wireshark, Cutter, Rizin, radare2 and more</li>
+            <li data-i18n="stack_lab_1">dockurr/windows profile with OEM first-boot provisioning</li>
+            <li data-i18n="stack_lab_2">OpenSSH, noVNC and RDP exposed for real operator access</li>
+            <li data-i18n="stack_lab_3">x64dbg with MCP plugin bundle and bridge autostart</li>
+            <li data-i18n="stack_lab_4">Sysinternals, Wireshark, Cutter, Rizin, radare2 and more</li>
           </ul>
         </article>
       </div>
     </section>
 
     <section id="faq">
-      <div class="eyebrow">FAQ</div>
-      <h2>Questions the repo should answer up front.</h2>
+      <div class="eyebrow" data-i18n="faq_eyebrow">FAQ</div>
+      <h2 data-i18n="faq_title">Questions the repo should answer up front.</h2>
       <div class="faq">
         <details>
-          <summary>Is this meant to replace Ghidra, x64dbg or radare2?</summary>
-          <p>No. GhostTrace is the workbench that orchestrates them. The point is to keep context, triage and debugger evidence flowing through one operator-facing surface.</p>
+          <summary data-i18n="faq1_q">Is this meant to replace Ghidra, x64dbg or radare2?</summary>
+          <p data-i18n="faq1_a">No. GhostTrace is the workbench that orchestrates them. The point is to keep context, triage and debugger evidence flowing through one operator-facing surface.</p>
         </details>
         <details>
-          <summary>Does the project depend on cloud AI?</summary>
-          <p>No. The default path is Ollama running on the host. The Windows sandbox does not run its own model stack by default.</p>
+          <summary data-i18n="faq2_q">Does the project depend on cloud AI?</summary>
+          <p data-i18n="faq2_a">No. The default path is Ollama running on the host. The Windows sandbox does not run its own model stack by default.</p>
         </details>
         <details>
-          <summary>Is the Windows lab mandatory?</summary>
-          <p>No. The main stack works without it. The sandbox profile is optional and only matters when you want the Windows-side tooling and debugger bridge.</p>
+          <summary data-i18n="faq3_q">Is the Windows lab mandatory?</summary>
+          <p data-i18n="faq3_a">No. The main stack works without it. The sandbox profile is optional and only matters when you want the Windows-side tooling and debugger bridge.</p>
         </details>
         <details>
-          <summary>Why are some Windows tools marked optional?</summary>
-          <p>Because upstream packaging is inconsistent on Windows for a few tools. The lab now completes successfully even when `r2ai` or `PE-bear` are unavailable, instead of failing the whole bootstrap.</p>
+          <summary data-i18n="faq4_q">Why are some Windows tools marked optional?</summary>
+          <p data-i18n="faq4_a">Because upstream packaging is inconsistent on Windows for a few tools. The lab now completes successfully even when `r2ai` or `PE-bear` are unavailable, instead of failing the whole bootstrap.</p>
         </details>
       </div>
     </section>
@@ -529,9 +572,9 @@
     <footer class="footer">
       <div class="footer-card">
         <div>
-          GhostTrace is an opinionated RE workspace built for iterative, evidence-first analysis.
+          <span data-i18n="footer_copy">GhostTrace is an opinionated RE workspace built for iterative, evidence-first analysis.</span>
           <br>
-          Built by <a href="https://github.com/0xCyberBerserker">0xCyberBerserker</a>.
+          <span data-i18n="footer_by">Built by</span> <a href="https://github.com/0xCyberBerserker">0xCyberBerserker</a>.
         </div>
         <div>
           <a href="https://github.com/0xCyberBerserker/ghosttrace-lab">GitHub</a>
@@ -541,5 +584,158 @@
       </div>
     </footer>
   </main>
+  <script>
+    const translations = {
+      en: {
+        nav_why: "Why it exists",
+        nav_workflow: "Workflow",
+        nav_stack: "Stack",
+        nav_faq: "FAQ",
+        hero_eyebrow: "Open source · Sandbox-aware · Ollama-native",
+        hero_title: "Reverse engineering that feels like an operator console, not a bag of scripts.",
+        hero_copy: "GhostTrace combines a cyberpunk web workspace, a Ghidraaas backend, an Ollama-driven analyst, and a reproducible Windows lab with SSH and x64dbg bridge tooling. It is designed for fast static triage, guided deep dives, and dynamic evidence workflows without losing the thread between tools.",
+        badge_live: "Live Pages",
+        badge_ollama: "Ollama Local",
+        badge_sandbox: "Windows Sandbox",
+        badge_x64dbg: "x64dbg Bridge",
+        hero_cta_repo: "Open the repo",
+        hero_cta_flow: "See the workflow",
+        card_copy: "AI-assisted reverse engineering workbench for static triage, guided decompilation, and sandbox-aware workflows.",
+        card_model: "Default Ollama model: huihui_ai/qwen3.5-abliterated:4b",
+        card_author: "By 0xCyberBerserker",
+        why_eyebrow: "Why GhostTrace",
+        why_title: "An integrated RE workbench for people who want one command surface and one memory model.",
+        why_copy: "Most reverse engineering setups degenerate into tabs, folders, shell history and screenshots. GhostTrace tries to collapse that into one loop: upload a sample, let the assistant triage it, preserve evidence, and carry that context into debugging and sandbox work.",
+        why_card1_title: "Static-first, evidence-aware",
+        why_card1_copy: "Imports, strings, function indices, decompilation, and triage reports are cached and reused so the analysis gets richer instead of noisier.",
+        why_card2_title: "Sandbox that is actually reachable",
+        why_card2_copy: "The Windows lab ships with noVNC, RDP, SSH, OEM provisioning, x64dbg autostart bridge and host-side helpers for command execution and file transfer.",
+        why_card3_title: "Operator-friendly UI",
+        why_card3_copy: "The web app is built around jobs, triage, debugger state and guided next steps, with a design language that looks deliberate instead of generic.",
+        why_card4_title: "Docs that can ship with the repo",
+        why_card4_copy: "The project includes a GitHub Pages-ready landing page so GhostTrace can present the platform clearly outside the operator UI itself.",
+        workflow_eyebrow: "Workflow",
+        workflow_title: "One sample, one trail of evidence.",
+        workflow_copy: "The shape is inspired by good offensive and defensive RE workflows: start broad, shrink uncertainty fast, keep the expensive steps targeted, and always preserve what you learned for the next pass.",
+        step1_title: "Upload and analyze",
+        step1_copy: "The Flask web UI hashes the sample, forwards it to Ghidraaas, and tracks the resulting analysis job in a persistent sidebar.",
+        step2_title: "Auto triage the target",
+        step2_copy: "GhostTrace generates structured reports from imports, strings, functions and optional evidence so the assistant can recommend a sensible next move immediately.",
+        step3_title: "Escalate into debugging",
+        step3_copy: "The x64dbg bridge exposes debugger state, queued requests and findings back into the same workspace, instead of sending you off to a disconnected side tool.",
+        step4_title: "Use the sandbox as a lab, not a black hole",
+        step4_copy: "The Windows VM is provisioned reproducibly, reachable over SSH, and fed through host-side copy helpers so you can script it instead of babysitting it.",
+        stack_eyebrow: "Stack",
+        stack_title: "What ships with the project.",
+        stack_core_title: "Core platform",
+        stack_core_1: "Flask web UI with job management, chat, triage and x64dbg views",
+        stack_core_2: "Ghidraaas backend with cached imports, strings, functions and decompilation",
+        stack_core_3: "Ollama-compatible assistant orchestration using `huihui_ai/qwen3.5-abliterated:4b` by default",
+        stack_core_4: "Persistent triage reports and dynamic evidence ingestion",
+        stack_lab_title: "Windows lab",
+        stack_lab_1: "dockurr/windows profile with OEM first-boot provisioning",
+        stack_lab_2: "OpenSSH, noVNC and RDP exposed for real operator access",
+        stack_lab_3: "x64dbg with MCP plugin bundle and bridge autostart",
+        stack_lab_4: "Sysinternals, Wireshark, Cutter, Rizin, radare2 and more",
+        faq_eyebrow: "FAQ",
+        faq_title: "Questions the repo should answer up front.",
+        faq1_q: "Is this meant to replace Ghidra, x64dbg or radare2?",
+        faq1_a: "No. GhostTrace is the workbench that orchestrates them. The point is to keep context, triage and debugger evidence flowing through one operator-facing surface.",
+        faq2_q: "Does the project depend on cloud AI?",
+        faq2_a: "No. The default path is Ollama running on the host. The Windows sandbox does not run its own model stack by default.",
+        faq3_q: "Is the Windows lab mandatory?",
+        faq3_a: "No. The main stack works without it. The sandbox profile is optional and only matters when you want the Windows-side tooling and debugger bridge.",
+        faq4_q: "Why are some Windows tools marked optional?",
+        faq4_a: "Because upstream packaging is inconsistent on Windows for a few tools. The lab now completes successfully even when `r2ai` or `PE-bear` are unavailable, instead of failing the whole bootstrap.",
+        footer_copy: "GhostTrace is an opinionated RE workspace built for iterative, evidence-first analysis.",
+        footer_by: "Built by"
+      },
+      es: {
+        nav_why: "Por qué existe",
+        nav_workflow: "Flujo",
+        nav_stack: "Stack",
+        nav_faq: "FAQ",
+        hero_eyebrow: "Open source · Sandbox con contexto · Ollama local",
+        hero_title: "Reverse engineering con sensación de consola de operador, no de bolsa de scripts.",
+        hero_copy: "GhostTrace combina una interfaz web cyberpunk, un backend Ghidraaas, un analista basado en Ollama y un laboratorio Windows reproducible con SSH y bridge de x64dbg. Está pensado para triage estático rápido, deep dives guiados y workflows de evidencia dinámica sin perder el hilo entre herramientas.",
+        badge_live: "Web Pública",
+        badge_ollama: "Ollama Local",
+        badge_sandbox: "Sandbox Windows",
+        badge_x64dbg: "Bridge x64dbg",
+        hero_cta_repo: "Abrir repo",
+        hero_cta_flow: "Ver flujo",
+        card_copy: "Entorno de reverse engineering asistido por IA para triage estático, decompilación guiada y workflows con sandbox.",
+        card_model: "Modelo Ollama por defecto: huihui_ai/qwen3.5-abliterated:4b",
+        card_author: "Por 0xCyberBerserker",
+        why_eyebrow: "Por qué GhostTrace",
+        why_title: "Un workbench de RE integrado para quien quiere una sola superficie de control y una sola memoria operativa.",
+        why_copy: "Muchos entornos de reverse engineering acaban siendo pestañas, carpetas, historial de shell y capturas. GhostTrace intenta colapsar todo eso en un único bucle: subir una muestra, dejar que el asistente la triagee, preservar evidencia y arrastrar ese contexto hasta la depuración y la sandbox.",
+        why_card1_title: "Static-first y con evidencia",
+        why_card1_copy: "Imports, strings, índices de funciones, decompilación e informes de triage se cachean y reutilizan para que el análisis gane contexto en vez de ruido.",
+        why_card2_title: "Una sandbox realmente accesible",
+        why_card2_copy: "El laboratorio Windows trae noVNC, RDP, SSH, provisioning OEM, bridge autoarrancable de x64dbg y helpers desde host para ejecutar comandos y transferir archivos.",
+        why_card3_title: "UI pensada para operador",
+        why_card3_copy: "La web gira alrededor de jobs, triage, estado del debugger y siguientes pasos guiados, con una estética intencional en vez de genérica.",
+        why_card4_title: "Documentación que puede vivir con el repo",
+        why_card4_copy: "El proyecto incluye una landing preparada para GitHub Pages para presentar GhostTrace con claridad fuera de la UI principal.",
+        workflow_eyebrow: "Flujo",
+        workflow_title: "Una muestra, un rastro de evidencia.",
+        workflow_copy: "La estructura está inspirada en buenos workflows ofensivos y defensivos de RE: empezar amplio, reducir incertidumbre rápido, reservar lo caro para lo importante y conservar lo aprendido para la siguiente pasada.",
+        step1_title: "Sube y analiza",
+        step1_copy: "La web Flask calcula el hash de la muestra, la envía a Ghidraaas y sigue el job resultante en una barra lateral persistente.",
+        step2_title: "Haz triage automático",
+        step2_copy: "GhostTrace genera informes estructurados a partir de imports, strings, funciones y evidencia opcional para recomendar un siguiente paso útil desde el primer momento.",
+        step3_title: "Escala a depuración",
+        step3_copy: "El bridge de x64dbg devuelve estado, requests y findings al mismo workspace, en vez de mandarte a una herramienta lateral desconectada.",
+        step4_title: "Usa la sandbox como laboratorio, no como agujero negro",
+        step4_copy: "La VM Windows se provisiona de forma reproducible, es accesible por SSH y se alimenta con helpers desde host para que puedas automatizarla en vez de babysittearla.",
+        stack_eyebrow: "Stack",
+        stack_title: "Lo que trae el proyecto.",
+        stack_core_title: "Plataforma principal",
+        stack_core_1: "Web UI Flask con gestión de jobs, chat, triage y vistas de x64dbg",
+        stack_core_2: "Backend Ghidraaas con caché de imports, strings, funciones y decompilación",
+        stack_core_3: "Orquestación de asistente compatible con Ollama usando `huihui_ai/qwen3.5-abliterated:4b` por defecto",
+        stack_core_4: "Informes de triage persistentes e ingestión de evidencia dinámica",
+        stack_lab_title: "Laboratorio Windows",
+        stack_lab_1: "Perfil dockurr/windows con provisioning OEM en primer arranque",
+        stack_lab_2: "OpenSSH, noVNC y RDP expuestos para acceso real de operador",
+        stack_lab_3: "x64dbg con bundle MCP y bridge con autoarranque",
+        stack_lab_4: "Sysinternals, Wireshark, Cutter, Rizin, radare2 y más",
+        faq_eyebrow: "FAQ",
+        faq_title: "Preguntas que el repo debería responder desde el principio.",
+        faq1_q: "¿Esto pretende sustituir a Ghidra, x64dbg o radare2?",
+        faq1_a: "No. GhostTrace es el workbench que los orquesta. La idea es mantener contexto, triage y evidencia del debugger fluyendo por una sola superficie de trabajo.",
+        faq2_q: "¿Depende de IA en la nube?",
+        faq2_a: "No. El camino por defecto es Ollama corriendo en el host. La sandbox Windows no levanta su propia pila de modelos por defecto.",
+        faq3_q: "¿El laboratorio Windows es obligatorio?",
+        faq3_a: "No. El stack principal funciona sin él. El perfil de sandbox es opcional y solo importa si quieres las herramientas Windows y el bridge del debugger.",
+        faq4_q: "¿Por qué algunas herramientas Windows aparecen como opcionales?",
+        faq4_a: "Porque el empaquetado upstream en Windows es inconsistente para algunas herramientas. El laboratorio ahora termina correctamente aunque `r2ai` o `PE-bear` no estén disponibles, en vez de romper todo el bootstrap.",
+        footer_copy: "GhostTrace es un entorno de RE con una visión clara: análisis iterativo y guiado por evidencia.",
+        footer_by: "Creado por"
+      }
+    };
+
+    const applyLanguage = (lang) => {
+      const selected = translations[lang] || translations.en;
+      document.documentElement.lang = lang;
+      document.querySelectorAll("[data-i18n]").forEach((element) => {
+        const key = element.getAttribute("data-i18n");
+        if (selected[key]) {
+          element.textContent = selected[key];
+        }
+      });
+      document.querySelectorAll(".lang-switch button").forEach((button) => {
+        button.classList.toggle("active", button.dataset.lang === lang);
+      });
+      localStorage.setItem("ghosttrace-lang", lang);
+    };
+
+    const initialLang = localStorage.getItem("ghosttrace-lang") || "en";
+    applyLanguage(initialLang);
+    document.querySelectorAll(".lang-switch button").forEach((button) => {
+      button.addEventListener("click", () => applyLanguage(button.dataset.lang));
+    });
+  </script>
 </body>
 </html>
