@@ -1,7 +1,7 @@
 <div align="center">
   <h1>👻 GhostTrace</h1>
-  <p><strong>AI reverse engineering workbench for binary triage, guided decompilation, and sandbox-aware operator workflows.</strong></p>
-  <p><strong>Entorno de reverse engineering asistido por IA para triage binario, decompilación guiada y flujos de sandbox con contexto.</strong></p>
+  <p><strong>Reverse engineering with operator-grade workflows, debugger context, sandbox trails, and less tab graveyard energy.</strong></p>
+  <p><strong>Reverse engineering con flujos de operador de verdad, contexto de depuración, rastro de sandbox y menos vibra de cementerio de pestañas.</strong></p>
   <p>
     <a href="https://0xcyberberserker.github.io/ghosttrace-lab/"><img alt="site" src="https://img.shields.io/badge/site-ghosttrace--lab-0a1324?style=for-the-badge&logo=githubpages&logoColor=46f3ff&labelColor=07111d"></a>
     <img alt="ollama" src="https://img.shields.io/badge/ollama-local-0a1324?style=for-the-badge&logo=ollama&logoColor=ffffff&labelColor=07111d">
