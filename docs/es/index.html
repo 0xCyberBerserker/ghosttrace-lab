@@ -15,7 +15,7 @@
   <link rel="icon" type="image/svg+xml" href="../favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&family=Material+Symbols+Rounded:FILL@1&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg-0: #07111d;
@@ -92,6 +92,21 @@
       gap: 0.8rem;
       font-weight: 700;
     }
+    .material-symbols-rounded {
+      font-family: "Material Symbols Rounded";
+      font-weight: normal;
+      font-style: normal;
+      font-size: 1.1rem;
+      line-height: 1;
+      display: inline-block;
+      letter-spacing: normal;
+      text-transform: none;
+      white-space: nowrap;
+      word-wrap: normal;
+      direction: ltr;
+      -webkit-font-smoothing: antialiased;
+      font-variation-settings: "FILL" 1, "wght" 500, "GRAD" 0, "opsz" 24;
+    }
     .brand-mark {
       width: 42px;
       height: 42px;
@@ -110,6 +125,15 @@
       gap: 1rem;
       color: var(--muted);
       font-size: 0.96rem;
+    }
+    .nav-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.38rem;
+    }
+    .nav-links a .material-symbols-rounded {
+      font-size: 1rem;
+      color: rgba(70, 243, 255, 0.82);
     }
     .nav-meta {
       display: flex;
@@ -205,6 +229,7 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
+      gap: 0.45rem;
       min-height: 54px;
       padding: 0 1.2rem;
       border-radius: 999px;
@@ -395,6 +420,21 @@
     .maker-line .maker-flag-wrap::after {
       content: ".";
     }
+    .footer-links {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.7rem;
+      flex-wrap: wrap;
+    }
+    .footer-links a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+    }
+    .footer-links .material-symbols-rounded {
+      font-size: 1rem;
+      color: rgba(70, 243, 255, 0.82);
+    }
     @media (max-width: 980px) {
       .hero, .grid-3, .grid-2 {
         grid-template-columns: 1fr;
@@ -476,11 +516,11 @@
       </a>
       <div class="nav-meta">
         <div class="nav-links">
-          <a href="#why" data-i18n="nav_why">Why it exists</a>
-          <a href="#workflow" data-i18n="nav_workflow">Workflow</a>
-          <a href="#stack" data-i18n="nav_stack">Stack</a>
-          <a href="#faq" data-i18n="nav_faq">FAQ</a>
-          <a href="https://github.com/0xCyberBerserker/ghosttrace-lab">GitHub</a>
+          <a href="#why"><span class="material-symbols-rounded" aria-hidden="true">visibility</span><span data-i18n="nav_why">Why it exists</span></a>
+          <a href="#workflow"><span class="material-symbols-rounded" aria-hidden="true">route</span><span data-i18n="nav_workflow">Workflow</span></a>
+          <a href="#stack"><span class="material-symbols-rounded" aria-hidden="true">deployed_code</span><span data-i18n="nav_stack">Stack</span></a>
+          <a href="#faq"><span class="material-symbols-rounded" aria-hidden="true">help</span><span data-i18n="nav_faq">FAQ</span></a>
+          <a href="https://github.com/0xCyberBerserker/ghosttrace-lab"><span class="material-symbols-rounded" aria-hidden="true">terminal</span><span>GitHub</span></a>
         </div>
         <div class="lang-switch" aria-label="Language switcher">
           <button type="button" data-lang="en" class="active">EN</button>
@@ -507,8 +547,8 @@
           <div class="hero-badge" data-i18n="badge_x64dbg">x64dbg Bridge</div>
         </div>
         <div class="hero-actions">
-          <a class="cta" href="https://github.com/0xCyberBerserker/ghosttrace-lab" data-i18n="hero_cta_repo">Open the repo</a>
-          <a class="cta-secondary" href="#workflow" data-i18n="hero_cta_flow">See the workflow</a>
+          <a class="cta" href="https://github.com/0xCyberBerserker/ghosttrace-lab"><span class="material-symbols-rounded" aria-hidden="true">terminal</span><span data-i18n="hero_cta_repo">Open the repo</span></a>
+          <a class="cta-secondary" href="#workflow"><span class="material-symbols-rounded" aria-hidden="true">arrow_forward</span><span data-i18n="hero_cta_flow">See the workflow</span></a>
         </div>
       </div>
       <div class="hero-card">
@@ -658,10 +698,10 @@
             <span class="maker-flag-wrap"><img src="../assets/spain-flag.svg" alt=""></span>
           </div>
         </div>
-        <div>
-          <a href="https://github.com/0xCyberBerserker/ghosttrace-lab">GitHub</a>
-          ·
-          <a href="https://github.com/0xCyberBerserker/ghosttrace-lab/blob/main/README.md">README</a>
+        <div class="footer-links">
+          <a href="https://github.com/0xCyberBerserker/ghosttrace-lab"><span class="material-symbols-rounded" aria-hidden="true">terminal</span><span>GitHub</span></a>
+          <span>·</span>
+          <a href="https://github.com/0xCyberBerserker/ghosttrace-lab/blob/main/README.md"><span class="material-symbols-rounded" aria-hidden="true">description</span><span>README</span></a>
         </div>
       </div>
     </footer>
