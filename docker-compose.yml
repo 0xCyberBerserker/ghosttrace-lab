@@ -1,0 +1,96 @@
+services:
+  ghidraaas:
+    image: ghidraaas:latest
+    container_name: ghidraaas
+    ports:
+      - "8080:8080"
+    environment:
+      GHIDRAAAS_MAX_CONTENT_LENGTH_MB: "1024"
+    volumes:
+      - ghidra_projects:/opt/ghidra_projects
+      - ghidra_output:/opt/ghidraaas/output
+
+  webui:
+    build: .
+    container_name: ghidraaas-ai-webui
+    depends_on:
+      - ghidraaas
+      - sandbox_runner
+    ports:
+      - "5000:5000"
+    environment:
+      API_BASE: "http://host.docker.internal:11434/v1"
+      API_KEY: "ollama"
+      MODEL_NAME: "qwen3-coder-next:latest"
+      GHIDRAAAS_BASE: "http://ghidraaas:8080/ghidra/api"
+      JOB_METADATA_PATH: "/app/data/job_metadata.json"
+      UPLOADS_DIR: "/app/data/uploads"
+      SANDBOX_RUNNER_URL: "http://sandbox_runner:9001"
+    volumes:
+      - webui_data:/app/data
+      - sandbox_bin:/app/data/uploads
+      - ./ai-config.json:/app/config/ai-config.json:ro
+
+  sandbox_runner:
+    build:
+      context: .
+      dockerfile: sandbox/runner/Dockerfile
+    container_name: sandbox-runner
+    environment:
+      SAMPLES_DIR: "/shared"
+      QUEUE_DIR: "/queue"
+      WEBUI_BASE: "http://webui:5000"
+      BRIDGE_DIR: "/bridge"
+    ports:
+      - "9001:9001"
+    volumes:
+      - sandbox_bin:/shared
+      - sandbox_runner_data:/queue
+      - sandbox_bridge:/bridge
+
+  windows_sandbox:
+    profiles: ["windows-sandbox"]
+    image: dockurr/windows
+    container_name: windows-sandbox
+    environment:
+      VERSION: "11l"
+      USERNAME: "Docker"
+      PASSWORD: "admin"
+      REGION: "es-ES"
+      KEYBOARD: "es-ES"
+      LANGUAGE: "English"
+      OLLAMA_HOST: "host.docker.internal"
+      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
+      OLLAMA_MODEL: "huihui_ai/qwen3.5-abliterated:4b"
+    ports:
+      - "8006:8006"
+      - "3389:3389"
+      - "2222:22"
+    devices:
+      - /dev/kvm
+      - /dev/vhost-net
+    cap_add:
+      - NET_ADMIN
+    device_cgroup_rules:
+      - 'c *:* rwm'
+    networks:
+      default: {}
+    # This profile is optional and intended for user-operated sandboxing.
+    # It is not required by the main stack and may need host support
+    # such as KVM / TUN and a working macvlan-capable Docker environment.
+    volumes:
+      - ./sandbox/oem:/oem
+      - sandbox_bin:/shared
+      - sandbox_bridge:/shared/bridge
+      - ./ai-config.json:/shared/config/ai-config.json:ro
+      - ./sandbox/bridge-tools:/shared/bridge-tools:ro
+      - sandbox_storage:/storage
+
+volumes:
+  ghidra_projects:
+  ghidra_output:
+  webui_data:
+  sandbox_bin:
+  sandbox_storage:
+  sandbox_runner_data:
+  sandbox_bridge:

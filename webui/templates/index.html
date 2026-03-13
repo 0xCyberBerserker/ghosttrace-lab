@@ -10,72 +10,3046 @@
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
     <style>
+        :root {
+            --bg-0: #060816;
+            --bg-1: #0a1023;
+            --panel: rgba(8, 13, 32, 0.78);
+            --panel-strong: rgba(10, 16, 38, 0.92);
+            --border: rgba(63, 255, 233, 0.22);
+            --cyan: #47f5ff;
+            --pink: #ff4fd8;
+            --lime: #a6ff47;
+            --amber: #ffcf5a;
+            --text: #d9f7ff;
+            --muted: #7fa7b7;
+            --shadow: 0 0 0 1px rgba(71, 245, 255, 0.08), 0 0 24px rgba(71, 245, 255, 0.08), 0 0 40px rgba(255, 79, 216, 0.07);
+        }
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0f1116;
-            color: #e5e7eb;
+            font-family: 'Space Grotesk', sans-serif;
+            background:
+                radial-gradient(circle at top left, rgba(255, 79, 216, 0.18), transparent 28%),
+                radial-gradient(circle at top right, rgba(71, 245, 255, 0.14), transparent 30%),
+                radial-gradient(circle at bottom center, rgba(166, 255, 71, 0.08), transparent 28%),
+                linear-gradient(135deg, var(--bg-0), var(--bg-1) 52%, #05070f);
+            color: var(--text);
+            overflow: hidden;
+        }
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background-image:
+                linear-gradient(rgba(71, 245, 255, 0.04) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(71, 245, 255, 0.04) 1px, transparent 1px);
+            background-size: 32px 32px;
+            mask-image: radial-gradient(circle at center, black, transparent 85%);
+            opacity: 0.42;
+        }
+        body::after {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(180deg, transparent 0%, rgba(71, 245, 255, 0.03) 48%, transparent 100%);
+            animation: scanline 8s linear infinite;
+        }
+        @keyframes scanline {
+            from { transform: translateY(-100%); }
+            to { transform: translateY(100%); }
         }
         .panel {
-            background-color: #1a1d23;
-            border-radius: 0.5rem;
+            background: var(--panel);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(18px);
         }
         .chat-bubble-user {
-            background-color: #374151;
+            background: linear-gradient(135deg, rgba(255, 79, 216, 0.22), rgba(255, 79, 216, 0.09));
+            border: 1px solid rgba(255, 79, 216, 0.32);
         }
         .chat-bubble-assistant {
-            background-color: #2d333b;
+            background: linear-gradient(135deg, rgba(71, 245, 255, 0.16), rgba(71, 245, 255, 0.07));
+            border: 1px solid rgba(71, 245, 255, 0.22);
         }
         .sidebar {
-            background-color: #1a1d23;
+            background: linear-gradient(180deg, rgba(8, 12, 26, 0.95), rgba(7, 10, 22, 0.82));
+            backdrop-filter: blur(18px);
+            box-shadow: inset -1px 0 0 rgba(71, 245, 255, 0.12);
         }
         input::placeholder, textarea::placeholder {
-            color: #9ca3af;
+            color: var(--muted);
+        }
+        textarea {
+            resize: none !important;
+            scrollbar-width: none;
+        }
+        textarea::-webkit-scrollbar {
+            display: none;
+        }
+        h1, h2, .panel strong {
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        #chat-log, #jobs-list, .triage-shell, .operator-shell {
+            scrollbar-width: thin;
+            scrollbar-color: rgba(71, 245, 255, 0.5) transparent;
+        }
+        #chat-log::-webkit-scrollbar, #jobs-list::-webkit-scrollbar, .triage-shell::-webkit-scrollbar, .operator-shell::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        #chat-log::-webkit-scrollbar-track, #jobs-list::-webkit-scrollbar-track, .triage-shell::-webkit-scrollbar-track, .operator-shell::-webkit-scrollbar-track {
+            background: rgba(5, 10, 24, 0.28);
+            border-radius: 999px;
+        }
+        #chat-log::-webkit-scrollbar-thumb, #jobs-list::-webkit-scrollbar-thumb, .triage-shell::-webkit-scrollbar-thumb, .operator-shell::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, rgba(71, 245, 255, 0.75), rgba(255, 79, 216, 0.55));
+            border-radius: 999px;
+            border: 1px solid rgba(5, 10, 24, 0.18);
+        }
+        #chat-log::-webkit-scrollbar-thumb:hover, #jobs-list::-webkit-scrollbar-thumb:hover, .triage-shell::-webkit-scrollbar-thumb:hover, .operator-shell::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, rgba(71, 245, 255, 0.92), rgba(255, 79, 216, 0.72));
+        }
+        .chrome-frame {
+            position: relative;
+        }
+        .chrome-frame::before {
+            content: "";
+            position: absolute;
+            inset: 10px;
+            border: 1px solid rgba(71, 245, 255, 0.08);
+            border-radius: 1.2rem;
+            pointer-events: none;
+        }
+        .neon-button {
+            background: linear-gradient(90deg, rgba(255, 79, 216, 0.92), rgba(71, 245, 255, 0.92));
+            border: 1px solid rgba(217, 247, 255, 0.16);
+            color: #08111f;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            box-shadow: 0 0 28px rgba(71, 245, 255, 0.18);
+        }
+        .neon-button:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 0 34px rgba(255, 79, 216, 0.22);
+        }
+        .cyber-input {
+            background: rgba(5, 10, 24, 0.86);
+            border: 1px solid rgba(71, 245, 255, 0.18);
+            color: var(--text);
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.06);
+        }
+        .cyber-input:focus {
+            border-color: rgba(71, 245, 255, 0.55);
+            box-shadow: 0 0 0 2px rgba(71, 245, 255, 0.12), 0 0 18px rgba(71, 245, 255, 0.14);
+        }
+        .file-input {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border: 0;
+        }
+        .file-picker {
+            display: flex;
+            align-items: center;
+            gap: 0.9rem;
+            border: 1px dashed rgba(71, 245, 255, 0.32);
+            border-radius: 0.85rem;
+            background: rgba(8, 14, 33, 0.82);
+            padding: 0.85rem 0.95rem;
+            box-shadow: inset 0 0 20px rgba(71, 245, 255, 0.03);
+        }
+        .file-picker:hover {
+            border-color: rgba(71, 245, 255, 0.48);
+            box-shadow: inset 0 0 24px rgba(71, 245, 255, 0.06), 0 0 18px rgba(71, 245, 255, 0.08);
+        }
+        .file-picker-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 8.5rem;
+            border-radius: 999px;
+            border: 1px solid rgba(71, 245, 255, 0.28);
+            background: rgba(71, 245, 255, 0.14);
+            color: var(--cyan);
+            padding: 0.7rem 1rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.82rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .file-picker-name {
+            min-width: 0;
+            color: rgba(217, 247, 255, 0.76);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.85rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .job-item {
+            border: 1px solid rgba(71, 245, 255, 0.12);
+            border-radius: 0.9rem;
+            background: linear-gradient(180deg, rgba(7, 13, 31, 0.95), rgba(8, 11, 22, 0.9));
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.03);
+            position: relative;
+        }
+        .job-item:hover {
+            border-color: rgba(71, 245, 255, 0.28);
+            box-shadow: 0 0 22px rgba(71, 245, 255, 0.1);
+        }
+        .job-item.bg-gray-700 {
+            background: linear-gradient(135deg, rgba(255, 79, 216, 0.18), rgba(71, 245, 255, 0.2));
+            border-color: rgba(71, 245, 255, 0.5);
+            box-shadow: 0 0 26px rgba(71, 245, 255, 0.16);
+        }
+        .job-title {
+            color: rgba(239, 253, 255, 0.96);
+        }
+        .job-meta {
+            color: rgba(163, 236, 246, 0.78);
+        }
+        .job-item-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+        .job-title {
+            min-width: 0;
+            flex: 1 1 auto;
+        }
+        .job-item-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            flex-shrink: 0;
+            flex-wrap: wrap;
+            justify-content: flex-end;
+        }
+        .job-action-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.85rem;
+            height: 1.85rem;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 120, 120, 0.18);
+            background: rgba(22, 10, 24, 0.82);
+            color: rgba(255, 199, 199, 0.9);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1;
+            transition: all 160ms ease;
+        }
+        .job-action-button:hover {
+            border-color: rgba(255, 120, 120, 0.45);
+            color: #ffd1d1;
+            box-shadow: 0 0 14px rgba(255, 79, 120, 0.12);
+        }
+        .job-action-button.archive {
+            border-color: rgba(71, 245, 255, 0.16);
+            background: rgba(10, 17, 38, 0.82);
+            color: rgba(217, 247, 255, 0.9);
+        }
+        .job-action-button.archive:hover {
+            border-color: rgba(71, 245, 255, 0.38);
+            color: var(--cyan);
+            box-shadow: 0 0 14px rgba(71, 245, 255, 0.12);
+        }
+        .job-action-button.rename {
+            border-color: rgba(71, 245, 255, 0.16);
+            background: rgba(10, 17, 38, 0.82);
+            color: rgba(217, 247, 255, 0.9);
+        }
+        .job-action-button.rename:hover {
+            border-color: rgba(71, 245, 255, 0.38);
+            color: var(--cyan);
+            box-shadow: 0 0 14px rgba(71, 245, 255, 0.12);
+        }
+        .job-action-button.export {
+            border-color: rgba(166, 255, 71, 0.18);
+            background: rgba(15, 22, 10, 0.82);
+            color: rgba(220, 255, 199, 0.92);
+        }
+        .job-action-button.export:hover {
+            border-color: rgba(166, 255, 71, 0.42);
+            color: var(--lime);
+            box-shadow: 0 0 14px rgba(166, 255, 71, 0.12);
+        }
+        .job-action-button:disabled {
+            opacity: 0.5;
+            cursor: wait;
+        }
+        .jobs-toolbar-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            border: 1px solid rgba(71, 245, 255, 0.16);
+            border-radius: 999px;
+            background: rgba(10, 17, 38, 0.82);
+            color: rgba(217, 247, 255, 0.86);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.68rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 0.42rem 0.72rem;
+            transition: all 160ms ease;
+            white-space: nowrap;
+        }
+        .jobs-toolbar-button:hover {
+            border-color: rgba(71, 245, 255, 0.34);
+            color: var(--cyan);
+        }
+        .jobs-toolbar-button.is-active {
+            border-color: rgba(71, 245, 255, 0.42);
+            color: var(--cyan);
+            box-shadow: 0 0 14px rgba(71, 245, 255, 0.08);
+        }
+        .mono, .job-status, #upload-status, #chat-input, .tool-calls, .markdown-content code {
+            font-family: 'IBM Plex Mono', monospace;
+        }
+        .markdown-content {
+            color: #dff7ff;
+            line-height: 1.7;
+            font-size: 0.97rem;
+        }
+        .markdown-content > * + * {
+            margin-top: 0.9rem;
+        }
+        .markdown-content h1,
+        .markdown-content h2,
+        .markdown-content h3,
+        .markdown-content h4 {
+            color: #f3fdff;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: none;
+            margin-top: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+        .markdown-content h1 { font-size: 1.3rem; }
+        .markdown-content h2 { font-size: 1.15rem; }
+        .markdown-content h3,
+        .markdown-content h4 { font-size: 1rem; }
+        .markdown-content p,
+        .markdown-content li {
+            color: rgba(223, 247, 255, 0.94);
+        }
+        .markdown-content strong {
+            color: #ffffff;
+            font-weight: 700;
+        }
+        .markdown-content a {
+            color: var(--cyan);
+            text-decoration: underline;
+            text-decoration-color: rgba(71, 245, 255, 0.45);
+            text-underline-offset: 0.18rem;
+        }
+        .markdown-content ul,
+        .markdown-content ol {
+            padding-left: 1.2rem;
+        }
+        .markdown-content li::marker {
+            color: rgba(255, 79, 216, 0.9);
+        }
+        .markdown-content hr {
+            border: 0;
+            border-top: 1px solid rgba(71, 245, 255, 0.16);
+            margin: 1.1rem 0;
+        }
+        .markdown-content blockquote {
+            border-left: 3px solid rgba(71, 245, 255, 0.38);
+            background: rgba(8, 15, 33, 0.72);
+            color: rgba(201, 239, 248, 0.86);
+            padding: 0.9rem 1rem;
+            border-radius: 0 0.8rem 0.8rem 0;
+        }
+        .markdown-content table {
+            width: 100%;
+            border-collapse: collapse;
+            overflow: hidden;
+            border-radius: 0.9rem;
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            background: rgba(6, 11, 26, 0.82);
+        }
+        .markdown-content th,
+        .markdown-content td {
+            padding: 0.75rem 0.85rem;
+            border-bottom: 1px solid rgba(71, 245, 255, 0.1);
+            text-align: left;
+        }
+        .markdown-content th {
+            color: #f4fdff;
+            background: rgba(71, 245, 255, 0.08);
+            font-weight: 700;
+        }
+        .markdown-content tr:last-child td {
+            border-bottom: 0;
+        }
+        .markdown-content pre,
+        .markdown-content code {
+            background: rgba(4, 9, 21, 0.9);
+            color: var(--cyan);
+            border-radius: 0.6rem;
+        }
+        .markdown-content :not(pre) > code {
+            border: 1px solid rgba(71, 245, 255, 0.18);
+            padding: 0.12rem 0.38rem;
+            font-size: 0.88em;
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.03);
+        }
+        .markdown-content pre {
+            position: relative;
+            overflow-x: auto;
+            padding: 1.1rem 1rem 1rem;
+            border: 1px solid rgba(71, 245, 255, 0.15);
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.03);
+        }
+        .markdown-content pre::before {
+            content: "DECOMPILED OUTPUT";
+            display: block;
+            margin-bottom: 0.8rem;
+            color: rgba(163, 236, 246, 0.8);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
+        }
+        .markdown-content pre code {
+            display: block;
+            background: transparent;
+            border: 0;
+            padding: 0;
+            color: #8df7ff;
+            white-space: pre;
+        }
+        .assistant-shell {
+            position: relative;
+            overflow: hidden;
+        }
+        .assistant-shell::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            background: linear-gradient(180deg, rgba(71, 245, 255, 0.03), transparent 24%);
+        }
+        .status-banner {
+            border: 1px solid rgba(71, 245, 255, 0.18);
+            border-radius: 0.8rem;
+            background: rgba(10, 17, 38, 0.72);
+        }
+        .upload-progress-shell {
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            border-radius: 0.9rem;
+            background: rgba(7, 13, 29, 0.82);
+            padding: 0.8rem 0.9rem 0.75rem;
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.03);
+        }
+        .upload-stage + .upload-stage {
+            margin-top: 0.7rem;
+        }
+        .upload-progress-track {
+            position: relative;
+            overflow: hidden;
+            height: 0.65rem;
+            border-radius: 999px;
+            background: rgba(12, 22, 47, 0.9);
+            border: 1px solid rgba(71, 245, 255, 0.12);
+        }
+        .upload-progress-bar {
+            height: 100%;
+            width: 0%;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(255, 79, 216, 0.95), rgba(71, 245, 255, 0.95));
+            box-shadow: 0 0 18px rgba(71, 245, 255, 0.2);
+            transition: width 180ms ease;
+        }
+        .upload-progress-bar.analysis-bar {
+            background: linear-gradient(90deg, rgba(71, 245, 255, 0.78), rgba(166, 255, 71, 0.92));
+        }
+        .upload-progress-track.is-active .upload-progress-bar.analysis-bar {
+            width: 42%;
+            background-size: 200% 100%;
+            animation: pulse-slide 1.6s linear infinite;
+        }
+        .upload-progress-text {
+            color: rgba(217, 247, 255, 0.82);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.75rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .upload-stage-label {
+            color: rgba(217, 247, 255, 0.9);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+        }
+        .upload-stage-status {
+            color: rgba(163, 236, 246, 0.72);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        .upload-telemetry {
+            display: grid;
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 0.55rem;
+            margin-top: 0.75rem;
+        }
+        .upload-telemetry-cell {
+            border: 1px solid rgba(71, 245, 255, 0.12);
+            border-radius: 0.8rem;
+            background: rgba(8, 14, 31, 0.72);
+            padding: 0.55rem 0.65rem;
+        }
+        .upload-telemetry-label {
+            color: rgba(163, 236, 246, 0.66);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.64rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .upload-telemetry-value {
+            color: rgba(239, 253, 255, 0.94);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.76rem;
+            letter-spacing: 0.03em;
+            margin-top: 0.25rem;
+        }
+        .eyebrow {
+            color: var(--cyan);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+        }
+        .welcome-grid {
+            position: relative;
+            overflow: hidden;
+        }
+        .welcome-grid::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                radial-gradient(circle at 20% 20%, rgba(255, 79, 216, 0.18), transparent 25%),
+                radial-gradient(circle at 82% 28%, rgba(71, 245, 255, 0.16), transparent 24%);
+            pointer-events: none;
+        }
+        .chat-status-card {
+            border: 1px solid rgba(71, 245, 255, 0.16);
+            border-radius: 0.95rem;
+            background: linear-gradient(180deg, rgba(10, 17, 38, 0.88), rgba(7, 12, 28, 0.88));
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.04);
+        }
+        .chat-log-surface {
+            border: 1px solid rgba(71, 245, 255, 0.1);
+            border-radius: 1rem;
+            background:
+                radial-gradient(circle at top right, rgba(71, 245, 255, 0.06), transparent 24%),
+                linear-gradient(180deg, rgba(4, 9, 23, 0.88), rgba(3, 7, 19, 0.96));
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.03);
+            padding: 1rem;
+        }
+        .pane-header {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 1rem;
+            border: 1px solid rgba(71, 245, 255, 0.12);
+            border-radius: 0.95rem;
+            background: rgba(7, 13, 29, 0.72);
+            padding: 0.95rem 1rem;
+            margin-bottom: 0.95rem;
+        }
+        .pane-title {
+            color: rgba(244, 253, 255, 0.96);
+            font-size: 1rem;
+            font-weight: 700;
+        }
+        .pane-copy {
+            color: rgba(217, 247, 255, 0.66);
+            font-size: 0.84rem;
+            line-height: 1.55;
+            margin-top: 0.3rem;
+            max-width: 52rem;
+        }
+        .pane-header-actions {
+            display: flex;
+            align-items: center;
+            gap: 0.7rem;
+            flex-shrink: 0;
+        }
+        .collapse-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            border: 1px solid rgba(71, 245, 255, 0.16);
+            border-radius: 999px;
+            background: rgba(7, 13, 29, 0.82);
+            color: rgba(217, 247, 255, 0.88);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            padding: 0.5rem 0.78rem;
+            transition: all 150ms ease;
+        }
+        .collapse-toggle:hover {
+            border-color: rgba(71, 245, 255, 0.34);
+            color: var(--cyan);
+        }
+        .collapse-chevron {
+            transition: transform 150ms ease;
+        }
+        .collapse-toggle.is-collapsed .collapse-chevron {
+            transform: rotate(-90deg);
+        }
+        .chat-empty-state {
+            border: 1px dashed rgba(71, 245, 255, 0.2);
+            border-radius: 1rem;
+            background: linear-gradient(180deg, rgba(9, 15, 34, 0.72), rgba(8, 13, 29, 0.55));
+        }
+        .prompt-chip {
+            border: 1px solid rgba(71, 245, 255, 0.18);
+            border-radius: 999px;
+            background: rgba(10, 18, 40, 0.82);
+            color: rgba(217, 247, 255, 0.88);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.77rem;
+            letter-spacing: 0.04em;
+            padding: 0.65rem 0.95rem;
+            transition: all 160ms ease;
+        }
+        .prompt-chip:hover {
+            border-color: rgba(71, 245, 255, 0.42);
+            box-shadow: 0 0 20px rgba(71, 245, 255, 0.1);
+            transform: translateY(-1px);
+        }
+        .section-heading {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.75rem;
+        }
+        .section-heading-main {
+            min-width: 0;
+        }
+        .jobs-header-shell {
+            padding-top: 1rem;
+        }
+        .jobs-header {
+            align-items: flex-start;
+            flex-wrap: wrap;
+            row-gap: 0.85rem;
+            border: 1px solid rgba(71, 245, 255, 0.12);
+            border-radius: 0.95rem;
+            background: rgba(7, 13, 29, 0.72);
+            padding: 0.95rem 1rem;
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.02);
+        }
+        .jobs-header .section-heading-main {
+            flex: 1 1 100%;
+        }
+        .jobs-toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.6rem;
+            width: 100%;
+            justify-content: flex-start;
+        }
+        .info-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 1.85rem;
+            height: 1.85rem;
+            border-radius: 999px;
+            border: 1px solid rgba(71, 245, 255, 0.2);
+            background: rgba(8, 16, 36, 0.9);
+            color: rgba(217, 247, 255, 0.88);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 600;
+            line-height: 1;
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.04);
+            transition: all 160ms ease;
+        }
+        .info-button:hover,
+        .info-button.is-open {
+            border-color: rgba(71, 245, 255, 0.44);
+            color: var(--cyan);
+            box-shadow: 0 0 18px rgba(71, 245, 255, 0.12);
+        }
+        .info-panel {
+            margin-top: 0.8rem;
+            padding: 0.85rem 0.95rem;
+            border-radius: 0.9rem;
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            background: linear-gradient(180deg, rgba(7, 14, 31, 0.88), rgba(9, 14, 28, 0.82));
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.03);
+        }
+        .info-panel-title {
+            color: rgba(239, 253, 255, 0.96);
+            font-size: 0.88rem;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+        }
+        .info-panel-copy {
+            color: rgba(217, 247, 255, 0.7);
+            font-size: 0.83rem;
+            line-height: 1.55;
+            margin-top: 0.35rem;
+        }
+        .help-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            border: 1px solid rgba(71, 245, 255, 0.18);
+            border-radius: 999px;
+            background: rgba(7, 13, 29, 0.86);
+            padding: 0.45rem 0.75rem;
+            color: rgba(217, 247, 255, 0.88);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            transition: all 160ms ease;
+        }
+        .help-toggle:hover {
+            border-color: rgba(71, 245, 255, 0.36);
+            color: var(--cyan);
+        }
+        .help-toggle-indicator {
+            width: 0.85rem;
+            height: 0.85rem;
+            border-radius: 999px;
+            background: rgba(127, 167, 183, 0.4);
+            box-shadow: 0 0 0 1px rgba(71, 245, 255, 0.12);
+        }
+        .help-toggle.is-on .help-toggle-indicator {
+            background: linear-gradient(135deg, rgba(71, 245, 255, 0.95), rgba(255, 79, 216, 0.9));
+            box-shadow: 0 0 16px rgba(71, 245, 255, 0.28);
+        }
+        .context-help {
+            margin-top: 0.75rem;
+            padding: 0.8rem 0.95rem;
+            border-radius: 0.9rem;
+            border: 1px dashed rgba(71, 245, 255, 0.18);
+            background: linear-gradient(180deg, rgba(7, 14, 31, 0.56), rgba(9, 14, 28, 0.42));
+        }
+        .context-help-title {
+            color: rgba(239, 253, 255, 0.94);
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            text-transform: uppercase;
+        }
+        .context-help-copy {
+            color: rgba(217, 247, 255, 0.68);
+            font-size: 0.8rem;
+            line-height: 1.55;
+            margin-top: 0.35rem;
+        }
+        body:not(.help-mode-enabled) .context-help {
+            display: none;
+        }
+        .prompt-track + .prompt-track {
+            margin-top: 1rem;
+        }
+        .prompt-track-title {
+            color: rgba(239, 253, 255, 0.92);
+            font-size: 0.86rem;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+        }
+        .prompt-track-copy {
+            color: rgba(163, 236, 246, 0.62);
+            font-size: 0.78rem;
+            margin-top: 0.2rem;
+        }
+        .send-shell {
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            border-radius: 1rem;
+            background: linear-gradient(180deg, rgba(6, 11, 26, 0.92), rgba(10, 17, 38, 0.92));
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.03);
+        }
+        .send-button {
+            min-width: 8rem;
+            box-shadow: 0 0 26px rgba(255, 79, 216, 0.16);
+        }
+        .send-button:disabled {
+            opacity: 0.55;
+            box-shadow: none;
+        }
+        .tool-log-card {
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            border-radius: 0.85rem;
+            background: rgba(8, 14, 31, 0.78);
+            padding: 0.8rem 0.9rem;
+        }
+        .tool-log-card ul {
+            margin-top: 0.45rem;
+            display: grid;
+            gap: 0.35rem;
+        }
+        .tool-log-card li {
+            color: rgba(217, 247, 255, 0.72);
+            font-size: 0.8rem;
+            line-height: 1.45;
+        }
+        .view-toggle {
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            border-radius: 999px;
+            background: rgba(7, 13, 29, 0.82);
+            padding: 0.3rem;
+            display: inline-flex;
+            gap: 0.35rem;
+        }
+        .view-toggle-button {
+            border-radius: 999px;
+            padding: 0.55rem 0.95rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.74rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgba(163, 236, 246, 0.74);
+            transition: all 150ms ease;
+        }
+        .view-toggle-button.is-active {
+            background: linear-gradient(90deg, rgba(255, 79, 216, 0.22), rgba(71, 245, 255, 0.22));
+            color: rgba(239, 253, 255, 0.96);
+            border: 1px solid rgba(71, 245, 255, 0.22);
+            box-shadow: 0 0 18px rgba(71, 245, 255, 0.08);
+        }
+        .workspace-header {
+            align-items: flex-start;
+            flex-wrap: wrap;
+            row-gap: 0.9rem;
+            border: 1px solid rgba(71, 245, 255, 0.12);
+            border-radius: 0.95rem;
+            background: rgba(7, 13, 29, 0.72);
+            padding: 0.95rem 1rem;
+            margin-bottom: 0.95rem;
+        }
+        .workspace-header-main {
+            min-width: 0;
+            flex: 1 1 18rem;
+        }
+        .workspace-header-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.65rem;
+            align-items: center;
+            justify-content: flex-end;
+            width: 100%;
+        }
+        .workspace-header-meta {
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 0.55rem;
+        }
+        .workspace-header-meta .mono {
+            border: 1px solid rgba(71, 245, 255, 0.12);
+            border-radius: 999px;
+            background: rgba(7, 13, 29, 0.82);
+            padding: 0.42rem 0.72rem;
+        }
+        .operator-header {
+            align-items: flex-start;
+            flex-wrap: wrap;
+            border: 1px solid rgba(71, 245, 255, 0.12);
+            border-radius: 0.95rem;
+            background: rgba(7, 13, 29, 0.72);
+            padding: 0.95rem 1rem;
+            margin-bottom: 0.95rem;
+        }
+        .operator-header-main {
+            min-width: 0;
+            flex: 1 1 16rem;
+        }
+        .operator-status-strip {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 0.65rem;
+            width: 100%;
+        }
+        .triage-shell {
+            border: 1px solid rgba(71, 245, 255, 0.12);
+            border-radius: 1rem;
+            background:
+                radial-gradient(circle at top right, rgba(255, 79, 216, 0.05), transparent 26%),
+                linear-gradient(180deg, rgba(6, 11, 26, 0.9), rgba(3, 7, 19, 0.95));
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.03);
+        }
+        .triage-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(0, 1fr));
+            gap: 0.75rem;
+        }
+        .triage-summary-card {
+            border: 1px solid rgba(71, 245, 255, 0.12);
+            border-radius: 0.9rem;
+            background: rgba(8, 14, 31, 0.76);
+            padding: 0.8rem 0.9rem;
+        }
+        .triage-summary-label {
+            color: rgba(163, 236, 246, 0.66);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.64rem;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+        }
+        .triage-summary-value {
+            color: rgba(239, 253, 255, 0.96);
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin-top: 0.3rem;
+        }
+        .triage-status-card {
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            border-radius: 0.95rem;
+            background: rgba(10, 17, 38, 0.82);
+            padding: 1rem;
+        }
+        .triage-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            border-radius: 999px;
+            padding: 0.45rem 0.8rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border: 1px solid rgba(71, 245, 255, 0.16);
+            background: rgba(71, 245, 255, 0.08);
+            color: rgba(217, 247, 255, 0.88);
+        }
+        .triage-pill.processing {
+            border-color: rgba(255, 207, 90, 0.24);
+            background: rgba(255, 207, 90, 0.08);
+            color: rgba(255, 233, 177, 0.94);
+        }
+        .triage-pill.ready {
+            border-color: rgba(166, 255, 71, 0.22);
+            background: rgba(166, 255, 71, 0.08);
+            color: rgba(224, 255, 196, 0.94);
+        }
+        .triage-meta-list {
+            display: grid;
+            gap: 0.35rem;
+            color: rgba(217, 247, 255, 0.76);
+            font-size: 0.82rem;
+        }
+        .debug-log-list {
+            display: grid;
+            gap: 0.8rem;
+        }
+        .debug-log-card {
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            border-radius: 0.95rem;
+            background: linear-gradient(180deg, rgba(8, 14, 31, 0.84), rgba(7, 11, 25, 0.86));
+            padding: 1rem 1rem 0.95rem;
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.03);
+        }
+        .debug-log-title {
+            color: rgba(244, 253, 255, 0.94);
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+        .debug-log-copy {
+            color: rgba(163, 236, 246, 0.7);
+            font-size: 0.8rem;
+            margin-top: 0.35rem;
+            line-height: 1.55;
+        }
+        .debug-empty-note {
+            border: 1px dashed rgba(71, 245, 255, 0.16);
+            border-radius: 0.9rem;
+            background: rgba(7, 12, 28, 0.62);
+            padding: 0.95rem 1rem;
+            color: rgba(163, 236, 246, 0.66);
+            font-size: 0.84rem;
+        }
+        .debug-request-grid {
+            display: grid;
+            gap: 0.75rem;
+        }
+        .debug-command-shell {
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            border-radius: 0.95rem;
+            background: rgba(7, 12, 28, 0.74);
+            padding: 0.95rem 1rem;
+        }
+        .operator-shell {
+            border: 1px solid rgba(71, 245, 255, 0.16);
+            border-radius: 1rem;
+            background: linear-gradient(135deg, rgba(9, 16, 37, 0.9), rgba(19, 11, 36, 0.84));
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.04);
+            flex: 0 0 auto;
+            min-height: 0;
+            max-height: min(30rem, 42vh);
+            overflow-y: auto;
+        }
+        .operator-grid {
+            display: grid;
+            gap: 0.8rem;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+        }
+        .operator-card {
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            border-radius: 0.9rem;
+            background: rgba(7, 12, 28, 0.72);
+            padding: 0.95rem 1rem;
+        }
+        .operator-action {
+            width: 100%;
+            text-align: left;
+            border: 1px solid rgba(71, 245, 255, 0.18);
+            border-radius: 0.9rem;
+            background: rgba(7, 13, 29, 0.82);
+            padding: 0.9rem 1rem;
+            transition: all 160ms ease;
+        }
+        .operator-action:hover {
+            border-color: rgba(71, 245, 255, 0.38);
+            box-shadow: 0 0 18px rgba(71, 245, 255, 0.08);
+            transform: translateY(-1px);
+        }
+        .operator-stage-copy {
+            color: rgba(217, 247, 255, 0.74);
+            font-size: 0.88rem;
+            line-height: 1.55;
+            margin-top: 0.55rem;
+            max-width: 58rem;
+        }
+        .operator-status-strip {
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+            gap: 0.7rem;
+        }
+        .operator-toggle {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.55rem;
+            border: 1px solid rgba(71, 245, 255, 0.16);
+            border-radius: 999px;
+            background: rgba(7, 13, 29, 0.86);
+            padding: 0.45rem 0.7rem;
+            color: rgba(217, 247, 255, 0.88);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.72rem;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+        }
+        .operator-toggle-indicator {
+            width: 0.85rem;
+            height: 0.85rem;
+            border-radius: 999px;
+            background: rgba(163, 236, 246, 0.42);
+            box-shadow: 0 0 0 1px rgba(163, 236, 246, 0.18);
+            transition: all 160ms ease;
+        }
+        .operator-toggle.is-active .operator-toggle-indicator {
+            background: rgba(166, 255, 71, 0.9);
+            box-shadow: 0 0 14px rgba(166, 255, 71, 0.28);
+        }
+        .operator-alerts {
+            display: grid;
+            gap: 0.7rem;
+        }
+        .operator-alert {
+            border-radius: 0.9rem;
+            padding: 0.9rem 1rem;
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            background: rgba(7, 12, 28, 0.74);
+        }
+        .operator-alert.warning {
+            border-color: rgba(255, 207, 90, 0.24);
+            background: rgba(54, 38, 9, 0.34);
+        }
+        .operator-alert.success {
+            border-color: rgba(166, 255, 71, 0.22);
+            background: rgba(17, 38, 11, 0.34);
+        }
+        .operator-alert.info {
+            border-color: rgba(71, 245, 255, 0.18);
+        }
+        .operator-alert-title {
+            color: rgba(244, 253, 255, 0.94);
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+        .operator-alert-copy {
+            color: rgba(217, 247, 255, 0.72);
+            font-size: 0.82rem;
+            line-height: 1.55;
+            margin-top: 0.28rem;
+        }
+        .operator-checklist {
+            display: grid;
+            gap: 0.7rem;
+        }
+        .operator-checklist-item {
+            display: flex;
+            gap: 0.75rem;
+            align-items: flex-start;
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            border-radius: 0.9rem;
+            background: rgba(7, 12, 28, 0.72);
+            padding: 0.9rem 1rem;
+        }
+        .operator-checklist-item.is-completed {
+            border-color: rgba(166, 255, 71, 0.2);
+        }
+        .operator-checklist-item.is-active {
+            border-color: rgba(71, 245, 255, 0.3);
+            box-shadow: 0 0 18px rgba(71, 245, 255, 0.08);
+        }
+        .operator-checkpoint-dot {
+            width: 0.85rem;
+            height: 0.85rem;
+            border-radius: 999px;
+            margin-top: 0.22rem;
+            background: rgba(127, 167, 183, 0.42);
+            box-shadow: 0 0 0 1px rgba(127, 167, 183, 0.16);
+        }
+        .operator-checklist-item.is-active .operator-checkpoint-dot {
+            background: rgba(71, 245, 255, 0.9);
+            box-shadow: 0 0 12px rgba(71, 245, 255, 0.22);
+        }
+        .operator-checklist-item.is-completed .operator-checkpoint-dot {
+            background: rgba(166, 255, 71, 0.9);
+            box-shadow: 0 0 12px rgba(166, 255, 71, 0.24);
+        }
+        .operator-checkpoint-title {
+            color: rgba(244, 253, 255, 0.94);
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+        .operator-checkpoint-copy {
+            color: rgba(217, 247, 255, 0.68);
+            font-size: 0.81rem;
+            line-height: 1.5;
+            margin-top: 0.26rem;
+        }
+        .operator-primary {
+            border: 1px solid rgba(255, 79, 216, 0.18);
+            border-radius: 1rem;
+            background: linear-gradient(135deg, rgba(23, 11, 33, 0.88), rgba(10, 20, 42, 0.86));
+            padding: 1rem;
+        }
+        .operator-primary-copy {
+            color: rgba(217, 247, 255, 0.72);
+            font-size: 0.84rem;
+            line-height: 1.55;
+            margin-top: 0.35rem;
+        }
+        .operator-primary-button {
+            margin-top: 0.9rem;
+        }
+        .operator-toast-stack {
+            position: fixed;
+            top: 1.15rem;
+            right: 1.15rem;
+            display: grid;
+            gap: 0.7rem;
+            width: min(24rem, calc(100vw - 2rem));
+            z-index: 50;
+            pointer-events: none;
+        }
+        .operator-toast {
+            pointer-events: auto;
+            border: 1px solid rgba(71, 245, 255, 0.16);
+            border-radius: 1rem;
+            background: rgba(8, 13, 32, 0.94);
+            box-shadow: var(--shadow);
+            padding: 0.95rem 1rem;
+        }
+        .operator-toast.warning {
+            border-color: rgba(255, 207, 90, 0.28);
+        }
+        .operator-toast.success {
+            border-color: rgba(166, 255, 71, 0.24);
+        }
+        .operator-toast-title {
+            color: rgba(244, 253, 255, 0.96);
+            font-size: 0.88rem;
+            font-weight: 700;
+        }
+        .operator-toast-copy {
+            color: rgba(217, 247, 255, 0.74);
+            font-size: 0.82rem;
+            line-height: 1.5;
+            margin-top: 0.28rem;
+        }
+        @media (max-width: 1024px) {
+            body {
+                overflow: auto;
+            }
+            .chrome-frame {
+                height: auto;
+                min-height: calc(100vh - 1.5rem);
+                flex-direction: column;
+                overflow: visible;
+            }
+            .chrome-frame::before {
+                inset: 8px;
+            }
+            .app-sidebar {
+                width: 100%;
+                max-width: none;
+                min-width: 0;
+                border-bottom: 1px solid rgba(71, 245, 255, 0.12);
+                box-shadow: inset 0 -1px 0 rgba(71, 245, 255, 0.12);
+            }
+            .app-main {
+                min-height: 48rem;
+            }
+            #jobs-list {
+                max-height: 16rem;
+            }
+            .upload-telemetry {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+            .view-toggle {
+                flex-wrap: wrap;
+            }
+            .prompt-chip {
+                padding: 0.62rem 0.88rem;
+            }
+            .pane-header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .pane-header-actions {
+                justify-content: flex-end;
+            }
+            .workspace-header-actions,
+            .operator-status-strip {
+                justify-content: flex-start;
+            }
+            .triage-summary-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (max-width: 640px) {
+            body {
+                padding: 0.5rem;
+            }
+            .chrome-frame {
+                min-height: calc(100vh - 1rem);
+                border-radius: 1.05rem;
+            }
+            .app-sidebar,
+            .app-main {
+                padding: 0.9rem;
+            }
+            .upload-telemetry {
+                grid-template-columns: 1fr;
+            }
+            .section-heading,
+            .flex.items-center.justify-between.border-t.border-cyan-400\/10.pt-4 {
+                gap: 0.6rem;
+            }
+            .jobs-toolbar {
+                justify-content: stretch;
+            }
+            .jobs-toolbar > * {
+                flex: 1 1 calc(50% - 0.35rem);
+            }
+            .view-toggle {
+                width: 100%;
+                justify-content: space-between;
+            }
+            .view-toggle-button {
+                flex: 1 1 0;
+                text-align: center;
+                padding: 0.65rem 0.7rem;
+            }
+            .workspace-header-actions > * {
+                flex: 1 1 auto;
+            }
+            .workspace-header-meta {
+                width: 100%;
+                justify-content: flex-start;
+            }
+            .workspace-header-meta .mono {
+                width: 100%;
+            }
+            .operator-status-strip > * {
+                flex: 1 1 auto;
+            }
+            .operator-status-strip,
+            .flex.items-center.gap-3 {
+                flex-wrap: wrap;
+            }
+            .send-shell {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .send-button {
+                width: 100%;
+                min-width: 0;
+            }
+            #chat-input {
+                min-height: 6rem;
+            }
+            .operator-grid {
+                grid-template-columns: 1fr;
+            }
+            .triage-summary-grid {
+                grid-template-columns: 1fr;
+            }
+            .grid.gap-5.xl\:grid-cols-2 {
+                grid-template-columns: 1fr;
+            }
+        }
+        .processing-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.6rem;
+            border: 1px solid rgba(71, 245, 255, 0.18);
+            border-radius: 999px;
+            background: rgba(9, 17, 37, 0.9);
+            color: rgba(223, 247, 255, 0.9);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.74rem;
+            letter-spacing: 0.06em;
+            padding: 0.55rem 0.85rem;
+            margin-bottom: 0.85rem;
+        }
+        .processing-dot {
+            width: 0.55rem;
+            height: 0.55rem;
+            border-radius: 999px;
+            background: var(--lime);
+            box-shadow: 0 0 12px rgba(166, 255, 71, 0.35);
+            animation: status-pulse 1.2s ease-in-out infinite;
+        }
+        .tool-state-rail {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 0.9rem;
+            border: 1px solid rgba(71, 245, 255, 0.14);
+            border-radius: 0.9rem;
+            background: rgba(7, 13, 29, 0.82);
+            padding: 0.7rem 0.85rem;
+            margin-bottom: 0.85rem;
+        }
+        .tool-state-copy {
+            min-width: 0;
+        }
+        .tool-state-label {
+            color: rgba(163, 236, 246, 0.66);
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.64rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+        .tool-state-message {
+            color: rgba(239, 253, 255, 0.94);
+            font-size: 0.85rem;
+            margin-top: 0.18rem;
+        }
+        .tool-state-pill {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.45rem;
+            white-space: nowrap;
+            border-radius: 999px;
+            padding: 0.42rem 0.68rem;
+            font-family: 'IBM Plex Mono', monospace;
+            font-size: 0.68rem;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            border: 1px solid rgba(71, 245, 255, 0.16);
+            color: rgba(223, 247, 255, 0.85);
+            background: rgba(10, 18, 40, 0.92);
+        }
+        .tool-state-pill::before {
+            content: "";
+            width: 0.5rem;
+            height: 0.5rem;
+            border-radius: 999px;
+            background: rgba(163, 236, 246, 0.65);
+        }
+        .tool-state-pill.state-active::before,
+        .tool-state-pill.state-processing::before {
+            background: var(--amber);
+            box-shadow: 0 0 12px rgba(255, 207, 90, 0.42);
+            animation: status-pulse 1.1s ease-in-out infinite;
+        }
+        .tool-state-pill.state-ready::before {
+            background: var(--lime);
+            box-shadow: 0 0 12px rgba(166, 255, 71, 0.42);
+        }
+        .tool-state-pill.state-idle::before {
+            background: rgba(163, 236, 246, 0.65);
+        }
+        @keyframes status-pulse {
+            0%, 100% { opacity: 0.45; transform: scale(0.9); }
+            50% { opacity: 1; transform: scale(1); }
+        }
+        .thinking-card {
+            border: 1px solid rgba(71, 245, 255, 0.18);
+            border-radius: 0.95rem;
+            background: linear-gradient(180deg, rgba(10, 24, 44, 0.72), rgba(6, 16, 31, 0.74));
+            box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.03);
+        }
+        .thinking-line {
+            height: 0.55rem;
+            border-radius: 999px;
+            background: linear-gradient(90deg, rgba(71, 245, 255, 0.14), rgba(255, 79, 216, 0.2), rgba(71, 245, 255, 0.14));
+            background-size: 200% 100%;
+            animation: pulse-slide 1.6s linear infinite;
+        }
+        @keyframes pulse-slide {
+            from { background-position: 200% 0; }
+            to { background-position: -200% 0; }
         }
     </style>
 </head>
-<body class="flex h-screen">
+<body class="h-screen p-3 md:p-4">
+    <div id="operator-toast-stack" class="operator-toast-stack"></div>
 
-    <div class="w-1/4 sidebar flex flex-col p-5 border-r border-gray-700">
-        <h1 class="text-xl font-semibold mb-6 text-white">Reverse Engineering AI Assistant</h1>
-        <form id="upload-form" class="mb-6">
-            <label for="file-input" class="block mb-2 text-sm font-medium text-gray-300">Upload Binary for Analysis</label>
-            <input type="file" id="file-input" class="block w-full text-sm text-gray-200 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-medium file:bg-indigo-600 file:text-white hover:file:bg-indigo-700 cursor-pointer"/>
-            <button type="submit" class="w-full mt-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-4 rounded-md transition">Analyze</button>
-        </form>
-        <div id="upload-status" class="text-sm text-center mb-4 h-5"></div>
-        <h2 class="text-md font-semibold border-t border-gray-700 pt-4 text-gray-300">Analysis Jobs</h2>
-        <div id="jobs-list" class="flex-grow overflow-y-auto mt-3 space-y-3"></div>
-    </div>
+    <div class="chrome-frame app-shell flex h-full overflow-hidden rounded-[1.6rem] border border-cyan-400/15">
+        <div class="app-sidebar w-[31rem] max-w-[34%] min-w-[20rem] sidebar flex flex-col p-5 md:p-6">
+            <div class="mb-6">
+                <div class="eyebrow mb-2">Neural Reverse Console</div>
+                <h1 class="text-2xl font-bold text-white">Reverse Engineering AI Assistant</h1>
+                <p class="mt-2 text-sm text-cyan-100/55">Binary triage, decompilation and agent-guided analysis through a neon-drenched command deck.</p>
+            </div>
 
-    <div class="w-3/4 flex flex-col h-screen">
-        <div id="welcome-message" class="flex-grow flex items-center justify-center">
-            <div class="text-center text-gray-500">
-                <h2 class="text-2xl font-semibold text-gray-300">Welcome</h2>
-                <p class="mt-2 text-sm">Upload a file and select a job to begin your analysis.</p>
+            <div class="panel p-4 mb-5">
+                <div class="section-heading mb-3">
+                    <div class="section-heading-main">
+                        <div class="eyebrow">Upload Vector</div>
+                    </div>
+                </div>
+                <div class="context-help mb-4">
+                    <div class="context-help-title">Upload guide</div>
+                    <div class="context-help-copy">Upload a binary to create or refresh an analysis job. The first progress bar tracks transfer to the backend. The second bar tracks Ghidra analysis after the file is fully uploaded.</div>
+                </div>
+                <form id="upload-form" class="mb-2">
+                    <label for="file-input" class="block mb-2 text-sm font-medium text-cyan-50/80">Upload Binary for Analysis</label>
+                    <input type="file" id="file-input" class="file-input"/>
+                    <label for="file-input" class="file-picker cursor-pointer">
+                        <span class="file-picker-button">Select File</span>
+                        <span id="file-name-display" class="file-picker-name">No file selected</span>
+                    </label>
+                    <button type="submit" class="neon-button w-full mt-4 rounded-xl py-3 px-4 transition">Analyze</button>
+                </form>
+                <div id="upload-progress" class="upload-progress-shell mt-3 hidden">
+                    <div class="flex items-center justify-between mb-3">
+                        <span class="upload-progress-text">Transfer Pipeline</span>
+                        <span id="upload-progress-label" class="upload-progress-text">Idle</span>
+                    </div>
+                    <div class="upload-stage">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="upload-stage-label">Upload</span>
+                            <span id="upload-stage-upload-status" class="upload-stage-status">Pending</span>
+                        </div>
+                        <div class="upload-progress-track">
+                            <div id="upload-progress-bar" class="upload-progress-bar"></div>
+                        </div>
+                    </div>
+                    <div class="upload-stage">
+                        <div class="flex items-center justify-between mb-2">
+                            <span class="upload-stage-label">Analysis</span>
+                            <span id="upload-stage-analysis-status" class="upload-stage-status">Pending</span>
+                        </div>
+                        <div id="analysis-progress-track" class="upload-progress-track">
+                            <div id="analysis-progress-bar" class="upload-progress-bar analysis-bar"></div>
+                        </div>
+                    </div>
+                    <div class="upload-telemetry">
+                        <div class="upload-telemetry-cell">
+                            <div class="upload-telemetry-label">Transferred</div>
+                            <div id="upload-telemetry-bytes" class="upload-telemetry-value">0 MB / 0 MB</div>
+                        </div>
+                        <div class="upload-telemetry-cell">
+                            <div class="upload-telemetry-label">Speed</div>
+                            <div id="upload-telemetry-speed" class="upload-telemetry-value">0 MB/s</div>
+                        </div>
+                        <div class="upload-telemetry-cell">
+                            <div class="upload-telemetry-label">ETA</div>
+                            <div id="upload-telemetry-eta" class="upload-telemetry-value">--</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="upload-status" class="status-banner mono text-sm text-center mt-3 px-3 py-2 min-h-[2.75rem] hidden items-center justify-center"></div>
+            </div>
+
+            <div class="jobs-header-shell">
+                <div class="section-heading jobs-header w-full">
+                    <div class="section-heading-main">
+                        <h2 class="text-sm font-semibold text-cyan-50/85">Analysis Jobs</h2>
+                    </div>
+                    <div class="jobs-toolbar">
+                        <button type="button" id="toggle-archived-jobs" class="jobs-toolbar-button">Show Archived</button>
+                        <button type="button" id="archive-completed-jobs" class="jobs-toolbar-button">Archive Completed</button>
+                        <button type="button" id="restore-archived-jobs" class="jobs-toolbar-button">Restore Archived</button>
+                        <button type="button" id="delete-completed-jobs" class="jobs-toolbar-button">Delete Completed</button>
+                        <button type="button" class="collapse-toggle" data-collapse-target="jobs-list-shell" aria-expanded="true" aria-controls="jobs-list-shell">
+                            <span class="collapse-chevron">▾</span>
+                            <span>Jobs</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+            <div id="jobs-list-shell">
+                <div class="context-help mb-4">
+                    <div class="context-help-title">Job list guide</div>
+                    <div class="context-help-copy">Each job is one uploaded binary. Reopen a job to continue the chat, review its triage report, inspect debugger findings, or resume work after a refresh.</div>
+                </div>
+                <div id="jobs-list" class="flex-grow overflow-y-auto mt-3 space-y-3 pr-1"></div>
             </div>
         </div>
-        <div id="chat-container" class="hidden flex-grow flex flex-col p-6 overflow-hidden">
-            <div id="chat-log" class="flex-grow overflow-y-auto mb-4 p-4 panel"></div>
-            <form id="chat-form" class="flex items-end">
-                <textarea id="chat-input" class="flex-grow bg-gray-800 rounded-l-md p-3 focus:outline-none resize-none text-gray-200" placeholder="Enter command..." rows="1" disabled></textarea>
-                <button type="submit" class="bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-3 px-5 rounded-r-md transition self-stretch">Send</button>
-            </form>
+
+        <div class="app-main flex-1 flex flex-col h-full overflow-hidden p-4 md:p-6">
+            <div id="welcome-message" class="welcome-grid flex-grow flex items-center justify-center panel">
+                <div class="relative z-10 max-w-2xl text-center px-8">
+                    <div class="eyebrow mb-4">System Awaiting Target</div>
+                    <h2 class="text-4xl font-bold text-white">Open An Analysis</h2>
+                    <p class="mt-4 text-base text-cyan-100/60">Upload a sample or reopen an existing job to start static analysis, triage review, and debugger-guided validation.</p>
+                </div>
+            </div>
+            <div id="chat-container" class="hidden flex-grow flex-col overflow-hidden min-h-0">
+                <div class="panel flex flex-col flex-grow overflow-hidden min-h-0 p-4 md:p-5">
+                    <div class="section-heading workspace-header">
+                        <div class="section-heading-main workspace-header-main">
+                            <div class="eyebrow mb-1">Live Session</div>
+                            <div class="text-lg font-semibold text-white">Analysis Workspace</div>
+                        </div>
+                        <div class="workspace-header-actions">
+                            <button type="button" id="help-mode-toggle" class="help-toggle">
+                                <span class="help-toggle-indicator"></span>
+                                <span id="help-mode-label">Help Mode Off</span>
+                            </button>
+                            <a href="http://127.0.0.1:8006" target="_blank" rel="noopener noreferrer" class="prompt-chip">Open Windows VNC</a>
+                            <div class="view-toggle">
+                                <button type="button" id="view-chat" class="view-toggle-button is-active">Chat</button>
+                                <button type="button" id="view-triage" class="view-toggle-button">Triage</button>
+                                <button type="button" id="view-x64dbg" class="view-toggle-button">x64dbg</button>
+                            </div>
+                            <div class="workspace-header-meta">
+                                <div class="mono text-xs text-cyan-200/60">SSE / TOOL-AUGMENTED / OLLAMA</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="context-help mb-4">
+                        <div class="context-help-title">Workspace guide</div>
+                        <div class="context-help-copy">Use Chat for questions and guided analysis, Triage for the first structured pass, and x64dbg for runtime confirmation and debugger-driven follow-up.</div>
+                    </div>
+                    <div id="operator-shell" class="operator-shell mb-4 p-4 hidden">
+                        <div class="flex flex-wrap items-center justify-between gap-3 operator-header">
+                            <div class="operator-header-main">
+                                <div class="eyebrow mb-1">AI Operator</div>
+                                <div id="operator-title" class="text-white text-lg font-semibold">Stage-aware recommendations</div>
+                                <div id="operator-copy" class="operator-stage-copy">The assistant watches the current job and suggests the next useful step.</div>
+                            </div>
+                            <div class="operator-status-strip">
+                                <button type="button" id="autopilot-toggle" class="operator-toggle">
+                                    <span class="operator-toggle-indicator"></span>
+                                    <span id="autopilot-toggle-label">Autopilot Off</span>
+                                </button>
+                                <button type="button" class="collapse-toggle" data-collapse-target="operator-body" aria-expanded="true" aria-controls="operator-body">
+                                    <span class="collapse-chevron">▾</span>
+                                    <span>Operator</span>
+                                </button>
+                                <div id="operator-stage" class="triage-pill processing">Idle</div>
+                            </div>
+                        </div>
+                        <div id="operator-body">
+                            <div class="context-help">
+                                <div class="context-help-title">Operator guide</div>
+                                <div class="context-help-copy">The AI Operator tracks the active job and suggests what to do next. It can recommend prompts, move you to the right view, or prepare debugger work. Autopilot follows the same logic but leaves risky steps manual.</div>
+                            </div>
+                            <div id="operator-alerts" class="operator-alerts mt-4"></div>
+                            <div id="operator-summary" class="operator-grid mt-4"></div>
+                            <div id="operator-primary" class="operator-primary mt-4 hidden"></div>
+                            <div id="operator-checklist" class="operator-checklist mt-4"></div>
+                            <div id="operator-actions" class="grid gap-3 mt-4"></div>
+                        </div>
+                    </div>
+                    <div id="chat-view" class="flex flex-col flex-grow min-h-0">
+                        <div class="pane-header">
+                            <div>
+                                <div class="eyebrow mb-2">Chat Workspace</div>
+                                <div class="pane-title">Assistant Conversation</div>
+                                <div class="pane-copy">Use this view to ask questions, request summaries, correlate findings, and drive the next investigation step with the assistant.</div>
+                            </div>
+                        </div>
+                        <div class="context-help mb-4">
+                            <div class="context-help-title">How to use the chat well</div>
+                            <div class="context-help-copy">Ask for capability summaries, imported APIs, interesting strings, priority functions, decompilation guidance, or correlations between static and dynamic evidence. A good novice workflow is: summarize first, identify suspicious areas second, then drill into one function or behavior at a time.</div>
+                        </div>
+                        <div id="chat-log" class="chat-log-surface flex-grow overflow-y-auto mb-4 pr-1"></div>
+                    </div>
+                    <div id="triage-view" class="hidden flex-grow min-h-0 mb-4">
+                        <div class="triage-shell w-full h-full overflow-y-auto p-5">
+                            <div class="pane-header">
+                                <div>
+                                    <div class="eyebrow mb-2">Triage Workspace</div>
+                                    <div class="pane-title">Structured First Pass</div>
+                                    <div class="pane-copy">Start here to understand what the sample likely does before drilling into specific functions or runtime evidence.</div>
+                                </div>
+                            </div>
+                            <div class="context-help mb-4">
+                                <div class="context-help-title">Triage guide</div>
+                                <div class="context-help-copy">Start here if you are new. The counters show scope, the status card shows report readiness, and the markdown report explains likely capabilities and next steps in plain language.</div>
+                            </div>
+                            <div id="triage-status" class="triage-status-card">
+                                <div class="section-heading">
+                                    <div class="section-heading-main">
+                                        <div class="eyebrow mb-2">Auto Triage</div>
+                                    </div>
+                                </div>
+                                <div class="text-white text-lg font-semibold">No job selected</div>
+                                <p class="mt-2 text-sm text-cyan-100/60">Choose an analysis job to load its cached triage report.</p>
+                            </div>
+                            <div id="triage-content" class="hidden mt-5 space-y-5">
+                                <div class="triage-summary-grid">
+                                    <div class="triage-summary-card">
+                                        <div class="triage-summary-label">Capabilities</div>
+                                        <div id="triage-capabilities" class="triage-summary-value">0</div>
+                                    </div>
+                                    <div class="triage-summary-card">
+                                        <div class="triage-summary-label">Interesting Imports</div>
+                                        <div id="triage-import-count" class="triage-summary-value">0</div>
+                                    </div>
+                                    <div class="triage-summary-card">
+                                        <div class="triage-summary-label">Strings</div>
+                                        <div id="triage-string-count" class="triage-summary-value">0</div>
+                                    </div>
+                                    <div class="triage-summary-card">
+                                        <div class="triage-summary-label">Dynamic Artifacts</div>
+                                        <div id="triage-dynamic-count" class="triage-summary-value">0</div>
+                                    </div>
+                                </div>
+                                <div class="triage-status-card">
+                                    <div class="flex flex-wrap items-center justify-between gap-3">
+                                        <div>
+                                            <div class="eyebrow">Report State</div>
+                                            <div id="triage-report-title" class="text-white text-lg font-semibold mt-2">Cached report</div>
+                                        </div>
+                                        <div id="triage-pill" class="triage-pill ready">Ready</div>
+                                    </div>
+                                    <div id="triage-meta" class="triage-meta-list mt-4"></div>
+                                </div>
+                                <div id="triage-markdown" class="markdown-content panel p-5"></div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="x64dbg-view" class="hidden flex-grow min-h-0 mb-4">
+                        <div class="triage-shell w-full h-full overflow-y-auto p-5">
+                            <div class="pane-header">
+                                <div>
+                                    <div class="eyebrow mb-2">Debugger Workspace</div>
+                                    <div class="pane-title">Live x64dbg Bridge</div>
+                                    <div class="pane-copy">Use this view to confirm runtime behavior, review debugger findings, and queue the next action for the sandbox bridge.</div>
+                                </div>
+                                <div class="pane-header-actions">
+                                    <button type="button" class="info-button" data-info-target="info-x64dbg-pane" aria-expanded="false" aria-controls="info-x64dbg-pane" title="What does this section do?">i</button>
+                                </div>
+                            </div>
+                            <div id="info-x64dbg-pane" class="info-panel hidden mb-4">
+                                <div class="info-panel-title">When to use x64dbg here</div>
+                                <div class="info-panel-copy">Switch here after triage when you need runtime confirmation. You can inspect findings, check bridge status, use the recovery command if needed, and queue guided debugger tasks for the sandbox.</div>
+                            </div>
+                            <div class="context-help mb-4">
+                                <div class="context-help-title">Debugger guide</div>
+                                <div class="context-help-copy">Use x64dbg after triage when you want runtime confirmation. Read the snapshot first, check bridge health second, then inspect findings and queue the next debugger request.</div>
+                            </div>
+                            <div id="x64dbg-status" class="triage-status-card">
+                                <div class="section-heading">
+                                    <div class="section-heading-main">
+                                        <div class="eyebrow mb-2">x64dbg MCP</div>
+                                    </div>
+                                </div>
+                                <div class="text-white text-lg font-semibold">No debugger session loaded</div>
+                                <p class="mt-2 text-sm text-cyan-100/60">Choose an analysis job to load debugger state, findings, and queued requests.</p>
+                            </div>
+                            <div id="x64dbg-content" class="hidden mt-5 space-y-5">
+                                <div>
+                                    <div class="flex items-center justify-between gap-3 mb-3">
+                                        <div class="eyebrow">Debugger Snapshot</div>
+                                    </div>
+                                    <div class="context-help mb-4">
+                                        <div class="context-help-title">How to read the snapshot</div>
+                                        <div class="context-help-copy">Session tells you whether the bridge is live. PID is the attached process. Findings counts runtime observations already captured. Requests counts tasks waiting for or recently sent to the debugger side.</div>
+                                    </div>
+                                <div class="triage-summary-grid">
+                                    <div class="triage-summary-card">
+                                        <div class="triage-summary-label">Session</div>
+                                        <div id="x64dbg-session-status" class="triage-summary-value">idle</div>
+                                    </div>
+                                    <div class="triage-summary-card">
+                                        <div class="triage-summary-label">PID</div>
+                                        <div id="x64dbg-pid" class="triage-summary-value">-</div>
+                                    </div>
+                                    <div class="triage-summary-card">
+                                        <div class="triage-summary-label">Findings</div>
+                                        <div id="x64dbg-findings-count" class="triage-summary-value">0</div>
+                                    </div>
+                                    <div class="triage-summary-card">
+                                        <div class="triage-summary-label">Requests</div>
+                                        <div id="x64dbg-requests-count" class="triage-summary-value">0</div>
+                                    </div>
+                                </div>
+                                </div>
+                                <div class="triage-status-card">
+                                    <div class="flex flex-wrap items-center justify-between gap-3">
+                                        <div>
+                                            <div class="eyebrow">Bridge State</div>
+                                            <div id="x64dbg-title" class="text-white text-lg font-semibold mt-2">x64dbg MCP bridge</div>
+                                        </div>
+                                        <div class="flex items-center gap-3">
+                                            <div id="x64dbg-pill" class="triage-pill processing">Idle</div>
+                                        </div>
+                                    </div>
+                                    <div class="context-help">
+                                        <div class="context-help-title">What bridge state means</div>
+                                        <div class="context-help-copy">This card shows whether the platform and sandbox are still talking. If the sample is present and the last update is fresh, your debugger workflow is synchronized correctly.</div>
+                                    </div>
+                                    <div id="x64dbg-meta" class="triage-meta-list mt-4"></div>
+                                </div>
+                                <div class="debug-command-shell">
+                                    <div class="flex flex-wrap items-center justify-between gap-3">
+                                        <div>
+                                            <div class="eyebrow">Sandbox Bridge Recovery</div>
+                                            <div class="text-white text-sm font-semibold mt-2">The bridge should auto-start after Windows sign-in on newly provisioned VMs</div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" class="collapse-toggle" data-collapse-target="x64dbg-bridge-shell" aria-expanded="true" aria-controls="x64dbg-bridge-shell">
+                                                <span class="collapse-chevron">▾</span>
+                                                <span>Recovery</span>
+                                            </button>
+                                            <button type="button" id="copy-x64dbg-bridge-command" class="prompt-chip">Copy Recovery Command</button>
+                                        </div>
+                                    </div>
+                                    <div class="context-help">
+                                                <div class="context-help-title">When to use this</div>
+                                                <div class="context-help-copy">You should not need this during normal use. `Bridge State` above is the main health check. Use this only if the VM was installed before autostart was configured, or if the watcher failed to launch after sign-in.</div>
+                                    </div>
+                                    <div id="x64dbg-bridge-shell">
+                                        <div id="x64dbg-bridge-command" class="mono text-sm text-cyan-100/80 mt-4 break-all">powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\shared\bridge-tools\Start-X64dbgBridge.ps1"</div>
+                                        <div id="x64dbg-bridge-copy-status" class="mono text-xs text-cyan-200/60 mt-3">Manual recovery command for the guest-side watcher that syncs x64dbg state, findings, and pending requests.</div>
+                                    </div>
+                                </div>
+                                <div class="grid gap-5 xl:grid-cols-2">
+                                    <div>
+                                        <div class="flex items-center justify-between gap-3 mb-3">
+                                            <div class="eyebrow">Captured Findings</div>
+                                            <div class="flex items-center gap-2">
+                                                <button type="button" class="collapse-toggle" data-collapse-target="x64dbg-findings-shell" aria-expanded="true" aria-controls="x64dbg-findings-shell">
+                                                    <span class="collapse-chevron">▾</span>
+                                                    <span>Findings</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="context-help mb-4">
+                                            <div class="context-help-title">How to read findings</div>
+                                            <div class="context-help-copy">Each finding is runtime evidence from the debugger flow. Summary tells you what happened, type tells you what category of event it was, and address tells you where to pivot next in decompilation or tracing.</div>
+                                        </div>
+                                        <div id="x64dbg-findings-shell">
+                                            <div id="x64dbg-findings-list" class="debug-log-list"></div>
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <div class="flex items-center justify-between gap-3 mb-3">
+                                            <div class="eyebrow">Queued Requests</div>
+                                            <div class="flex items-center gap-2">
+                                                <button type="button" class="collapse-toggle" data-collapse-target="x64dbg-requests-shell" aria-expanded="true" aria-controls="x64dbg-requests-shell">
+                                                    <span class="collapse-chevron">▾</span>
+                                                    <span>Requests</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        <div class="context-help mb-4">
+                                            <div class="context-help-title">How to use queued requests</div>
+                                            <div class="context-help-copy">Requests are tasks for the sandbox debugger workflow. Action is the task name, address is optional targeting, notes explain intent, status shows where the task sits in the pipeline, and requested shows when it entered the queue.</div>
+                                        </div>
+                                        <div id="x64dbg-requests-shell">
+                                            <div class="debug-request-grid mb-4">
+                                                <div class="flex items-center justify-between gap-3">
+                                                    <div class="mono text-xs text-cyan-200/70">Quick actions</div>
+                                                </div>
+                                                <div class="context-help">
+                                                    <div class="context-help-title">How to queue debugger work</div>
+                                                    <div class="context-help-copy">Use the chips for common tasks. Fill the form manually when you need a targeted request. Good novice defaults are: use action for the task name, add an address only if you know the exact location, and write notes that explain what evidence you want back.</div>
+                                                </div>
+                                                <div class="flex flex-wrap gap-2">
+                                                    <button type="button" class="prompt-chip debug-request-chip" data-action="set_breakpoint" data-address="0x401000" data-notes="Pause at the PE entry point and capture register state.">Entry Breakpoint</button>
+                                                    <button type="button" class="prompt-chip debug-request-chip" data-action="trace_api" data-notes="Trace high-signal WinAPI calls around process creation, file writes, and registry changes.">Trace APIs</button>
+                                                    <button type="button" class="prompt-chip debug-request-chip" data-action="dump_memory" data-notes="Capture a focused memory snapshot near the current region of interest.">Dump Memory</button>
+                                                </div>
+                                                <form id="x64dbg-request-form" class="send-shell p-3">
+                                                    <div class="grid gap-3 md:grid-cols-[1fr_1fr]">
+                                                        <div>
+                                                            <div class="mb-2 flex items-center gap-2">
+                                                                <label for="x64dbg-request-action" class="mono text-xs text-cyan-200/70">Action</label>
+                                                            </div>
+                                                            <input id="x64dbg-request-action" class="cyber-input mono rounded-xl px-4 py-3 focus:outline-none w-full" type="text" placeholder="Action (e.g. inspect_address)" />
+                                                            <div class="context-help">
+                                                                <div class="context-help-copy">Use task names like <span class="mono">set_breakpoint</span>, <span class="mono">trace_api</span>, <span class="mono">dump_memory</span>, or <span class="mono">inspect_address</span>.</div>
+                                                            </div>
+                                                        </div>
+                                                        <div>
+                                                            <div class="mb-2 flex items-center gap-2">
+                                                                <label for="x64dbg-request-address" class="mono text-xs text-cyan-200/70">Address or symbol</label>
+                                                            </div>
+                                                            <input id="x64dbg-request-address" class="cyber-input mono rounded-xl px-4 py-3 focus:outline-none w-full" type="text" placeholder="Address / symbol (optional)" />
+                                                            <div class="context-help">
+                                                                <div class="context-help-copy">Fill this only when you want the debugger to focus on a specific code location such as <span class="mono">0x401000</span> or a known symbol.</div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="mt-3">
+                                                        <div class="mb-2 flex items-center gap-2">
+                                                            <label for="x64dbg-request-notes" class="mono text-xs text-cyan-200/70">Operator notes</label>
+                                                        </div>
+                                                        <textarea id="x64dbg-request-notes" class="cyber-input mono w-full rounded-xl p-4 focus:outline-none" rows="3" placeholder="Notes for the sandbox debugger bridge..."></textarea>
+                                                        <div class="context-help">
+                                                            <div class="context-help-copy">Describe the goal in plain language, for example “trace file writes after startup” or “capture state around this address”.</div>
+                                                        </div>
+                                                    </div>
+                                                    <div class="flex items-center justify-between gap-3 mt-3">
+                                                        <div id="x64dbg-request-status" class="mono text-xs text-cyan-200/70">Queue a debugger task for the sandbox bridge.</div>
+                                                        <button type="submit" class="neon-button rounded-xl px-5 py-3">Queue Request</button>
+                                                    </div>
+                                                </form>
+                                            </div>
+                                            <div id="x64dbg-requests-list" class="debug-log-list"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <form id="chat-form" class="send-shell flex items-end gap-3 p-3">
+                        <textarea id="chat-input" class="cyber-input mono flex-grow rounded-xl p-4 focus:outline-none resize-none" placeholder="Inject command into the analysis stream..." rows="1" disabled></textarea>
+                        <button type="submit" class="neon-button send-button rounded-xl py-4 px-6 transition self-stretch" disabled>Send</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </div>
 
 <script>
 $(document).ready(function() {
     let currentJobId = null;
+    let currentJob = null;
     let jobStatusPollers = {};
+    let triagePollers = {};
+    let x64dbgPollers = {};
+    let operatorPollers = {};
+    let triageStateDigests = {};
+    let x64dbgStateDigests = {};
+    let uploadStartedAt = null;
+    const JOBS_STORAGE_KEY = 'ghidraaas-analysis-jobs';
+    const ACTIVE_JOB_STORAGE_KEY = 'ghidraaas-active-job';
+    const ACTIVE_VIEW_STORAGE_KEY = 'ghidraaas-active-view';
+    const OPERATOR_STATE_STORAGE_KEY = 'ghidraaas-operator-state';
+    const AUTOPILOT_STORAGE_KEY = 'ghidraaas-autopilot-enabled';
+    const HELP_MODE_STORAGE_KEY = 'ghidraaas-help-mode-enabled';
+    const SHOW_ARCHIVED_STORAGE_KEY = 'ghidraaas-show-archived-jobs';
+    const COLLAPSE_STATE_STORAGE_KEY = 'ghidraaas-collapse-state';
+    let activeView = localStorage.getItem(ACTIVE_VIEW_STORAGE_KEY) || 'chat';
+    let autopilotEnabled = localStorage.getItem(AUTOPILOT_STORAGE_KEY) === 'true';
+    let helpModeEnabled = localStorage.getItem(HELP_MODE_STORAGE_KEY) === 'true';
+    let showArchivedJobs = localStorage.getItem(SHOW_ARCHIVED_STORAGE_KEY) === 'true';
+    const ANALYSIS_TRACKS = [
+        {
+            title: 'Static Triage',
+            copy: 'Fast capability mapping inspired by classic reverse engineering triage.',
+            prompts: [
+                "Summarize the binary's main capabilities and likely purpose.",
+                "List the most interesting functions to inspect first.",
+                "Explain what this program appears to do at a high level."
+            ]
+        },
+        {
+            title: 'PE / API Behavior',
+            copy: 'Use imported APIs to infer filesystem, process, registry, crypto, and service behavior.',
+            prompts: [
+                "List the most important imported APIs and explain what behaviors they suggest.",
+                "Identify imports related to process injection, services, registry, or persistence.",
+                "Find imports related to file handling and installation behavior."
+            ]
+        },
+        {
+            title: 'Strings & Config',
+            copy: 'Mine extracted strings for URLs, paths, mutexes, branding, config markers, and feature toggles.',
+            prompts: [
+                "List the most interesting strings and group them by URLs, file paths, config, and product markers.",
+                "Find strings that look related to licensing, updates, telemetry, or remote endpoints.",
+                "Use strings plus imports to infer what external services or local resources this binary may touch."
+            ]
+        },
+        {
+            title: 'Network Clues',
+            copy: 'Infer probable network or telemetry behavior from static evidence only.',
+            prompts: [
+                "Check for imported APIs related to HTTP, WinINet, WinHTTP, Winsock, or telemetry.",
+                "Based on imports and function names, infer whether this binary likely performs network activity.",
+                "Find the best functions to inspect for update checks, licensing, or remote communication."
+            ]
+        },
+        {
+            title: 'Dynamic Evidence',
+            copy: 'Correlate uploaded sandbox or telemetry artifacts with the static findings already cached.',
+            prompts: [
+                "Summarize any uploaded dynamic evidence and compare it with the static imports and strings.",
+                "Highlight where sandbox evidence confirms or contradicts the static analysis.",
+                "Use dynamic evidence plus decompilation to explain the most suspicious behavior chain."
+            ]
+        }
+    ];
+    function getOperatorStateStore() {
+        try {
+            return JSON.parse(localStorage.getItem(OPERATOR_STATE_STORAGE_KEY) || '{}');
+        } catch (error) {
+            return {};
+        }
+    }
+    function getCollapseStateStore() {
+        try {
+            return JSON.parse(localStorage.getItem(COLLAPSE_STATE_STORAGE_KEY) || '{}');
+        } catch (error) {
+            return {};
+        }
+    }
+    function getDefaultCollapsedState(targetId) {
+        const isSmallScreen = window.matchMedia('(max-width: 1024px)').matches;
+        if (!isSmallScreen) {
+            return false;
+        }
+        const mobileCollapsedTargets = new Set([
+            'jobs-list-shell',
+            'operator-body'
+        ]);
+        return mobileCollapsedTargets.has(targetId);
+    }
+    function saveCollapseStateStore(store) {
+        localStorage.setItem(COLLAPSE_STATE_STORAGE_KEY, JSON.stringify(store));
+    }
+    function setCollapseState(targetId, isCollapsed) {
+        const store = getCollapseStateStore();
+        store[targetId] = Boolean(isCollapsed);
+        saveCollapseStateStore(store);
+    }
+    function applyCollapseState(buttonEl, targetId, isCollapsed) {
+        const $target = $(`#${targetId}`);
+        const $button = $(buttonEl);
+        $target.toggleClass('hidden', isCollapsed);
+        $button.toggleClass('is-collapsed', isCollapsed).attr('aria-expanded', isCollapsed ? 'false' : 'true');
+    }
+    function restoreCollapseState() {
+        const store = getCollapseStateStore();
+        $('[data-collapse-target]').each(function() {
+            const targetId = $(this).data('collapse-target');
+            const isCollapsed = Object.prototype.hasOwnProperty.call(store, targetId)
+                ? Boolean(store[targetId])
+                : getDefaultCollapsedState(targetId);
+            applyCollapseState(this, targetId, isCollapsed);
+        });
+    }
+    function saveOperatorStateStore(store) {
+        localStorage.setItem(OPERATOR_STATE_STORAGE_KEY, JSON.stringify(store));
+    }
+    function getJobOperatorState(jobId) {
+        const store = getOperatorStateStore();
+        return store[jobId] || {};
+    }
+    function updateJobOperatorState(jobId, updates = {}) {
+        if (!jobId) return {};
+        const store = getOperatorStateStore();
+        const current = store[jobId] || {};
+        store[jobId] = { ...current, ...updates };
+        saveOperatorStateStore(store);
+        return store[jobId];
+    }
+    function setAutopilotEnabled(enabled) {
+        autopilotEnabled = Boolean(enabled);
+        localStorage.setItem(AUTOPILOT_STORAGE_KEY, autopilotEnabled ? 'true' : 'false');
+        $('#autopilot-toggle').toggleClass('is-active', autopilotEnabled);
+        $('#autopilot-toggle-label').text(autopilotEnabled ? 'Autopilot On' : 'Autopilot Off');
+    }
+    function setHelpModeEnabled(enabled) {
+        helpModeEnabled = Boolean(enabled);
+        localStorage.setItem(HELP_MODE_STORAGE_KEY, helpModeEnabled ? 'true' : 'false');
+        $('body').toggleClass('help-mode-enabled', helpModeEnabled);
+        $('#help-mode-toggle').toggleClass('is-on', helpModeEnabled);
+        $('#help-mode-label').text(helpModeEnabled ? 'Help Mode On' : 'Help Mode Off');
+    }
+    function setShowArchivedJobs(enabled) {
+        showArchivedJobs = Boolean(enabled);
+        localStorage.setItem(SHOW_ARCHIVED_STORAGE_KEY, String(showArchivedJobs));
+        $('#toggle-archived-jobs').toggleClass('is-active', showArchivedJobs).text(showArchivedJobs ? 'Hide Archived' : 'Show Archived');
+    }
+    function getJobDisplayName(job) {
+        if (!job) return 'Recovered analysis';
+        return job.label || job.filename || `${getShortJobId(job.job_id)}.bin`;
+    }
+    function showOperatorToast(alert) {
+        if (!alert || !alert.title) return;
+        const toastId = `toast-${Date.now()}-${Math.random().toString(16).slice(2, 8)}`;
+        const level = escapeHtml(alert.level || 'info');
+        $('#operator-toast-stack').append(`
+            <div id="${toastId}" class="operator-toast ${level}">
+                <div class="eyebrow mb-2">AI Operator Alert</div>
+                <div class="operator-toast-title">${escapeHtml(alert.title)}</div>
+                <div class="operator-toast-copy">${escapeHtml(alert.description || '')}</div>
+            </div>
+        `);
+        setTimeout(() => {
+            $(`#${toastId}`).fadeOut(220, function() {
+                $(this).remove();
+            });
+        }, 4800);
+    }
+
+    function readStoredJobs() {
+        try {
+            const raw = localStorage.getItem(JOBS_STORAGE_KEY);
+            if (!raw) return [];
+            const jobs = JSON.parse(raw);
+            return Array.isArray(jobs) ? jobs : [];
+        } catch (error) {
+            console.warn("Failed to read stored jobs:", error);
+            return [];
+        }
+    }
+
+    function writeStoredJobs(jobs) {
+        localStorage.setItem(JOBS_STORAGE_KEY, JSON.stringify(jobs));
+    }
+
+    function setStoredActiveJob(jobId) {
+        if (jobId) {
+            localStorage.setItem(ACTIVE_JOB_STORAGE_KEY, jobId);
+        } else {
+            localStorage.removeItem(ACTIVE_JOB_STORAGE_KEY);
+        }
+    }
+
+    function getStoredActiveJob() {
+        return localStorage.getItem(ACTIVE_JOB_STORAGE_KEY);
+    }
+
+    function upsertStoredJob(job) {
+        const jobs = readStoredJobs().filter(existing => existing.job_id !== job.job_id);
+        jobs.unshift(job);
+        writeStoredJobs(jobs);
+    }
+
+    function removeStoredJob(jobId) {
+        const jobs = readStoredJobs().filter(job => job.job_id !== jobId);
+        writeStoredJobs(jobs);
+    }
+
+    function updateStoredJobStatus(jobId, status) {
+        const jobs = readStoredJobs().map(job => job.job_id === jobId ? { ...job, status } : job);
+        writeStoredJobs(jobs);
+    }
+
+    function updateStoredJob(jobId, updates = {}) {
+        const jobs = readStoredJobs().map(job => job.job_id === jobId ? { ...job, ...updates } : job);
+        writeStoredJobs(jobs);
+    }
+
+    function findStoredJob(jobId) {
+        return readStoredJobs().find(job => job.job_id === jobId) || null;
+    }
+
+    function renderJobItem(job, prepend = false) {
+        const safeFilename = $('<div/>').text(getJobDisplayName(job)).html();
+        const normalizedStatus = (job.status || 'pending').toLowerCase();
+        const isArchived = Boolean(job.archived);
+        const statusClass = normalizedStatus === 'done'
+            ? 'text-green-400'
+            : normalizedStatus === 'failed' || normalizedStatus === 'error'
+                ? 'text-red-400'
+                : 'text-yellow-400';
+        const jobHtml = `
+            <div id="job-${job.job_id}" class="job-item p-3 bg-gray-800 hover:bg-gray-700 rounded-md cursor-pointer transition ${isArchived ? 'opacity-70' : ''}" data-job-id="${job.job_id}">
+                <div class="job-item-header">
+                    <div class="job-title font-medium truncate">${safeFilename}</div>
+                    <div class="job-item-actions">
+                        <button type="button" class="job-action-button rename job-rename-button" data-job-id="${job.job_id}" title="Rename analysis job" aria-label="Rename analysis job">✎</button>
+                        <button type="button" class="job-action-button export job-export-button" data-job-id="${job.job_id}" title="Export triage report" aria-label="Export triage report">⇩</button>
+                        <button type="button" class="job-action-button archive job-archive-button" data-job-id="${job.job_id}" title="${isArchived ? 'Unarchive analysis job' : 'Archive analysis job'}" aria-label="${isArchived ? 'Unarchive analysis job' : 'Archive analysis job'}">${isArchived ? '↺' : '−'}</button>
+                        <button type="button" class="job-action-button job-delete-button" data-job-id="${job.job_id}" title="Delete analysis job" aria-label="Delete analysis job">x</button>
+                    </div>
+                </div>
+                <div class="job-meta text-xs">ID: ${job.job_id.substring(0,8)}...</div>
+                <div class="text-xs font-mono job-status mt-1 ${statusClass}">${normalizedStatus.toUpperCase()}${isArchived ? ' · ARCHIVED' : ''}</div>
+            </div>`;
+
+        const $existing = $(`#job-${job.job_id}`);
+        if ($existing.length) {
+            $existing.replaceWith(jobHtml);
+        } else if (prepend) {
+            $('#jobs-list').prepend(jobHtml);
+        } else {
+            $('#jobs-list').append(jobHtml);
+        }
+    }
+
+    function activateJob(jobId) {
+        const $job = $(`#job-${jobId}`);
+        if (!$job.length) return;
+        currentJobId = jobId;
+        currentJob = findStoredJob(jobId) || { job_id: jobId, filename: `${jobId.slice(0, 8)}.bin` };
+        setStoredActiveJob(jobId);
+        $('.job-item').removeClass('bg-gray-700');
+        $job.addClass('bg-gray-700');
+        $('#welcome-message').hide();
+        $('#chat-container').removeClass('hidden').addClass('flex');
+        $('#chat-input, #chat-form button').prop('disabled', false);
+        $('#chat-log').html('');
+        renderChatEmptyState();
+        addSessionMessage();
+        const cachedOperatorState = getJobOperatorState(jobId);
+        if (cachedOperatorState.payload) {
+            renderOperatorPanel(cachedOperatorState.payload);
+        }
+        loadOperatorPanel(jobId);
+        if (activeView === 'triage') {
+            loadTriageReport(jobId);
+        } else if (activeView === 'x64dbg') {
+            loadX64dbgOverview(jobId);
+        } else {
+            $('#chat-input').focus();
+        }
+    }
+
+    function clearJobRuntimeState(jobId) {
+        if (!jobId) return;
+        if (jobStatusPollers[jobId]) {
+            clearInterval(jobStatusPollers[jobId]);
+            delete jobStatusPollers[jobId];
+        }
+        clearTriagePolling(jobId);
+        clearX64dbgPolling(jobId);
+        clearOperatorPolling(jobId);
+        delete triageStateDigests[jobId];
+        delete x64dbgStateDigests[jobId];
+    }
+
+    function resetWorkspaceAfterJobRemoval(jobId) {
+        clearJobRuntimeState(jobId);
+        if (currentJobId !== jobId) {
+            return;
+        }
+
+        currentJobId = null;
+        currentJob = null;
+        setStoredActiveJob(null);
+        $('#chat-log').html('');
+        $('#chat-input').val('').prop('disabled', true);
+        $('#chat-form button').prop('disabled', true);
+        $('#chat-container').removeClass('flex').addClass('hidden');
+        $('#welcome-message').show();
+        renderOperatorEmpty();
+        setActiveView('chat');
+    }
+
+    async function deleteJob(jobId) {
+        const job = findStoredJob(jobId);
+        const label = getJobDisplayName(job) || getShortJobId(jobId);
+        const confirmed = window.confirm(`Delete analysis job "${label}"? This will remove cached artifacts, dynamic evidence, and the Ghidra project if it exists.`);
+        if (!confirmed) return;
+
+        const $button = $(`#job-${jobId} .job-delete-button`);
+        $button.prop('disabled', true).text('…');
+
+        try {
+            const response = await fetch(`/jobs/${jobId}`, { method: 'DELETE' });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || `HTTP ${response.status}`);
+            }
+
+            removeStoredJob(jobId);
+            resetWorkspaceAfterJobRemoval(jobId);
+            $(`#job-${jobId}`).remove();
+            showUploadStatus(`Deleted analysis job: ${label}`, false);
+            setTimeout(() => showUploadStatus(''), 2200);
+        } catch (error) {
+            console.error('delete job error:', error);
+            $button.prop('disabled', false).text('x');
+            showUploadStatus(`DELETE FAILED: ${error.message}`, true);
+        }
+    }
+
+    async function patchJob(jobId, updates = {}) {
+        const response = await fetch(`/jobs/${jobId}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(updates),
+        });
+        const data = await response.json();
+        if (!response.ok) {
+            throw new Error(data.error || `HTTP ${response.status}`);
+        }
+        return data;
+    }
+
+    async function toggleJobArchive(jobId) {
+        const job = findStoredJob(jobId);
+        if (!job) return;
+        const nextArchived = !Boolean(job.archived);
+        try {
+            await patchJob(jobId, { archived: nextArchived });
+        } catch (error) {
+            showUploadStatus(`ARCHIVE FAILED: ${error.message}`, true);
+            return;
+        }
+        updateStoredJob(jobId, { archived: nextArchived });
+        if (!showArchivedJobs && nextArchived) {
+            resetWorkspaceAfterJobRemoval(jobId);
+        }
+        loadStoredJobs();
+        if (!nextArchived && currentJobId === jobId) {
+            activateJob(jobId);
+        }
+        showUploadStatus(`${nextArchived ? 'Archived' : 'Restored'} analysis job: ${getJobDisplayName(job)}`, false);
+        setTimeout(() => showUploadStatus(''), 1800);
+    }
+
+    async function renameJob(jobId) {
+        const job = findStoredJob(jobId);
+        if (!job) return;
+
+        const currentName = getJobDisplayName(job);
+        const nextName = window.prompt('Choose a label for this analysis job.', currentName);
+        if (nextName === null) return;
+
+        const trimmed = nextName.trim();
+        if (trimmed === currentName) return;
+
+        try {
+            await patchJob(jobId, { label: trimmed || null });
+            updateStoredJob(jobId, { label: trimmed || null });
+            loadStoredJobs();
+            if (currentJobId === jobId) {
+                activateJob(jobId);
+            }
+            showUploadStatus(`Updated analysis label: ${trimmed || (job.filename || getShortJobId(jobId))}`, false);
+            setTimeout(() => showUploadStatus(''), 1800);
+        } catch (error) {
+            showUploadStatus(`RENAME FAILED: ${error.message}`, true);
+        }
+    }
+
+    function exportTriage(jobId, format = 'md') {
+        window.open(`/triage/${jobId}/export?format=${encodeURIComponent(format)}`, '_blank', 'noopener,noreferrer');
+    }
+
+    async function archiveCompletedJobs() {
+        const jobs = readStoredJobs().filter(job => (job.status || '').toLowerCase() === 'done' && !job.archived);
+        if (!jobs.length) {
+            showUploadStatus('No completed jobs available to archive.', false);
+            setTimeout(() => showUploadStatus(''), 1800);
+            return;
+        }
+
+        $('#archive-completed-jobs').prop('disabled', true).text('Archiving...');
+        const failures = [];
+
+        for (const job of jobs) {
+            try {
+                await patchJob(job.job_id, { archived: true });
+                updateStoredJob(job.job_id, { archived: true });
+                if (!showArchivedJobs && currentJobId === job.job_id) {
+                    resetWorkspaceAfterJobRemoval(job.job_id);
+                }
+            } catch (error) {
+                failures.push(`${getJobDisplayName(job)}: ${error.message}`);
+            }
+        }
+
+        loadStoredJobs();
+        $('#archive-completed-jobs').prop('disabled', false).text('Archive Completed');
+
+        if (failures.length) {
+            showUploadStatus(`ARCHIVE FAILED FOR ${failures.length} JOB(S): ${failures[0]}`, true);
+            return;
+        }
+
+        showUploadStatus(`Archived ${jobs.length} completed analysis job(s).`, false);
+        setTimeout(() => showUploadStatus(''), 2200);
+    }
+
+    async function restoreArchivedJobs() {
+        const jobs = readStoredJobs().filter(job => Boolean(job.archived));
+        if (!jobs.length) {
+            showUploadStatus('No archived jobs to restore.', false);
+            setTimeout(() => showUploadStatus(''), 1800);
+            return;
+        }
+
+        $('#restore-archived-jobs').prop('disabled', true).text('Restoring...');
+        const failures = [];
+
+        for (const job of jobs) {
+            try {
+                await patchJob(job.job_id, { archived: false });
+                updateStoredJob(job.job_id, { archived: false });
+            } catch (error) {
+                failures.push(`${getJobDisplayName(job)}: ${error.message}`);
+            }
+        }
+
+        loadStoredJobs();
+        $('#restore-archived-jobs').prop('disabled', false).text('Restore Archived');
+
+        if (failures.length) {
+            showUploadStatus(`RESTORE FAILED FOR ${failures.length} JOB(S): ${failures[0]}`, true);
+            return;
+        }
+
+        showUploadStatus(`Restored ${jobs.length} archived analysis job(s).`, false);
+        setTimeout(() => showUploadStatus(''), 2200);
+    }
+
+    async function deleteCompletedJobs() {
+        const jobs = readStoredJobs().filter(job => (job.status || '').toLowerCase() === 'done');
+        if (!jobs.length) {
+            showUploadStatus('No completed jobs to delete.', false);
+            setTimeout(() => showUploadStatus(''), 1800);
+            return;
+        }
+
+        const confirmed = window.confirm(`Delete ${jobs.length} completed analysis job(s)? This will remove cached artifacts and associated backend state.`);
+        if (!confirmed) return;
+
+        $('#delete-completed-jobs').prop('disabled', true).text('Deleting...');
+        const failures = [];
+
+        for (const job of jobs) {
+            try {
+                const response = await fetch(`/jobs/${job.job_id}`, { method: 'DELETE' });
+                const data = await response.json();
+                if (!response.ok) {
+                    throw new Error(data.error || `HTTP ${response.status}`);
+                }
+                removeStoredJob(job.job_id);
+                resetWorkspaceAfterJobRemoval(job.job_id);
+                $(`#job-${job.job_id}`).remove();
+            } catch (error) {
+                failures.push(`${job.filename || getShortJobId(job.job_id)}: ${error.message}`);
+            }
+        }
+
+        loadStoredJobs();
+        $('#delete-completed-jobs').prop('disabled', false).text('Delete Completed');
+
+        if (failures.length) {
+            showUploadStatus(`DELETE FAILED FOR ${failures.length} JOB(S): ${failures[0]}`, true);
+            return;
+        }
+
+        showUploadStatus(`Deleted ${jobs.length} completed analysis job(s).`, false);
+        setTimeout(() => showUploadStatus(''), 2200);
+    }
+
+    function loadStoredJobs() {
+        const jobs = readStoredJobs().filter(job => showArchivedJobs || !job.archived);
+        $('#jobs-list').empty();
+        jobs.forEach(job => {
+            renderJobItem(job);
+            if (!['done', 'failed', 'error'].includes((job.status || '').toLowerCase())) {
+                pollStatus(job.job_id);
+            }
+        });
+    }
+
+    async function loadJobsFromServer() {
+        try {
+            const response = await fetch('/jobs');
+            if (!response.ok) throw new Error('Failed to load jobs');
+            const data = await response.json();
+            const serverJobs = Array.isArray(data.jobs) ? data.jobs : [];
+            const storedJobs = readStoredJobs();
+            const jobMap = new Map(storedJobs.map(job => [job.job_id, job]));
+
+            serverJobs.forEach(job => {
+                const existing = jobMap.get(job.job_id) || {};
+                jobMap.set(job.job_id, {
+                    job_id: job.job_id,
+                    filename: job.filename || existing.filename || `${job.job_id.slice(0, 8)}.bin`,
+                    label: job.label ?? existing.label ?? null,
+                    archived: typeof job.archived === 'boolean' ? job.archived : Boolean(existing.archived),
+                    status: job.status || existing.status || 'done',
+                });
+            });
+
+            const mergedJobs = Array.from(jobMap.values());
+            writeStoredJobs(mergedJobs);
+            loadStoredJobs();
+
+            const activeJobId = getStoredActiveJob();
+            if (activeJobId) {
+                activateJob(activeJobId);
+            }
+        } catch (error) {
+            console.error("Failed to load jobs from server:", error);
+            loadStoredJobs();
+            const activeJobId = getStoredActiveJob();
+            if (activeJobId) {
+                activateJob(activeJobId);
+            }
+        }
+    }
+
     function showUploadStatus(message, isError = false) {
-        $('#upload-status').text(message).toggleClass('text-red-400', isError).toggleClass('text-green-400', !isError);
+        const $status = $('#upload-status');
+        if (!message) {
+            $status.addClass('hidden').removeClass('flex text-red-400 text-green-400 text-cyan-200');
+            $status.text('');
+            return;
+        }
+        $status.removeClass('hidden').addClass('flex');
+        $status.removeClass('text-red-400 text-green-400 text-cyan-200');
+        $status.addClass(isError ? 'text-red-400' : 'text-cyan-200');
+        $status.text(message);
+    }
+    function updateSelectedFileName() {
+        const fileInput = $('#file-input')[0];
+        const filename = fileInput.files.length > 0 ? fileInput.files[0].name : 'No file selected';
+        $('#file-name-display').text(filename);
+    }
+    function formatBytes(bytes) {
+        const megabytes = bytes / (1024 * 1024);
+        if (megabytes >= 1024) {
+            return `${(megabytes / 1024).toFixed(2)} GB`;
+        }
+        return `${megabytes.toFixed(1)} MB`;
+    }
+    function formatRate(bytesPerSecond) {
+        if (!Number.isFinite(bytesPerSecond) || bytesPerSecond <= 0) {
+            return '0 MB/s';
+        }
+        const megabytesPerSecond = bytesPerSecond / (1024 * 1024);
+        if (megabytesPerSecond >= 1024) {
+            return `${(megabytesPerSecond / 1024).toFixed(2)} GB/s`;
+        }
+        return `${megabytesPerSecond.toFixed(2)} MB/s`;
+    }
+    function formatEta(secondsRemaining) {
+        if (!Number.isFinite(secondsRemaining) || secondsRemaining < 0) {
+            return '--';
+        }
+        if (secondsRemaining < 60) {
+            return `${Math.ceil(secondsRemaining)}s`;
+        }
+        const minutes = Math.floor(secondsRemaining / 60);
+        const seconds = Math.ceil(secondsRemaining % 60);
+        return `${minutes}m ${seconds}s`;
+    }
+    function setUploadTelemetry(loadedBytes, totalBytes, bytesPerSecond = 0, etaSeconds = NaN) {
+        $('#upload-telemetry-bytes').text(`${formatBytes(loadedBytes)} / ${formatBytes(totalBytes)}`);
+        $('#upload-telemetry-speed').text(formatRate(bytesPerSecond));
+        $('#upload-telemetry-eta').text(formatEta(etaSeconds));
+    }
+    function setUploadProgress(percent, label) {
+        const normalizedPercent = Math.max(0, Math.min(100, Math.round(percent)));
+        $('#upload-progress').removeClass('hidden');
+        $('#upload-progress-bar').css('width', `${normalizedPercent}%`);
+        $('#upload-progress-label').text(label || `${normalizedPercent}%`);
+        $('#upload-stage-upload-status').text(label || `${normalizedPercent}%`);
+    }
+    function resetUploadProgress() {
+        $('#upload-progress').addClass('hidden');
+        $('#upload-progress-bar').css('width', '0%');
+        $('#analysis-progress-bar').css('width', '0%');
+        $('#analysis-progress-track').removeClass('is-active');
+        $('#upload-progress-label').text('Idle');
+        $('#upload-stage-upload-status').text('Pending');
+        $('#upload-stage-analysis-status').text('Pending');
+        setUploadTelemetry(0, 0, 0, NaN);
+        uploadStartedAt = null;
+    }
+    function startAnalysisProgress() {
+        $('#upload-progress').removeClass('hidden');
+        $('#analysis-progress-track').addClass('is-active');
+        $('#analysis-progress-bar').css('width', '42%');
+        $('#upload-progress-label').text('Analyzing');
+        $('#upload-stage-analysis-status').text('Running');
+        $('#upload-telemetry-eta').text('Processing');
+    }
+    function finishAnalysisProgress() {
+        $('#analysis-progress-track').removeClass('is-active');
+        $('#analysis-progress-bar').css('width', '100%');
+        $('#upload-progress-label').text('Complete');
+        $('#upload-stage-analysis-status').text('Complete');
+        $('#upload-telemetry-eta').text('Done');
+    }
+    function failAnalysisProgress() {
+        $('#analysis-progress-track').removeClass('is-active');
+        $('#analysis-progress-bar').css('width', '100%');
+        $('#upload-progress-label').text('Failed');
+        $('#upload-stage-analysis-status').text('Failed');
+        $('#upload-telemetry-eta').text('Failed');
+    }
+    function escapeHtml(value) {
+        return $('<div/>').text(value).html();
+    }
+    function getShortJobId(jobId) {
+        return `${jobId.substring(0, 8)}...${jobId.substring(jobId.length - 4)}`;
+    }
+    function setActiveView(viewName) {
+        activeView = ['triage', 'x64dbg'].includes(viewName) ? viewName : 'chat';
+        localStorage.setItem(ACTIVE_VIEW_STORAGE_KEY, activeView);
+        const isTriage = activeView === 'triage';
+        const isX64dbg = activeView === 'x64dbg';
+        $('#chat-view').toggleClass('hidden', isTriage || isX64dbg);
+        $('#triage-view').toggleClass('hidden', !isTriage);
+        $('#x64dbg-view').toggleClass('hidden', !isX64dbg);
+        $('#chat-form').toggleClass('hidden', isTriage || isX64dbg);
+        $('#view-chat').toggleClass('is-active', activeView === 'chat');
+        $('#view-triage').toggleClass('is-active', isTriage);
+        $('#view-x64dbg').toggleClass('is-active', isX64dbg);
+        if (isTriage && currentJobId) {
+            loadTriageReport(currentJobId);
+        } else if (isX64dbg && currentJobId) {
+            loadX64dbgOverview(currentJobId);
+        } else if (!isTriage && currentJobId) {
+            $('#chat-input').focus();
+        }
+    }
+    function clearTriagePolling(jobId) {
+        if (triagePollers[jobId]) {
+            clearTimeout(triagePollers[jobId]);
+            delete triagePollers[jobId];
+        }
+    }
+    function clearX64dbgPolling(jobId) {
+        if (x64dbgPollers[jobId]) {
+            clearTimeout(x64dbgPollers[jobId]);
+            delete x64dbgPollers[jobId];
+        }
+    }
+    function clearOperatorPolling(jobId) {
+        if (operatorPollers[jobId]) {
+            clearTimeout(operatorPollers[jobId]);
+            delete operatorPollers[jobId];
+        }
+    }
+    function renderTriageLoading(jobId, data = {}) {
+        $('#triage-content').addClass('hidden');
+        const processingList = Array.isArray(data.processing) && data.processing.length
+            ? ` Waiting on: ${data.processing.join(', ')}.`
+            : '';
+        $('#triage-status').html(`
+            <div class="eyebrow mb-2">Auto Triage</div>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="triage-pill processing">Processing</div>
+                <div class="text-white text-lg font-semibold">Building triage report for ${escapeHtml(getShortJobId(jobId))}</div>
+            </div>
+            <p class="mt-3 text-sm text-cyan-100/60">The report is waiting for structured artifacts from Ghidra and will refresh automatically.${escapeHtml(processingList)}</p>
+        `);
+    }
+    function renderTriageError(jobId, message) {
+        $('#triage-content').addClass('hidden');
+        $('#triage-status').html(`
+            <div class="eyebrow mb-2">Auto Triage</div>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="triage-pill processing">Unavailable</div>
+                <div class="text-white text-lg font-semibold">Triage report could not be loaded</div>
+            </div>
+            <p class="mt-3 text-sm text-red-300/80 mono">${escapeHtml(message || `Failed to load triage for ${jobId}`)}</p>
+        `);
+    }
+    function renderTriageReport(report) {
+        const summary = report.summary || {};
+        const importsSummary = summary.imports_summary || {};
+        const stringsSummary = summary.strings_summary || {};
+        const dynamicSummary = summary.dynamic_summary || {};
+        const functionsSummary = summary.functions_summary || {};
+        const capabilities = summary.capabilities || [];
+        $('#triage-content').removeClass('hidden');
+        $('#triage-status').html(`
+            <div class="eyebrow mb-2">Auto Triage</div>
+            <div class="text-white text-lg font-semibold">Cached report ready for ${escapeHtml(report.filename || currentJob?.filename || 'Recovered analysis')}</div>
+            <p class="mt-2 text-sm text-cyan-100/60">This report is grounded in structured Ghidra artifacts plus any uploaded dynamic evidence.</p>
+        `);
+        $('#triage-capabilities').text(capabilities.length);
+        $('#triage-import-count').text((importsSummary.interesting_imports || []).length);
+        $('#triage-string-count').text(stringsSummary.string_count || 0);
+        $('#triage-dynamic-count').text(dynamicSummary.artifact_count || 0);
+        $('#triage-pill').attr('class', 'triage-pill ready').text('Ready');
+        $('#triage-report-title').text(report.filename || currentJob?.filename || 'Recovered analysis');
+        $('#triage-meta').html(`
+            <div>Target ID: <span class="mono">${escapeHtml(getShortJobId(report.job_id))}</span></div>
+            <div>Functions indexed: <span class="mono">${escapeHtml(String(functionsSummary.function_count || 0))}</span></div>
+            <div>Libraries observed: <span class="mono">${escapeHtml(String(importsSummary.library_count || 0))}</span></div>
+            <div>Dynamic highlights: <span class="mono">${escapeHtml(String((dynamicSummary.highlights || []).length))}</span></div>
+        `);
+        $('#triage-markdown').html(marked.parse(report.markdown || '_No markdown report available._'));
+    }
+    async function loadTriageReport(jobId, options = {}) {
+        clearTriagePolling(jobId);
+        const silent = Boolean(options.silent);
+        if (!silent || !triageStateDigests[jobId]) {
+            renderTriageLoading(jobId);
+        }
+        try {
+            const response = await fetch(`/triage/${jobId}`);
+            const data = await response.json();
+            if (!response.ok && response.status !== 202) {
+                throw new Error(data.error || `HTTP ${response.status}`);
+            }
+            if (response.status === 202 || data.status === 'queued' || data.status === 'processing') {
+                if (!silent || !triageStateDigests[jobId]) {
+                    renderTriageLoading(jobId, data);
+                }
+                triagePollers[jobId] = setTimeout(() => loadTriageReport(jobId, { silent: true }), 4000);
+                return;
+            }
+            const digest = computeTriageDigest(data);
+            if (triageStateDigests[jobId] !== digest || !silent) {
+                renderTriageReport(data);
+                triageStateDigests[jobId] = digest;
+            }
+        } catch (error) {
+            console.error('Triage loading error:', error);
+            renderTriageError(jobId, error.message);
+        }
+    }
+    function renderDebugCards($container, entries, emptyMessage, formatter) {
+        if (!entries.length) {
+            $container.html(`<div class="debug-empty-note">${escapeHtml(emptyMessage)}</div>`);
+            return;
+        }
+        $container.html(entries.map((entry, index) => formatter(entry, index)).join(''));
+    }
+    function computeTriageDigest(payload) {
+        try {
+            return JSON.stringify(payload || {});
+        } catch (error) {
+            return `${Date.now()}`;
+        }
+    }
+    function computeX64dbgDigest(state, findingsPayload, requestsPayload) {
+        try {
+            return JSON.stringify({
+                state: state || {},
+                findings: Array.isArray(findingsPayload?.findings) ? findingsPayload.findings : [],
+                requests: Array.isArray(requestsPayload?.requests) ? requestsPayload.requests : [],
+            });
+        } catch (error) {
+            return `${Date.now()}`;
+        }
+    }
+    function renderX64dbgLoading(jobId) {
+        $('#x64dbg-content').addClass('hidden');
+        $('#x64dbg-status').html(`
+            <div class="eyebrow mb-2">x64dbg MCP</div>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="triage-pill processing">Syncing</div>
+                <div class="text-white text-lg font-semibold">Loading debugger bridge for ${escapeHtml(getShortJobId(jobId))}</div>
+            </div>
+            <p class="mt-3 text-sm text-cyan-100/60">Fetching session state, queued requests, and captured findings from the sandbox bridge.</p>
+        `);
+    }
+    function renderX64dbgError(jobId, message) {
+        $('#x64dbg-content').addClass('hidden');
+        $('#x64dbg-status').html(`
+            <div class="eyebrow mb-2">x64dbg MCP</div>
+            <div class="flex flex-wrap items-center gap-3">
+                <div class="triage-pill processing">Unavailable</div>
+                <div class="text-white text-lg font-semibold">Debugger bridge could not be loaded</div>
+            </div>
+            <p class="mt-3 text-sm text-red-300/80 mono">${escapeHtml(message || `Failed to load x64dbg data for ${jobId}`)}</p>
+        `);
+    }
+    function renderX64dbgOverview(jobId, state, findingsPayload, requestsPayload) {
+        const findings = Array.isArray(findingsPayload.findings) ? findingsPayload.findings : [];
+        const requests = Array.isArray(requestsPayload.requests) ? requestsPayload.requests : [];
+        const normalizedStatus = String(state.status || 'idle').toLowerCase();
+        const pillClass = ['ready', 'attached', 'active'].includes(normalizedStatus) ? 'ready' : 'processing';
+        $('#x64dbg-content').removeClass('hidden');
+        $('#x64dbg-status').html(`
+            <div class="eyebrow mb-2">x64dbg MCP</div>
+            <div class="text-white text-lg font-semibold">Debugger bridge loaded for ${escapeHtml(currentJob?.filename || getShortJobId(jobId))}</div>
+            <p class="mt-2 text-sm text-cyan-100/60">This panel tracks the sandbox-side x64dbg MCP session, captured findings, and queued debugging actions.</p>
+        `);
+        $('#x64dbg-session-status').text(normalizedStatus);
+        $('#x64dbg-pid').text(state.pid ? String(state.pid) : '-');
+        $('#x64dbg-findings-count').text(String(findings.length));
+        $('#x64dbg-requests-count').text(String(requests.length));
+        $('#x64dbg-pill').attr('class', `triage-pill ${pillClass}`).text(normalizedStatus === 'idle' ? 'Idle' : normalizedStatus.replaceAll('_', ' '));
+        $('#x64dbg-title').text(state.target_module || currentJob?.filename || 'x64dbg MCP bridge');
+        $('#x64dbg-meta').html(`
+            <div>Target ID: <span class="mono">${escapeHtml(getShortJobId(jobId))}</span></div>
+            <div>Transport: <span class="mono">${escapeHtml(state.transport || 'mcp')}</span></div>
+            <div>Sample present: <span class="mono">${state.sample_present ? 'yes' : 'no'}</span></div>
+            <div>Last update: <span class="mono">${escapeHtml(state.updated_at || 'n/a')}</span></div>
+        `);
+        renderDebugCards(
+            $('#x64dbg-findings-list'),
+            findings,
+            'No debugger findings have been captured for this job yet.',
+            (finding, index) => `
+                <div class="debug-log-card">
+                    <div class="debug-log-title">${escapeHtml(finding.summary || finding.type || 'Debugger finding')}</div>
+                    <div class="debug-log-copy">${escapeHtml(finding.evidence || 'No debugger evidence text recorded.')}</div>
+                    <div class="triage-meta-list mt-3">
+                        <div>Type: <span class="mono">${escapeHtml(finding.type || 'unknown')}</span></div>
+                        <div>Address: <span class="mono">${escapeHtml(finding.address || 'n/a')}</span></div>
+                    </div>
+                </div>
+            `
+        );
+        renderDebugCards(
+            $('#x64dbg-requests-list'),
+            requests.slice().reverse(),
+            'No debugger requests are queued for this job yet.',
+            (request, index) => `
+                <div class="debug-log-card">
+                    <div class="debug-log-title">${escapeHtml(request.action || 'debug action')}</div>
+                    <div class="debug-log-copy">${escapeHtml(request.notes || 'No operator note was attached to this request.')}</div>
+                    <div class="triage-meta-list mt-3">
+                        <div>Status: <span class="mono">${escapeHtml(request.status || 'queued')}</span></div>
+                        <div>Address: <span class="mono">${escapeHtml(request.address || 'n/a')}</span></div>
+                        <div>Requested: <span class="mono">${escapeHtml(request.requested_at || 'n/a')}</span></div>
+                    </div>
+                </div>
+            `
+        );
+    }
+    async function loadX64dbgOverview(jobId, options = {}) {
+        clearX64dbgPolling(jobId);
+        const silent = Boolean(options.silent);
+        const forceRender = Boolean(options.forceRender);
+        if (!silent || !x64dbgStateDigests[jobId]) {
+            renderX64dbgLoading(jobId);
+        }
+        try {
+            const [stateResponse, findingsResponse, requestsResponse] = await Promise.all([
+                fetch(`/debug/x64dbg/${jobId}`),
+                fetch(`/debug/x64dbg/${jobId}/findings`),
+                fetch(`/debug/x64dbg/${jobId}/requests`)
+            ]);
+            const [state, findingsPayload, requestsPayload] = await Promise.all([
+                stateResponse.json(),
+                findingsResponse.json(),
+                requestsResponse.json()
+            ]);
+            if (!stateResponse.ok) {
+                throw new Error(state.error || `HTTP ${stateResponse.status}`);
+            }
+            if (!findingsResponse.ok) {
+                throw new Error(findingsPayload.error || `HTTP ${findingsResponse.status}`);
+            }
+            if (!requestsResponse.ok) {
+                throw new Error(requestsPayload.error || `HTTP ${requestsResponse.status}`);
+            }
+            const digest = computeX64dbgDigest(state, findingsPayload, requestsPayload);
+            if (x64dbgStateDigests[jobId] !== digest || !silent || forceRender) {
+                renderX64dbgOverview(jobId, state, findingsPayload, requestsPayload);
+                x64dbgStateDigests[jobId] = digest;
+            }
+            x64dbgPollers[jobId] = setTimeout(() => {
+                if (activeView === 'x64dbg' && currentJobId === jobId) {
+                    loadX64dbgOverview(jobId, { silent: true });
+                }
+            }, 5000);
+        } catch (error) {
+            console.error('x64dbg overview error:', error);
+            renderX64dbgError(jobId, error.message);
+        }
+    }
+    async function queueX64dbgRequest(payload) {
+        if (!currentJobId) {
+            $('#x64dbg-request-status').text('Select a job before queuing debugger requests.');
+            return;
+        }
+        $('#x64dbg-request-status').text('Queueing debugger request...');
+        try {
+            const response = await fetch(`/debug/x64dbg/${currentJobId}/requests`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await response.json();
+            if (!response.ok) {
+                throw new Error(data.error || `HTTP ${response.status}`);
+            }
+            $('#x64dbg-request-status').text(`Queued ${payload.action} for ${currentJob?.filename || getShortJobId(currentJobId)}.`);
+            loadX64dbgOverview(currentJobId, { silent: true, forceRender: true });
+        } catch (error) {
+            console.error('x64dbg queue request error:', error);
+            $('#x64dbg-request-status').text(`Failed to queue request: ${error.message}`);
+        }
+    }
+    function renderOperatorAlerts(alerts = []) {
+        if (!alerts.length) {
+            $('#operator-alerts').html('');
+            return;
+        }
+        $('#operator-alerts').html(alerts.map(alert => `
+            <div class="operator-alert ${escapeHtml(alert.level || 'info')}">
+                <div class="operator-alert-title">${escapeHtml(alert.title || 'Operator Alert')}</div>
+                <div class="operator-alert-copy">${escapeHtml(alert.description || '')}</div>
+            </div>
+        `).join(''));
+    }
+    function renderOperatorChecklist(checklist = []) {
+        if (!checklist.length) {
+            $('#operator-checklist').html('');
+            return;
+        }
+        $('#operator-checklist').html(checklist.map(item => `
+            <div class="operator-checklist-item ${item.status === 'completed' ? 'is-completed' : item.status === 'active' ? 'is-active' : ''}">
+                <div class="operator-checkpoint-dot"></div>
+                <div>
+                    <div class="operator-checkpoint-title">${escapeHtml(item.label || 'Step')}</div>
+                    <div class="operator-checkpoint-copy">${escapeHtml(item.description || '')}</div>
+                </div>
+            </div>
+        `).join(''));
+    }
+    function renderOperatorPrimary(action) {
+        if (!action) {
+            $('#operator-primary').addClass('hidden').html('');
+            return;
+        }
+        $('#operator-primary').removeClass('hidden').html(`
+            <div class="eyebrow mb-2">Recommended Step</div>
+            <div class="text-white text-lg font-semibold">${escapeHtml(action.label || 'Recommended action')}</div>
+            <div class="operator-primary-copy">${escapeHtml(action.description || '')}</div>
+            <button type="button" class="operator-action operator-primary-button" data-index="0">
+                <div class="eyebrow mb-2">${escapeHtml(action.kind || 'action')}</div>
+                <div class="text-white font-semibold">${escapeHtml(action.label || 'Recommended action')}</div>
+                <div class="text-sm text-cyan-100/65 mt-2">Run the main action for this phase.</div>
+            </button>
+        `);
+    }
+    function renderOperatorEmpty() {
+        $('#operator-shell').addClass('hidden');
+    }
+    function renderOperatorPanel(payload) {
+        const summary = payload.summary || {};
+        const suggestions = Array.isArray(payload.suggestions) ? payload.suggestions : [];
+        const alerts = Array.isArray(payload.alerts) ? payload.alerts : [];
+        const checklist = Array.isArray(payload.checklist) ? payload.checklist : [];
+        $('#operator-shell').removeClass('hidden');
+        $('#operator-title').text(`AI Operator for ${currentJob?.filename || payload.filename || 'current target'}`);
+        $('#operator-copy').text([payload.stage_headline, payload.stage_copy].filter(Boolean).join(' '));
+        $('#operator-stage').attr('class', `triage-pill ${String(payload.stage || '').includes('debug') ? 'ready' : 'processing'}`).text(String(payload.stage || 'analysis').replaceAll('_', ' '));
+        $('#operator-summary').html(`
+            <div class="operator-card">
+                <div class="eyebrow mb-2">Triage</div>
+                <div class="text-white text-xl font-semibold">${escapeHtml(summary.triage_status || 'missing')}</div>
+            </div>
+            <div class="operator-card">
+                <div class="eyebrow mb-2">Dynamic Artifacts</div>
+                <div class="text-white text-xl font-semibold">${escapeHtml(String(summary.dynamic_artifacts || 0))}</div>
+            </div>
+            <div class="operator-card">
+                <div class="eyebrow mb-2">x64dbg</div>
+                <div class="text-white text-xl font-semibold">${escapeHtml(summary.x64dbg_status || 'idle')}</div>
+            </div>
+            <div class="operator-card">
+                <div class="eyebrow mb-2">Debugger Findings</div>
+                <div class="text-white text-xl font-semibold">${escapeHtml(String(summary.x64dbg_findings || 0))}</div>
+            </div>
+        `);
+        renderOperatorAlerts(alerts);
+        renderOperatorPrimary(payload.primary_action || suggestions[0]);
+        renderOperatorChecklist(checklist);
+        $('#operator-actions').html(suggestions.map((suggestion, index) => `
+            <button type="button" class="operator-action" data-index="${index}">
+                <div class="eyebrow mb-2">${escapeHtml(suggestion.kind || 'action')}</div>
+                <div class="text-white font-semibold">${escapeHtml(suggestion.label || 'Recommended action')}</div>
+                <div class="text-sm text-cyan-100/65 mt-2">${escapeHtml(suggestion.description || '')}</div>
+            </button>
+        `).join(''));
+        $('#operator-actions').data('suggestions', suggestions);
+    }
+    function maybeNotifyOperatorChanges(jobId, payload) {
+        const previous = getJobOperatorState(jobId);
+        if (previous.state_digest && previous.state_digest !== payload.state_digest) {
+            const incomingAlerts = Array.isArray(payload.alerts) ? payload.alerts : [];
+            incomingAlerts.forEach((alert, index) => {
+                const fingerprint = `${payload.state_digest}:${index}:${alert.title || 'alert'}`;
+                if (previous.last_alert_fingerprint !== fingerprint) {
+                    showOperatorToast(alert);
+                    updateJobOperatorState(jobId, { last_alert_fingerprint: fingerprint });
+                }
+            });
+        }
+        updateJobOperatorState(jobId, {
+            payload,
+            state_digest: payload.state_digest,
+            stage: payload.stage,
+        });
+    }
+    function applyOperatorSuggestion(suggestion, mode = 'manual') {
+        if (!suggestion) return;
+        const payload = suggestion.payload || {};
+        if (suggestion.kind === 'chat_prompt' && payload.prompt) {
+            setActiveView('chat');
+            $('#chat-input').val(payload.prompt).trigger('input').focus();
+            if (mode === 'autopilot') {
+                showOperatorToast({
+                    level: 'info',
+                    title: 'Autopilot staged a chat step',
+                    description: 'The next recommended prompt has been inserted into the chat box for review.',
+                });
+            }
+        } else if (suggestion.kind === 'open_view' && payload.view) {
+            setActiveView(payload.view);
+            if (mode === 'autopilot') {
+                showOperatorToast({
+                    level: 'info',
+                    title: 'Autopilot changed the workspace view',
+                    description: `The operator moved you to ${payload.view} because it is the best next place to look.`,
+                });
+            }
+        } else if (suggestion.kind === 'debug_request' && payload.action) {
+            setActiveView('x64dbg');
+            if (mode === 'manual') {
+                queueX64dbgRequest(payload);
+            } else {
+                $('#x64dbg-request-action').val(payload.action || '');
+                $('#x64dbg-request-address').val(payload.address || '');
+                $('#x64dbg-request-notes').val(payload.notes || '');
+                $('#x64dbg-request-status').text(`Autopilot prepared ${payload.action} but left execution to you.`);
+                showOperatorToast({
+                    level: 'warning',
+                    title: 'Autopilot prepared a debugger action',
+                    description: 'The request is prefilled in x64dbg, but it was not sent automatically.',
+                });
+            }
+        }
+    }
+    function maybeRunAutopilot(jobId, payload) {
+        if (!autopilotEnabled || !jobId || !payload) return;
+        const state = getJobOperatorState(jobId);
+        if (state.autopilot_digest_applied === payload.state_digest) return;
+        const primaryAction = payload.primary_action || (Array.isArray(payload.suggestions) ? payload.suggestions[0] : null);
+        if (!primaryAction) return;
+        applyOperatorSuggestion(primaryAction, 'autopilot');
+        updateJobOperatorState(jobId, { autopilot_digest_applied: payload.state_digest });
+    }
+    async function loadOperatorPanel(jobId) {
+        clearOperatorPolling(jobId);
+        try {
+            const response = await fetch(`/assistant/next_steps/${jobId}`);
+            const payload = await response.json();
+            if (!response.ok) {
+                throw new Error(payload.error || `HTTP ${response.status}`);
+            }
+            const cachedState = getJobOperatorState(jobId);
+            if (cachedState.state_digest !== payload.state_digest || !$('#operator-shell').is(':visible')) {
+                renderOperatorPanel(payload);
+            }
+            maybeNotifyOperatorChanges(jobId, payload);
+            maybeRunAutopilot(jobId, payload);
+            operatorPollers[jobId] = setTimeout(() => {
+                if (currentJobId === jobId) {
+                    loadOperatorPanel(jobId);
+                }
+            }, 6000);
+        } catch (error) {
+            console.error('operator panel error:', error);
+            renderOperatorEmpty();
+        }
+    }
+    async function copyX64dbgBridgeCommand() {
+        const command = $('#x64dbg-bridge-command').text().trim();
+        try {
+            await navigator.clipboard.writeText(command);
+            $('#x64dbg-bridge-copy-status').text('Recovery command copied to clipboard.');
+        } catch (error) {
+            console.error('clipboard copy failed:', error);
+            $('#x64dbg-bridge-copy-status').text('Could not copy automatically. Select the recovery command manually inside the panel.');
+        }
+    }
+    function renderChatEmptyState() {
+        if ($('#chat-empty-state').length || !currentJob) return;
+        const trackHtml = ANALYSIS_TRACKS.map(track => {
+            const promptChips = track.prompts.map(prompt => `<button type="button" class="prompt-chip suggestion-chip" data-prompt="${escapeHtml(prompt)}">${escapeHtml(prompt)}</button>`).join('');
+            return `
+                <div class="prompt-track">
+                    <div class="prompt-track-title">${escapeHtml(track.title)}</div>
+                    <div class="prompt-track-copy">${escapeHtml(track.copy)}</div>
+                    <div class="mt-3 flex flex-wrap gap-2">${promptChips}</div>
+                </div>
+            `;
+        }).join('');
+        $('#chat-log').append(`
+            <div id="chat-empty-state" class="chat-empty-state p-5 mb-4">
+                <div class="eyebrow mb-2">Article-Inspired Playbooks</div>
+                <div class="text-white text-xl font-semibold">Probe the current target like a reversing workflow</div>
+                <p class="mt-2 text-sm text-cyan-100/60">These guided prompts turn the article's tool categories into practical static-analysis tracks for this project.</p>
+                <div class="mt-4">${trackHtml}</div>
+            </div>
+        `);
+    }
+    function dismissChatEmptyState() {
+        $('#chat-empty-state').remove();
+    }
+    function addSessionMessage() {
+        if (!currentJob) return;
+        addChatCard(`
+            <div class="chat-status-card p-3">
+                <div class="eyebrow mb-2">Session Linked</div>
+                <div class="text-white font-semibold text-base">Connected to ${escapeHtml(currentJob.filename || 'Recovered analysis')}</div>
+                <div class="job-meta mono text-xs mt-1">Target ID: ${escapeHtml(getShortJobId(currentJob.job_id))}</div>
+                <div class="text-cyan-100/58 text-sm mt-2">Awaiting command. Start with static triage, inspect imported APIs, then pivot into specific functions and decompilation paths.</div>
+            </div>
+        `, false);
+        renderChatEmptyState();
+        if (activeView === 'triage') {
+            loadTriageReport(currentJob.job_id);
+        } else if (activeView === 'x64dbg') {
+            loadX64dbgOverview(currentJob.job_id);
+        }
+    }
+    function addChatCard(html, isUser = false) {
+        dismissChatEmptyState();
+        const senderClass = isUser ? 'chat-bubble-user' : '';
+        $('#chat-log').append(`
+            <div class="mb-4">
+                <div class="${senderClass}">${html}</div>
+            </div>
+        `);
+        $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
     }
     function addChatMessage(role, message) {
         const senderClass = role === 'user' ? 'chat-bubble-user' : 'chat-bubble-assistant';
-        const sanitizedMessage = $('<div/>').text(message).html();
+        const sanitizedMessage = escapeHtml(message);
+        dismissChatEmptyState();
         $('#chat-log').append(`
             <div class="mb-4">
                 <div class="p-3 rounded-md ${senderClass}">${sanitizedMessage}</div>
@@ -85,17 +3059,60 @@ $(document).ready(function() {
     }
     function addShimmerPlaceholder() {
         const placeholderId = `shimmer-${Date.now()}`;
+        dismissChatEmptyState();
         $('#chat-log').append(`
             <div id="${placeholderId}" class="mb-4">
-                <div class="p-3 rounded-md chat-bubble-assistant space-y-3">
-                    <div class="h-4 w-5/6 rounded bg-gray-700 animate-pulse"></div>
-                    <div class="h-4 w-full rounded bg-gray-700 animate-pulse"></div>
-                    <div class="h-4 w-3/4 rounded bg-gray-700 animate-pulse"></div>
+                <div class="thinking-card p-4">
+                    <div class="eyebrow mb-3">Signal Incoming</div>
+                    <div class="space-y-3">
+                        <div class="thinking-line w-2/5"></div>
+                        <div class="thinking-line w-full"></div>
+                        <div class="thinking-line w-4/6"></div>
+                    </div>
                 </div>
             </div>
         `);
         $('#chat-log').scrollTop($('#chat-log')[0].scrollHeight);
         return placeholderId;
+    }
+    function setProcessingBadge($container, message, isActive = true) {
+        const badgeHtml = isActive
+            ? `<div class="processing-badge"><span class="processing-dot"></span><span>${escapeHtml(message)}</span></div>`
+            : '';
+        const $existing = $container.find('.processing-badge');
+        if ($existing.length) {
+            $existing.remove();
+        }
+        if (badgeHtml) {
+            $container.prepend(badgeHtml);
+        }
+    }
+    function setToolStateRail($container, state, message) {
+        const normalizedState = state || 'idle';
+        const stateLabelMap = {
+            active: 'Tool Active',
+            processing: 'Warming Cache',
+            ready: 'Ready',
+            idle: 'Idle'
+        };
+        const railHtml = message
+            ? `
+                <div class="tool-state-rail">
+                    <div class="tool-state-copy">
+                        <div class="tool-state-label">Execution State</div>
+                        <div class="tool-state-message">${escapeHtml(message)}</div>
+                    </div>
+                    <div class="tool-state-pill state-${escapeHtml(normalizedState)}">${escapeHtml(stateLabelMap[normalizedState] || 'Idle')}</div>
+                </div>
+            `
+            : '';
+        const $existing = $container.find('.tool-state-rail');
+        if ($existing.length) {
+            $existing.remove();
+        }
+        if (railHtml) {
+            $container.prepend(railHtml);
+        }
     }
     function pollStatus(jobId) {
         if (jobStatusPollers[jobId]) return;
@@ -109,22 +3126,40 @@ $(document).ready(function() {
                 $jobItem.text(status.toUpperCase());
                 if (status === 'done') {
                     $jobItem.removeClass('text-yellow-400').addClass('text-green-400');
+                    updateStoredJobStatus(jobId, status);
                     clearInterval(jobStatusPollers[jobId]);
                     delete jobStatusPollers[jobId];
                 } else if (status === 'failed') {
                     $jobItem.removeClass('text-yellow-400').addClass('text-red-400');
+                    updateStoredJobStatus(jobId, status);
                     clearInterval(jobStatusPollers[jobId]);
                     delete jobStatusPollers[jobId];
+                } else {
+                    updateStoredJobStatus(jobId, status);
                 }
             } catch (error) {
                 console.error("Polling error:", error);
                 const $jobItem = $(`#job-${jobId} .job-status`);
                 $jobItem.text('ERROR').addClass('text-red-400');
+                updateStoredJobStatus(jobId, 'error');
                 clearInterval(jobStatusPollers[jobId]);
                 delete jobStatusPollers[jobId];
             }
         }, 3000);
     }
+    setActiveView(activeView);
+    setAutopilotEnabled(autopilotEnabled);
+    setHelpModeEnabled(helpModeEnabled);
+    setShowArchivedJobs(showArchivedJobs);
+    restoreCollapseState();
+    loadJobsFromServer();
+    showUploadStatus('');
+    resetUploadProgress();
+    $('#file-input').on('change', updateSelectedFileName);
+    $('#chat-log').on('click', '.suggestion-chip', function() {
+        const prompt = $(this).data('prompt');
+        $('#chat-input').val(prompt).trigger('input').focus();
+    });
     $('#upload-form').on('submit', function(e) {
         e.preventDefault();
         const fileInput = $('#file-input')[0];
@@ -134,46 +3169,191 @@ $(document).ready(function() {
         }
         const formData = new FormData();
         formData.append('file', fileInput.files[0]);
-        showUploadStatus('Analyzing...', false);
+        showUploadStatus('Uploading sample...', false);
+        setUploadProgress(0, '0%');
+        $('#upload-stage-analysis-status').text('Pending');
+        uploadStartedAt = Date.now();
+        setUploadTelemetry(0, fileInput.files[0].size || 0, 0, NaN);
         $.ajax({
             url: '/upload',
             type: 'POST',
             data: formData,
             processData: false,
             contentType: false,
+            xhr: function() {
+                const xhr = $.ajaxSettings.xhr();
+                if (xhr.upload) {
+                    xhr.upload.addEventListener('progress', function(event) {
+                        if (!event.lengthComputable) {
+                            setUploadProgress(100, 'Streaming');
+                            setUploadTelemetry(0, 0, 0, NaN);
+                            return;
+                        }
+                        const elapsedSeconds = Math.max((Date.now() - uploadStartedAt) / 1000, 0.001);
+                        const bytesPerSecond = event.loaded / elapsedSeconds;
+                        const remainingBytes = Math.max(event.total - event.loaded, 0);
+                        const etaSeconds = bytesPerSecond > 0 ? remainingBytes / bytesPerSecond : NaN;
+                        const percent = (event.loaded / event.total) * 100;
+                        setUploadProgress(percent, `${Math.round(percent)}%`);
+                        setUploadTelemetry(event.loaded, event.total, bytesPerSecond, etaSeconds);
+                        if (event.loaded === event.total) {
+                            showUploadStatus('Upload complete. Waiting for Ghidra analysis...', false);
+                            setUploadProgress(100, 'Uploaded');
+                            setUploadTelemetry(event.total, event.total, bytesPerSecond, 0);
+                            startAnalysisProgress();
+                        }
+                    });
+                }
+                return xhr;
+            },
             success: function(data) {
                 if (data.error) {
+                    failAnalysisProgress();
+                    resetUploadProgress();
                     showUploadStatus(`ERROR: ${data.error}`, true);
                     return;
                 }
-                showUploadStatus('Analysis started!', false);
+                setUploadProgress(100, 'Uploaded');
+                finishAnalysisProgress();
+                showUploadStatus('Analysis complete. Job archived and ready.', false);
                 const { job_id, status } = data;
                 const filename = fileInput.files[0].name;
-                const newJobHtml = `
-                    <div id="job-${job_id}" class="job-item p-3 bg-gray-800 hover:bg-gray-700 rounded-md cursor-pointer transition" data-job-id="${job_id}">
-                        <div class="font-medium truncate text-gray-200">${filename}</div>
-                        <div class="text-xs text-gray-400">ID: ${job_id.substring(0,8)}...</div>
-                        <div class="text-xs text-yellow-400 font-mono job-status mt-1">${status.toUpperCase()}</div>
-                    </div>`;
-                $('#jobs-list').prepend(newJobHtml);
+                upsertStoredJob({ job_id, filename, status: status.toLowerCase() });
+                renderJobItem({ job_id, filename, status }, true);
+                if (activeView === 'triage' && currentJobId === job_id) {
+                    loadTriageReport(job_id);
+                } else if (activeView === 'x64dbg' && currentJobId === job_id) {
+                    loadX64dbgOverview(job_id);
+                }
+                if (currentJobId === job_id) {
+                    loadOperatorPanel(job_id);
+                }
+                fileInput.value = '';
+                updateSelectedFileName();
                 pollStatus(job_id);
+                setTimeout(() => {
+                    showUploadStatus('');
+                    resetUploadProgress();
+                }, 2400);
             },
             error: function(xhr) {
+                failAnalysisProgress();
                 const error = xhr.responseJSON ? xhr.responseJSON.error : 'Unknown error.';
                 showUploadStatus(`UPLOAD FAILED: ${error}`, true);
+                setTimeout(() => resetUploadProgress(), 3200);
             }
         });
     });
     $('#jobs-list').on('click', '.job-item', function() {
-        currentJobId = $(this).data('job-id');
-        $('.job-item').removeClass('bg-gray-700');
-        $(this).addClass('bg-gray-700');
-        $('#welcome-message').hide();
-        $('#chat-container').removeClass('hidden').addClass('flex');
-        $('#chat-input, #chat-form button').prop('disabled', false);
-        $('#chat-log').html('');
-        addChatMessage('assistant', `Connected to job ${currentJobId}. Awaiting command...`);
-        $('#chat-input').focus();
+        activateJob($(this).data('job-id'));
+    });
+    $('#jobs-list').on('click', '.job-delete-button', function(e) {
+        e.stopPropagation();
+        deleteJob($(this).data('job-id'));
+    });
+    $('#jobs-list').on('click', '.job-rename-button', function(e) {
+        e.stopPropagation();
+        renameJob($(this).data('job-id'));
+    });
+    $('#jobs-list').on('click', '.job-export-button', function(e) {
+        e.stopPropagation();
+        exportTriage($(this).data('job-id'), 'md');
+    });
+    $('#jobs-list').on('click', '.job-archive-button', function(e) {
+        e.stopPropagation();
+        toggleJobArchive($(this).data('job-id'));
+    });
+    $('#toggle-archived-jobs').on('click', function() {
+        setShowArchivedJobs(!showArchivedJobs);
+        loadStoredJobs();
+    });
+    $('#archive-completed-jobs').on('click', function() {
+        archiveCompletedJobs();
+    });
+    $('#restore-archived-jobs').on('click', function() {
+        restoreArchivedJobs();
+    });
+    $('#delete-completed-jobs').on('click', function() {
+        deleteCompletedJobs();
+    });
+    $('#view-chat').on('click', function() {
+        setActiveView('chat');
+    });
+    $('#view-triage').on('click', function() {
+        setActiveView('triage');
+    });
+    $('#view-x64dbg').on('click', function() {
+        setActiveView('x64dbg');
+    });
+    $('#x64dbg-view').on('click', '.debug-request-chip', function() {
+        const action = $(this).data('action');
+        const address = $(this).data('address');
+        const notes = $(this).data('notes');
+        $('#x64dbg-request-action').val(action || '');
+        $('#x64dbg-request-address').val(address || '');
+        $('#x64dbg-request-notes').val(notes || '');
+        queueX64dbgRequest({
+            action: action,
+            address: address || undefined,
+            notes: notes || ''
+        });
+    });
+    $('#x64dbg-request-form').on('submit', function(e) {
+        e.preventDefault();
+        const action = $('#x64dbg-request-action').val().trim();
+        const address = $('#x64dbg-request-address').val().trim();
+        const notes = $('#x64dbg-request-notes').val().trim();
+        if (!action) {
+            $('#x64dbg-request-status').text('Action is required.');
+            return;
+        }
+        queueX64dbgRequest({
+            action: action,
+            address: address || undefined,
+            notes: notes
+        });
+    });
+    $('#copy-x64dbg-bridge-command').on('click', function() {
+        copyX64dbgBridgeCommand();
+    });
+    $('#autopilot-toggle').on('click', function() {
+        setAutopilotEnabled(!autopilotEnabled);
+        if (autopilotEnabled && currentJobId) {
+            const cachedState = getJobOperatorState(currentJobId);
+            if (cachedState.payload) {
+                maybeRunAutopilot(currentJobId, cachedState.payload);
+            }
+        }
+    });
+    $('#help-mode-toggle').on('click', function() {
+        setHelpModeEnabled(!helpModeEnabled);
+    });
+    $(document).on('click', '[data-collapse-target]', function() {
+        const targetId = $(this).data('collapse-target');
+        if (!targetId) return;
+        const isCollapsed = !$(this).hasClass('is-collapsed');
+        applyCollapseState(this, targetId, isCollapsed);
+        setCollapseState(targetId, isCollapsed);
+    });
+    $(document).on('click', '.info-button', function() {
+        const targetId = $(this).data('info-target');
+        if (!targetId) return;
+        const $panel = $(`#${targetId}`);
+        const willOpen = $panel.hasClass('hidden');
+        $panel.toggleClass('hidden', !willOpen);
+        $(this).toggleClass('is-open', willOpen).attr('aria-expanded', willOpen ? 'true' : 'false');
+    });
+    $('#operator-actions').on('click', '.operator-action', function() {
+        const suggestions = $('#operator-actions').data('suggestions') || [];
+        const suggestion = suggestions[$(this).data('index')];
+        if (!suggestion) return;
+        applyOperatorSuggestion(suggestion, 'manual');
+    });
+    $('#operator-primary').on('click', '.operator-action', function() {
+        const suggestions = $('#operator-actions').data('suggestions') || [];
+        const suggestion = suggestions[$(this).data('index')];
+        if (!suggestion) return;
+        applyOperatorSuggestion(suggestion, 'manual');
     });
     $('#chat-input').on('keydown', function(e) {
         if (e.key === 'Enter' && !e.shiftKey) {
@@ -207,7 +3387,9 @@ $(document).ready(function() {
             if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
             const reader = response.body.getReader();
             const decoder = new TextDecoder();
-            $responseContainer.html('<div class="markdown-content"></div><div class="tool-calls"></div>');
+            $responseContainer.removeClass('thinking-card').addClass('chat-bubble-assistant assistant-shell p-4 rounded-md');
+            $responseContainer.html('<div class="markdown-content"></div><div class="tool-calls mt-3"></div>');
+            setToolStateRail($responseContainer, 'active', 'Assistant linked to Ghidra and waiting for the first tool result.');
             function read() {
                 reader.read().then(({ done, value }) => {
                     if (done) {
@@ -226,8 +3408,22 @@ $(document).ready(function() {
                                     $responseContainer.find('.markdown-content').html(marked.parse(fullResponse));
                                 } else if (data.type === 'tool_call') {
                                     toolCallsHtml += `<li>${data.description}</li>`;
-                                    $responseContainer.find('.tool-calls').html(`<div class="text-xs text-gray-400 mt-2 bg-gray-900 p-2 rounded border border-gray-700"><strong>SYSTEM LOG:</strong><ul>${toolCallsHtml}</ul></div>`);
+                                    $responseContainer.find('.tool-calls').html(`<div class="tool-log-card"><div class="eyebrow">System Log</div><ul>${toolCallsHtml}</ul></div>`);
+                                } else if (data.type === 'tool_state') {
+                                    setToolStateRail($responseContainer, data.state, data.content);
+                                } else if (data.type === 'processing_status') {
+                                    if (data.state === 'start') {
+                                        setToolStateRail($responseContainer, 'processing', data.content);
+                                        setProcessingBadge($responseContainer, data.content, true);
+                                    } else {
+                                        setProcessingBadge($responseContainer, '', false);
+                                        setToolStateRail($responseContainer, 'ready', data.content);
+                                        toolCallsHtml += `<li>${data.content}</li>`;
+                                        $responseContainer.find('.tool-calls').html(`<div class="tool-log-card"><div class="eyebrow">System Log</div><ul>${toolCallsHtml}</ul></div>`);
+                                    }
                                 } else if (data.type === 'error') {
+                                    setProcessingBadge($responseContainer, '', false);
+                                    setToolStateRail($responseContainer, 'idle', data.content);
                                     $responseContainer.html(`<div class="text-red-400">ERROR: ${data.content}</div>`);
                                 }
                             } catch (e) {

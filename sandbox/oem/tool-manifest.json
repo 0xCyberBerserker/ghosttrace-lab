@@ -1,0 +1,258 @@
+{
+  "packages": [
+    {
+      "id": "vcpp-x64",
+      "name": "VC++ Redistributable x64",
+      "kind": "exe",
+      "url": "https://aka.ms/vs/17/release/vc_redist.x64.exe",
+      "download_name": "vc_redist.x64.exe",
+      "args": "/install /quiet /norestart",
+      "allowed_exit_codes": [0, 3010],
+      "install_path": "C:\\Tools\\ReverseLab\\Runtime",
+      "source": "aka.ms",
+      "notes": "Required runtime dependency for many reverse-engineering tools."
+    },
+    {
+      "id": "vcpp-x86",
+      "name": "VC++ Redistributable x86",
+      "kind": "exe",
+      "url": "https://aka.ms/vs/17/release/vc_redist.x86.exe",
+      "download_name": "vc_redist.x86.exe",
+      "args": "/install /quiet /norestart",
+      "allowed_exit_codes": [0, 3010],
+      "install_path": "C:\\Tools\\ReverseLab\\Runtime",
+      "source": "aka.ms",
+      "notes": "Required runtime dependency for many reverse-engineering tools."
+    },
+    {
+      "id": "sysinternals",
+      "name": "Sysinternals Suite",
+      "kind": "zip",
+      "url": "https://download.sysinternals.com/files/SysinternalsSuite.zip",
+      "download_name": "SysinternalsSuite.zip",
+      "install_path": "C:\\Tools\\ReverseLab\\Sysinternals",
+      "source": "download.sysinternals.com",
+      "notes": "Procmon, Process Explorer, Autoruns, TCPView, ProcDump, Strings, Sigcheck."
+    },
+    {
+      "id": "wireshark",
+      "name": "Wireshark",
+      "kind": "exe",
+      "url": "https://2.na.dl.wireshark.org/win64/Wireshark-latest-x64.exe",
+      "download_name": "Wireshark-latest-x64.exe",
+      "args": "/S",
+      "allowed_exit_codes": [0, 3010],
+      "install_path": "C:\\Program Files\\Wireshark",
+      "source": "wireshark.org",
+      "notes": "Packet capture and traffic analysis. Live capture support may still depend on Npcap."
+    },
+    {
+      "id": "x64dbg",
+      "name": "x64dbg",
+      "kind": "github-zip",
+      "repo": "x64dbg/x64dbg",
+      "asset_pattern": "snapshot_.*\\.zip$",
+      "download_name": "x64dbg.zip",
+      "install_path": "C:\\Tools\\ReverseLab\\x64dbg",
+      "source": "x64dbg/x64dbg",
+      "notes": "User-mode debugger for Windows reversing."
+    },
+    {
+      "id": "x64dbg-mcp",
+      "name": "x64dbg MCP Plugin Bundle",
+      "kind": "github-zip",
+      "repo": "Wasdubya/x64dbgMCP",
+      "asset_pattern": "MCPx64-x32dbg\\.zip$",
+      "download_name": "x64dbgMCP.zip",
+      "install_path": "C:\\Tools\\ReverseLab\\x64dbgMCP",
+      "source": "Wasdubya/x64dbgMCP",
+      "notes": "MCP plugin payload for x64dbg. Copied into x64dbg plugin directories by the next step."
+    },
+    {
+      "id": "x64dbg-mcp-install",
+      "name": "x64dbg MCP Plugin Install",
+      "kind": "command",
+      "executable": "powershell.exe",
+      "args": "-NoProfile -ExecutionPolicy Bypass -Command \"New-Item -ItemType Directory -Force -Path 'C:\\Tools\\ReverseLab\\x64dbg\\release\\x64\\plugins' | Out-Null; New-Item -ItemType Directory -Force -Path 'C:\\Tools\\ReverseLab\\x64dbg\\release\\x32\\plugins' | Out-Null; Copy-Item -LiteralPath 'C:\\Tools\\ReverseLab\\x64dbgMCP\\MCPx64dbg.dp64' -Destination 'C:\\Tools\\ReverseLab\\x64dbg\\release\\x64\\plugins\\MCPx64dbg.dp64' -Force; Copy-Item -LiteralPath 'C:\\Tools\\ReverseLab\\x64dbgMCP\\MCPx64dbg.dp32' -Destination 'C:\\Tools\\ReverseLab\\x64dbg\\release\\x32\\plugins\\MCPx64dbg.dp32' -Force\"",
+      "install_path": "C:\\Tools\\ReverseLab\\x64dbg\\release",
+      "source": "Wasdubya/x64dbgMCP",
+      "notes": "Places the MCP plugin binaries into x64dbg so the debugger can expose an MCP surface."
+    },
+    {
+      "id": "die",
+      "name": "Detect It Easy",
+      "kind": "github-zip",
+      "repo": "horsicq/DIE-engine",
+      "asset_pattern": "die_win64_portable_.*\\.zip$",
+      "download_name": "DetectItEasy.zip",
+      "install_path": "C:\\Tools\\ReverseLab\\DetectItEasy",
+      "source": "horsicq/DIE-engine",
+      "notes": "Portable packer/compiler/signature detection."
+    },
+    {
+      "id": "dependencies",
+      "name": "Dependencies",
+      "kind": "github-zip",
+      "repo": "lucasg/Dependencies",
+      "asset_pattern": "Dependencies_x64_Release\\.zip$",
+      "download_name": "Dependencies.zip",
+      "install_path": "C:\\Tools\\ReverseLab\\Dependencies",
+      "source": "lucasg/Dependencies",
+      "notes": "Modern dependency walker alternative."
+    },
+    {
+      "id": "cutter",
+      "name": "Cutter",
+      "kind": "github-zip",
+      "repo": "rizinorg/cutter",
+      "asset_pattern": "Cutter-v.*-Windows-x86_64\\.zip$",
+      "download_name": "Cutter.zip",
+      "install_path": "C:\\Tools\\ReverseLab\\Cutter",
+      "source": "rizinorg/cutter",
+      "notes": "GUI reverse-engineering suite built on top of Rizin."
+    },
+    {
+      "id": "rizin",
+      "name": "Rizin",
+      "kind": "github-zip",
+      "repo": "rizinorg/rizin",
+      "asset_pattern": "rizin-windows-shared64-v.*\\.zip$",
+      "download_name": "Rizin.zip",
+      "install_path": "C:\\Tools\\ReverseLab\\Rizin",
+      "source": "rizinorg/rizin",
+      "notes": "Core command-line reversing framework used by Cutter."
+    },
+    {
+      "id": "radare2",
+      "name": "radare2",
+      "kind": "github-zip",
+      "repo": "radareorg/radare2",
+      "asset_pattern": "radare2-.*-w64\\.zip$",
+      "download_name": "radare2.zip",
+      "install_path": "C:\\Tools\\ReverseLab\\radare2",
+      "source": "radareorg/radare2",
+      "notes": "Portable radare2 distribution with r2pm available for extra packages."
+    },
+    {
+      "id": "git-for-windows",
+      "name": "Git for Windows",
+      "kind": "github-exe",
+      "repo": "git-for-windows/git",
+      "asset_pattern": "Git-.*-64-bit\\.exe$",
+      "download_name": "GitForWindows.exe",
+      "args": "/VERYSILENT /NORESTART /NOCANCEL",
+      "allowed_exit_codes": [0, 3010],
+      "install_path": "C:\\Program Files\\Git",
+      "source": "git-for-windows/git",
+      "notes": "Required by r2pm packages such as r2ai and decai."
+    },
+    {
+      "id": "r2mcp",
+      "name": "radare2 MCP",
+      "kind": "github-zip",
+      "repo": "radareorg/radare2-mcp",
+      "asset_pattern": "r2mcp-windows\\.zip$",
+      "download_name": "r2mcp.zip",
+      "install_path": "C:\\Tools\\ReverseLab\\r2mcp",
+      "source": "radareorg/radare2-mcp",
+      "notes": "Standalone MCP bridge for radare2."
+    },
+    {
+      "id": "r2pm-sync",
+      "name": "radare2 Package Sync",
+      "kind": "command",
+      "executable": "powershell.exe",
+      "args": "-NoProfile -ExecutionPolicy Bypass -Command \"$env:Path = 'C:\\Program Files\\Git\\cmd;' + $env:Path; & 'C:\\Tools\\ReverseLab\\radare2\\radare2-6.1.0-w64\\bin\\r2pm.exe' -U\"",
+      "working_directory": "C:\\Tools\\ReverseLab\\radare2\\radare2-6.1.0-w64\\bin",
+      "install_path": "C:\\Tools\\ReverseLab\\radare2",
+      "source": "radareorg/radare2",
+      "notes": "Initializes and updates the r2pm package database before plugin installs."
+    },
+    {
+      "id": "r2ai",
+      "name": "r2ai",
+      "kind": "command",
+      "optional": true,
+      "executable": "powershell.exe",
+      "args": "-NoProfile -ExecutionPolicy Bypass -Command \"$env:Path = 'C:\\Program Files\\Git\\cmd;' + $env:Path; & 'C:\\Tools\\ReverseLab\\radare2\\radare2-6.1.0-w64\\bin\\r2pm.exe' -Uci r2ai\"",
+      "working_directory": "C:\\Tools\\ReverseLab\\radare2\\radare2-6.1.0-w64\\bin",
+      "install_path": "C:\\Tools\\ReverseLab\\radare2",
+      "source": "radareorg/r2ai",
+      "notes": "Installs the LLM-assisted radare2 plugin through r2pm. Optional on Windows because upstream support is inconsistent."
+    },
+    {
+      "id": "decai",
+      "name": "decai",
+      "kind": "command",
+      "optional": true,
+      "executable": "powershell.exe",
+      "args": "-NoProfile -ExecutionPolicy Bypass -Command \"$env:Path = 'C:\\Program Files\\Git\\cmd;' + $env:Path; & 'C:\\Tools\\ReverseLab\\radare2\\radare2-6.1.0-w64\\bin\\r2pm.exe' -Uci decai\"",
+      "working_directory": "C:\\Tools\\ReverseLab\\radare2\\radare2-6.1.0-w64\\bin",
+      "install_path": "C:\\Tools\\ReverseLab\\radare2",
+      "source": "radareorg ecosystem",
+      "notes": "Installs the decai plugin through r2pm for AI-assisted decompilation workflows. Optional on Windows because upstream support is inconsistent."
+    },
+    {
+      "id": "pe-bear",
+      "name": "PE-bear",
+      "kind": "github-zip",
+      "optional": true,
+      "repo": "hasherezade/pe-bear-releases",
+      "asset_pattern": "PE-bear_.*_x64_win_.*\\.zip$",
+      "download_name": "PE-bear.zip",
+      "install_path": "C:\\Tools\\ReverseLab\\PE-bear",
+      "source": "hasherezade/pe-bear-releases",
+      "notes": "PE triage and structural inspection. Optional in the Windows lab when upstream release asset naming changes."
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Procmon",
+      "target": "C:\\Tools\\ReverseLab\\Sysinternals\\Procmon64.exe"
+    },
+    {
+      "name": "Process Explorer",
+      "target": "C:\\Tools\\ReverseLab\\Sysinternals\\procexp64.exe"
+    },
+    {
+      "name": "Autoruns",
+      "target": "C:\\Tools\\ReverseLab\\Sysinternals\\Autoruns64.exe"
+    },
+    {
+      "name": "TCPView",
+      "target": "C:\\Tools\\ReverseLab\\Sysinternals\\Tcpview.exe"
+    },
+    {
+      "name": "x64dbg",
+      "target": "C:\\Tools\\ReverseLab\\x64dbg\\release\\x64\\x64dbg.exe"
+    },
+    {
+      "name": "Cutter",
+      "target": "C:\\Tools\\ReverseLab\\Cutter\\*\\cutter.exe"
+    },
+    {
+      "name": "Rizin",
+      "target": "C:\\Tools\\ReverseLab\\Rizin\\*\\bin\\rizin.exe"
+    },
+    {
+      "name": "radare2",
+      "target": "C:\\Tools\\ReverseLab\\radare2\\*\\bin\\radare2.exe"
+    },
+    {
+      "name": "r2mcp",
+      "target": "C:\\Tools\\ReverseLab\\r2mcp\\r2mcp.exe"
+    },
+    {
+      "name": "Detect It Easy",
+      "target": "C:\\Tools\\ReverseLab\\DetectItEasy\\die.exe"
+    },
+    {
+      "name": "Dependencies",
+      "target": "C:\\Tools\\ReverseLab\\Dependencies\\DependenciesGui.exe"
+    },
+    {
+      "name": "Wireshark",
+      "target": "C:\\Program Files\\Wireshark\\Wireshark.exe"
+    }
+  ]
+}

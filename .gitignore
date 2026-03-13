@@ -1,0 +1,14 @@
+.venv/
+.playwright-cli/
+.tmp-assets/
+data/
+
+__pycache__/
+*.pyc
+
+sandbox/runner/__pycache__/
+webui/__pycache__/
+
+sandbox/host-tools/ssh-helper-test.txt
+
+*.log
