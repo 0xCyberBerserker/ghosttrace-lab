@@ -199,17 +199,17 @@ The landing page lives in [`docs/index.html`](./docs/index.html) and is publishe
 
 ## Español
 
-GhostTrace une una UI de operador con estética cyberpunk, `Ghidraaas` para análisis estático, `Ollama` para razonamiento local, artefactos de triage cacheados y un laboratorio Windows reproducible con SSH y puente de depuración.
+GhostTrace reúne una interfaz de operador con estética cyberpunk, `Ghidraaas` para análisis estático, `Ollama` para razonamiento local, artefactos de triage cacheados y un laboratorio Windows reproducible con SSH y un puente de depuración.
 
 ### Puntos fuertes
 
-- Flujo static-first apoyado por `Ghidraaas`
+- Flujo centrado en análisis estático apoyado por `Ghidraaas`
 - Integración local con `Ollama` y `huihui_ai/qwen3.5-abliterated:4b`
 - Caché de imports, strings, funciones y decompilación
 - Informes de triage automáticos por análisis
 - Gestión persistente de jobs en la UI
 - Perfil de sandbox Windows con `noVNC`, `RDP` y `SSH`
-- Puente `x64dbg` para flujos de depuración asistidos
+- Puente de `x64dbg` para flujos de depuración asistidos
 
 ### Nota de responsabilidad
 
@@ -221,7 +221,7 @@ Como cualquier stack serio de análisis binario, puede usarse mal. Esa decisión
 
 ```text
 Subida binaria -> Web UI -> Ghidraaas -> Artefactos cacheados -> AI Operator / Chat / Triage
-                                         \-> Cola sandbox -> Laboratorio Windows -> x64dbg Bridge
+                                         \-> Cola sandbox -> Laboratorio Windows -> Puente x64dbg
 ```
 
 Componentes principales:
@@ -231,7 +231,7 @@ Componentes principales:
 - `Ghidraaas/`
   Backend Ghidra-as-a-Service de Cisco Talos adaptado a este stack.
 - `sandbox/`
-  Provisionado de sandbox Windows, helpers SSH desde host, bridge tooling y automatización OEM.
+  Provisionado de sandbox Windows, utilidades SSH desde el host, herramientas del puente y automatización OEM.
 - `docs/`
   Landing pública para GitHub Pages.
 
