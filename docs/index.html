@@ -138,6 +138,26 @@
       gap: 0.9rem;
       margin-top: 1.8rem;
     }
+    .hero-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.65rem;
+      margin-top: 1.1rem;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 34px;
+      padding: 0 0.8rem;
+      border-radius: 999px;
+      border: 1px solid rgba(70, 243, 255, 0.16);
+      background: rgba(8, 14, 29, 0.72);
+      color: var(--text);
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.76rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
     .cta, .cta-secondary {
       display: inline-flex;
       align-items: center;
@@ -331,6 +351,13 @@
           GhostTrace combines a cyberpunk web workspace, a Ghidraaas backend, an Ollama-driven analyst, and a reproducible Windows lab with SSH and x64dbg bridge tooling.
           It is designed for fast static triage, guided deep dives, and dynamic evidence workflows without losing the thread between tools.
         </p>
+        <div class="hero-badges">
+          <div class="hero-badge">Live Pages</div>
+          <div class="hero-badge">Ollama Local</div>
+          <div class="hero-badge">Ghidraaas</div>
+          <div class="hero-badge">Windows Sandbox</div>
+          <div class="hero-badge">x64dbg Bridge</div>
+        </div>
         <div class="hero-actions">
           <a class="cta" href="https://github.com/0xCyberBerserker/ghosttrace-lab">Open the repo</a>
           <a class="cta-secondary" href="#workflow">See the workflow</a>

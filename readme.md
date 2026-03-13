@@ -1,5 +1,12 @@
 # GhostTrace
 
+[![GitHub Pages](https://img.shields.io/badge/site-live-46f3ff?style=flat-square)](https://0xcyberberserker.github.io/ghosttrace-lab/)
+![Ollama](https://img.shields.io/badge/Ollama-local-0b1627?style=flat-square)
+![Model](https://img.shields.io/badge/model-huihui__ai%2Fqwen3.5--abliterated%3A4b-ff4fd8?style=flat-square)
+![Ghidraaas](https://img.shields.io/badge/backend-Ghidraaas-0b1627?style=flat-square)
+![Windows Sandbox](https://img.shields.io/badge/lab-Windows%20Sandbox-0b1627?style=flat-square)
+![x64dbg Bridge](https://img.shields.io/badge/debugger-x64dbg%20Bridge-0b1627?style=flat-square)
+
 👻 GhostTrace is an AI-assisted reverse engineering workbench for binary triage, guided decompilation, and sandbox-aware operator workflows.
 
 It combines a cyberpunk web UI, `Ghidraaas` for static analysis, `Ollama` for local reasoning, cached triage artifacts, and a reproducible Windows sandbox lab with SSH and debugger bridge support.
