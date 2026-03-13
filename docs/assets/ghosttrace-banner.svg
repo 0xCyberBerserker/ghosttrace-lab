@@ -1,90 +1,47 @@
-<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="1280" height="640" viewBox="0 0 1280 640" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <linearGradient id="bg" x1="86" y1="58" x2="1194" y2="664" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#091220"/>
-      <stop offset="0.55" stop-color="#08172B"/>
+    <linearGradient id="bg" x1="80" y1="40" x2="1200" y2="600" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#08111E"/>
       <stop offset="1" stop-color="#04070F"/>
     </linearGradient>
-    <linearGradient id="accent" x1="214" y1="160" x2="1062" y2="610" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#3CF7FF"/>
+    <linearGradient id="trace" x1="190" y1="332" x2="1108" y2="332" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#46F3FF"/>
       <stop offset="1" stop-color="#FF4FD8"/>
     </linearGradient>
-    <radialGradient id="glowA" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(1038 126) rotate(129.547) scale(378.723 283.495)">
-      <stop stop-color="#3CF7FF" stop-opacity="0.24"/>
-      <stop offset="1" stop-color="#3CF7FF" stop-opacity="0"/>
-    </radialGradient>
-    <radialGradient id="glowB" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(268 112) rotate(43.522) scale(414.33 294.735)">
-      <stop stop-color="#FF4FD8" stop-opacity="0.20"/>
-      <stop offset="1" stop-color="#FF4FD8" stop-opacity="0"/>
-    </radialGradient>
-    <pattern id="grid" x="0" y="0" width="30" height="30" patternUnits="userSpaceOnUse">
-      <path d="M30 0H0V30" stroke="#47F5FF" stroke-opacity="0.06"/>
-    </pattern>
-    <filter id="blur" x="-40" y="-40" width="1360" height="800" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
-      <feGaussianBlur stdDeviation="30"/>
+    <filter id="glow" x="0" y="0" width="1280" height="640" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+      <feGaussianBlur stdDeviation="18"/>
     </filter>
+    <pattern id="grid" x="0" y="0" width="32" height="32" patternUnits="userSpaceOnUse">
+      <path d="M32 0H0V32" stroke="#46F3FF" stroke-opacity="0.06"/>
+    </pattern>
   </defs>
 
-  <rect width="1280" height="720" rx="30" fill="url(#bg)"/>
-  <rect width="1280" height="720" rx="30" fill="url(#grid)"/>
-  <ellipse cx="1038" cy="126" rx="304" ry="196" fill="url(#glowA)" filter="url(#blur)"/>
-  <ellipse cx="268" cy="112" rx="330" ry="212" fill="url(#glowB)" filter="url(#blur)"/>
+  <rect width="1280" height="640" rx="28" fill="url(#bg)"/>
+  <rect width="1280" height="640" rx="28" fill="url(#grid)"/>
 
-  <rect x="52" y="52" width="1176" height="616" rx="30" fill="#07111E" fill-opacity="0.82" stroke="url(#accent)" stroke-opacity="0.24" stroke-width="2"/>
+  <ellipse cx="246" cy="146" rx="210" ry="110" fill="#46F3FF" fill-opacity="0.10" filter="url(#glow)"/>
+  <ellipse cx="1024" cy="496" rx="180" ry="96" fill="#FF4FD8" fill-opacity="0.08" filter="url(#glow)"/>
 
-  <rect x="82" y="84" width="556" height="552" rx="26" fill="#050B16" fill-opacity="0.96" stroke="#46F3FF" stroke-opacity="0.14"/>
-  <rect x="662" y="84" width="536" height="552" rx="26" fill="#091325" fill-opacity="0.96" stroke="#FF4FD8" stroke-opacity="0.14"/>
+  <path d="M190 332H402L458 270L516 388L582 242L646 332H888L952 290L1012 332H1108" stroke="url(#trace)" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="458" cy="270" r="8" fill="#46F3FF"/>
+  <circle cx="646" cy="332" r="8" fill="#A6FF47"/>
+  <circle cx="1012" cy="332" r="8" fill="#FF4FD8"/>
 
-  <rect x="104" y="112" width="136" height="32" rx="16" fill="#0D1A2B" stroke="#46F3FF" stroke-opacity="0.34"/>
-  <text x="130" y="133" fill="#A8FBFF" font-family="Consolas, 'Courier New', monospace" font-size="14" letter-spacing="2.6">OPEN SOURCE</text>
-  <rect x="254" y="112" width="194" height="32" rx="16" fill="#11182E" stroke="#FF4FD8" stroke-opacity="0.32"/>
-  <text x="281" y="133" fill="#FFD3F5" font-family="Consolas, 'Courier New', monospace" font-size="14" letter-spacing="2.1">SANDBOX READY</text>
-
-  <g transform="translate(102 176)">
-    <circle cx="56" cy="56" r="56" fill="#0B182A" stroke="url(#accent)" stroke-opacity="0.55" stroke-width="2"/>
-    <path d="M36 52C36 36.536 48.536 24 64 24H82V42H64C58.477 42 54 46.477 54 52V60C54 65.523 58.477 70 64 70H82V88H64C48.536 88 36 75.464 36 60V52Z" fill="#46F3FF"/>
-    <circle cx="49" cy="56" r="8" fill="#FF4FD8"/>
-    <path d="M89 41L112 52L89 63" stroke="#A6FF47" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"/>
+  <g transform="translate(170 176)">
+    <path d="M96 26C58.445 26 28 56.445 28 94V184C28 192.837 35.163 200 44 200C52.837 200 60 192.837 60 184V176L84 200L108 176L132 200L156 176L180 200L204 176V184C204 192.837 211.163 200 220 200C228.837 200 236 192.837 236 184V94C236 56.445 205.555 26 168 26H96Z" fill="#DDFBFF" fill-opacity="0.97"/>
+    <path d="M96 26C58.445 26 28 56.445 28 94V184C28 192.837 35.163 200 44 200C52.837 200 60 192.837 60 184V176L84 200L108 176L132 200L156 176L180 200L204 176V184C204 192.837 211.163 200 220 200C228.837 200 236 192.837 236 184V94C236 56.445 205.555 26 168 26H96Z" stroke="#46F3FF" stroke-opacity="0.45" stroke-width="4"/>
+    <circle cx="101" cy="100" r="11" fill="#09121F"/>
+    <circle cx="162" cy="100" r="11" fill="#09121F"/>
+    <path d="M90 144C104 156 122 162 140 162C158 162 176 156 190 144" stroke="#09121F" stroke-width="8" stroke-linecap="round"/>
+    <path d="M218 74C252 88 276 110 292 136" stroke="#46F3FF" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="300" cy="148" r="10" fill="#46F3FF"/>
   </g>
 
-  <text x="104" y="306" fill="#F4FCFF" font-family="'Segoe UI', Arial, sans-serif" font-size="94" font-weight="700" letter-spacing="-3">GhostTrace</text>
-  <text x="106" y="354" fill="#8FB5C5" font-family="'Segoe UI', Arial, sans-serif" font-size="27">AI reverse engineering workbench for triage, decompilation,</text>
-  <text x="106" y="390" fill="#8FB5C5" font-family="'Segoe UI', Arial, sans-serif" font-size="27">debugger-aware workflows, and a reproducible Windows lab.</text>
+  <text x="534" y="250" fill="#EAFBFF" font-family="'Segoe UI', Arial, sans-serif" font-size="88" font-weight="700" letter-spacing="-2">Ghost Trace</text>
+  <text x="538" y="306" fill="#8CB2C2" font-family="Consolas, 'Courier New', monospace" font-size="24" letter-spacing="2">AI REVERSE ENGINEERING WORKBENCH</text>
+  <text x="538" y="382" fill="#CFEFF8" font-family="'Segoe UI', Arial, sans-serif" font-size="29">Static triage, guided decompilation, sandbox workflows.</text>
+  <text x="538" y="426" fill="#CFEFF8" font-family="'Segoe UI', Arial, sans-serif" font-size="29">One operator surface for binaries, reports, and debugger traces.</text>
 
-  <g font-family="'Segoe UI', Arial, sans-serif" font-size="23" fill="#D9F8FF">
-    <circle cx="114" cy="458" r="6" fill="#46F3FF"/>
-    <text x="132" y="466">Ghidraaas backend with cached imports, strings, functions, and decompilation</text>
-    <circle cx="114" cy="504" r="6" fill="#FF4FD8"/>
-    <text x="132" y="512">Ollama-powered assistant with chat, triage, and guided next-step recommendations</text>
-    <circle cx="114" cy="550" r="6" fill="#A6FF47"/>
-    <text x="132" y="558">Windows sandbox lab with SSH, x64dbg bridge, and operator-friendly automation</text>
-  </g>
-
-  <rect x="104" y="588" width="246" height="52" rx="26" fill="url(#accent)"/>
-  <text x="142" y="621" fill="#06111F" font-family="Consolas, 'Courier New', monospace" font-size="22" font-weight="700" letter-spacing="2.0">GHOSTTRACE LAB</text>
-
-  <rect x="694" y="120" width="472" height="220" rx="24" fill="#06101C" stroke="#46F3FF" stroke-opacity="0.16"/>
-  <rect x="718" y="144" width="162" height="28" rx="14" fill="#10213A"/>
-  <text x="742" y="163" fill="#A9FBFF" font-family="Consolas, 'Courier New', monospace" font-size="13" letter-spacing="2.0">TRIAGE SNAPSHOT</text>
-
-  <text x="718" y="214" fill="#FF7CE5" font-family="Consolas, 'Courier New', monospace" font-size="17">[static]</text>
-  <text x="812" y="214" fill="#E3FBFF" font-family="Consolas, 'Courier New', monospace" font-size="17">Installer-like sample with registry, updater, and telemetry clues</text>
-
-  <text x="718" y="256" fill="#46F3FF" font-family="Consolas, 'Courier New', monospace" font-size="17">[dynamic]</text>
-  <text x="824" y="256" fill="#E3FBFF" font-family="Consolas, 'Courier New', monospace" font-size="17">Sandbox evidence and debugger state stay tied to the same job</text>
-
-  <text x="718" y="298" fill="#A6FF47" font-family="Consolas, 'Courier New', monospace" font-size="17">[next]</text>
-  <text x="798" y="298" fill="#E3FBFF" font-family="Consolas, 'Courier New', monospace" font-size="17">Review priority functions, then escalate into targeted debug actions</text>
-
-  <rect x="694" y="382" width="472" height="198" rx="24" fill="#091526" stroke="#FF4FD8" stroke-opacity="0.16"/>
-  <text x="720" y="418" fill="#FFC95F" font-family="Consolas, 'Courier New', monospace" font-size="14" letter-spacing="2.0">DEBUGGER SURFACE</text>
-  <text x="720" y="468" fill="#F5FCFF" font-family="'Segoe UI', Arial, sans-serif" font-size="31" font-weight="700">One workspace for static and dynamic evidence.</text>
-  <text x="720" y="510" fill="#8FB5C5" font-family="'Segoe UI', Arial, sans-serif" font-size="22">Queue debugger requests from the web UI, sync findings from the VM,</text>
-  <text x="720" y="542" fill="#8FB5C5" font-family="'Segoe UI', Arial, sans-serif" font-size="22">and keep the full operator trail attached to the same analysis job.</text>
-
-  <g opacity="0.75" stroke="#46F3FF" stroke-opacity="0.22">
-    <path d="M664 198H640" />
-    <path d="M664 240H640" />
-    <path d="M664 282H640" />
-  </g>
+  <rect x="538" y="478" width="248" height="52" rx="26" fill="#0B1627" stroke="#46F3FF" stroke-opacity="0.26"/>
+  <text x="572" y="511" fill="#A7FAFF" font-family="Consolas, 'Courier New', monospace" font-size="21" letter-spacing="2">GHOSTTRACE LAB</text>
 </svg>
