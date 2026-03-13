@@ -150,13 +150,23 @@
       min-height: 34px;
       padding: 0 0.8rem;
       border-radius: 999px;
-      border: 1px solid rgba(70, 243, 255, 0.16);
-      background: rgba(8, 14, 29, 0.72);
-      color: var(--text);
+      border: 1px solid rgba(70, 243, 255, 0.14);
+      background: linear-gradient(180deg, rgba(10, 18, 35, 0.9), rgba(7, 12, 24, 0.88));
+      color: #dffbff;
       font-family: "IBM Plex Mono", monospace;
       font-size: 0.76rem;
       letter-spacing: 0.08em;
       text-transform: uppercase;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 10px 28px rgba(0, 0, 0, 0.22);
+    }
+    .hero-badge::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      margin-right: 0.55rem;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--cyan), var(--pink));
+      box-shadow: 0 0 14px rgba(70, 243, 255, 0.32);
     }
     .cta, .cta-secondary {
       display: inline-flex;

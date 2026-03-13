@@ -1,11 +1,11 @@
 # GhostTrace
 
-[![GitHub Pages](https://img.shields.io/badge/site-live-46f3ff?style=flat-square)](https://0xcyberberserker.github.io/ghosttrace-lab/)
-![Ollama](https://img.shields.io/badge/Ollama-local-0b1627?style=flat-square)
-![Model](https://img.shields.io/badge/model-huihui__ai%2Fqwen3.5--abliterated%3A4b-ff4fd8?style=flat-square)
-![Ghidraaas](https://img.shields.io/badge/backend-Ghidraaas-0b1627?style=flat-square)
-![Windows Sandbox](https://img.shields.io/badge/lab-Windows%20Sandbox-0b1627?style=flat-square)
-![x64dbg Bridge](https://img.shields.io/badge/debugger-x64dbg%20Bridge-0b1627?style=flat-square)
+[![site](https://img.shields.io/badge/site-ghosttrace--lab-0a1324?style=for-the-badge&logo=githubpages&logoColor=46f3ff&labelColor=07111d)](https://0xcyberberserker.github.io/ghosttrace-lab/)
+![ollama](https://img.shields.io/badge/ollama-local-0a1324?style=for-the-badge&logo=ollama&logoColor=ffffff&labelColor=07111d)
+![model](https://img.shields.io/badge/model-qwen3.5--abliterated%3A4b-0a1324?style=for-the-badge&logo=openai&logoColor=ff4fd8&labelColor=07111d)
+![backend](https://img.shields.io/badge/backend-ghidraaas-0a1324?style=for-the-badge&logo=gnuprivacyguard&logoColor=46f3ff&labelColor=07111d)
+![sandbox](https://img.shields.io/badge/lab-windows%20sandbox-0a1324?style=for-the-badge&logo=windows11&logoColor=46f3ff&labelColor=07111d)
+![debugger](https://img.shields.io/badge/debugger-x64dbg%20bridge-0a1324?style=for-the-badge&logo=gnubash&logoColor=a6ff47&labelColor=07111d)
 
 👻 GhostTrace is an AI-assisted reverse engineering workbench for binary triage, guided decompilation, and sandbox-aware operator workflows.
 
