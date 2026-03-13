@@ -25,7 +25,7 @@
 
 ## English
 
-GhostTrace combines a cyberpunk web UI, `Ghidraaas` for static analysis, `Ollama` for local reasoning, cached triage artifacts, and a reproducible Windows sandbox lab with SSH and debugger bridge support.
+GhostTrace ties together a cyberpunk operator UI, `Ghidraaas` for static analysis, `Ollama` for local reasoning, cached triage artifacts, and a reproducible Windows sandbox lab with SSH and debugger bridge support.
 
 ### Highlights
 
@@ -39,9 +39,9 @@ GhostTrace combines a cyberpunk web UI, `Ghidraaas` for static analysis, `Ollama
 
 ### Responsibility Note
 
-GhostTrace is built for legitimate reverse engineering, malware analysis, DFIR, research, and defensive engineering workflows.
+GhostTrace is built for legitimate reverse engineering, malware analysis, DFIR, research, and defensive engineering.
 
-Like any serious binary-analysis stack, it can technically be misused. That decision belongs to the operator, not the project. If you run GhostTrace against targets, software, or environments without proper authorization, you assume full responsibility for the legal, ethical, and operational consequences. Use it smart. Use it lawfully. Keep it sharp, not stupid.
+Like any serious binary-analysis stack, it can be misused. That decision belongs to the operator, not the project. If you point GhostTrace at targets, software, or environments without proper authorization, you own the legal, ethical, and operational consequences. Use it smart. Use it lawfully. Keep it sharp, not stupid.
 
 ### Architecture
 
@@ -197,7 +197,7 @@ The landing page lives in [`docs/index.html`](./docs/index.html) and is publishe
 
 ## Español
 
-GhostTrace combina una interfaz web con estética cyberpunk, `Ghidraaas` para análisis estático, `Ollama` para razonamiento local, artefactos de triage cacheados y un laboratorio Windows reproducible con SSH y puente de depuración.
+GhostTrace une una UI de operador con estética cyberpunk, `Ghidraaas` para análisis estático, `Ollama` para razonamiento local, artefactos de triage cacheados y un laboratorio Windows reproducible con SSH y puente de depuración.
 
 ### Puntos fuertes
 
@@ -213,7 +213,7 @@ GhostTrace combina una interfaz web con estética cyberpunk, `Ghidraaas` para an
 
 GhostTrace está pensado para reverse engineering legítimo, análisis de malware, DFIR, investigación y trabajo defensivo.
 
-Como cualquier stack serio de análisis binario, técnicamente puede usarse mal. Esa decisión pertenece al operador, no al proyecto. Si ejecutas GhostTrace contra objetivos, software o entornos sin la debida autorización, asumes toda la responsabilidad por las consecuencias legales, éticas y operativas. Úsalo con cabeza. Úsalo dentro de la ley. Mantén el filo, no la torpeza.
+Como cualquier stack serio de análisis binario, puede usarse mal. Esa decisión pertenece al operador, no al proyecto. Si apuntas GhostTrace contra objetivos, software o entornos sin la debida autorización, asumes toda la responsabilidad por las consecuencias legales, éticas y operativas. Úsalo con cabeza. Úsalo dentro de la ley. Mantén el filo, no la torpeza.
 
 ### Arquitectura
 
