@@ -65,7 +65,7 @@ huihui_ai/qwen3.5-abliterated:4b
 
 ## Shared AI Configuration
 
-GhostTrace keeps its shared AI runtime settings in [`ai-config.json`](C:/Users/jcarl/Documents/repos/ai-reverse-engineering/ai-config.json).
+GhostTrace keeps its shared AI runtime settings in [`ai-config.json`](./ai-config.json).
 
 Current defaults:
 
@@ -157,6 +157,8 @@ Pinned guest credentials:
 - username: `Docker`
 - password: `admin`
 
+These defaults are intended for a disposable local lab. If you expose the sandbox beyond localhost, change them immediately.
+
 The lab provisions:
 
 - `OpenSSH Server`
@@ -175,20 +177,20 @@ The lab provisions:
 
 Windows sandbox helpers:
 
-- [`Invoke-WindowsSandboxSSH.ps1`](C:/Users/jcarl/Documents/repos/ai-reverse-engineering/sandbox/host-tools/Invoke-WindowsSandboxSSH.ps1)
-- [`Invoke-WindowsSandboxPS.ps1`](C:/Users/jcarl/Documents/repos/ai-reverse-engineering/sandbox/host-tools/Invoke-WindowsSandboxPS.ps1)
-- [`Copy-ToWindowsSandbox.ps1`](C:/Users/jcarl/Documents/repos/ai-reverse-engineering/sandbox/host-tools/Copy-ToWindowsSandbox.ps1)
-- [`Copy-FromWindowsSandbox.ps1`](C:/Users/jcarl/Documents/repos/ai-reverse-engineering/sandbox/host-tools/Copy-FromWindowsSandbox.ps1)
+- [`Invoke-WindowsSandboxSSH.ps1`](./sandbox/host-tools/Invoke-WindowsSandboxSSH.ps1)
+- [`Invoke-WindowsSandboxPS.ps1`](./sandbox/host-tools/Invoke-WindowsSandboxPS.ps1)
+- [`Copy-ToWindowsSandbox.ps1`](./sandbox/host-tools/Copy-ToWindowsSandbox.ps1)
+- [`Copy-FromWindowsSandbox.ps1`](./sandbox/host-tools/Copy-FromWindowsSandbox.ps1)
 
 Generic sandbox helpers:
 
-- [`Invoke-SandboxSSH.ps1`](C:/Users/jcarl/Documents/repos/ai-reverse-engineering/sandbox/host-tools/Invoke-SandboxSSH.ps1)
-- [`Copy-ToSandbox.ps1`](C:/Users/jcarl/Documents/repos/ai-reverse-engineering/sandbox/host-tools/Copy-ToSandbox.ps1)
-- [`Copy-FromSandbox.ps1`](C:/Users/jcarl/Documents/repos/ai-reverse-engineering/sandbox/host-tools/Copy-FromSandbox.ps1)
+- [`Invoke-SandboxSSH.ps1`](./sandbox/host-tools/Invoke-SandboxSSH.ps1)
+- [`Copy-ToSandbox.ps1`](./sandbox/host-tools/Copy-ToSandbox.ps1)
+- [`Copy-FromSandbox.ps1`](./sandbox/host-tools/Copy-FromSandbox.ps1)
 
 ## GitHub Pages
 
-The project landing page lives in [`docs/index.html`](C:/Users/jcarl/Documents/repos/ai-reverse-engineering/docs/index.html) and is designed for GitHub Pages publishing from `/docs`.
+The project landing page lives in [`docs/index.html`](./docs/index.html) and is designed for GitHub Pages publishing from `/docs`.
 
 Target repository:
 
