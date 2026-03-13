@@ -382,6 +382,9 @@
       border-radius: 3px;
       border: 1px solid rgba(255, 255, 255, 0.08);
     }
+    .maker-line .maker-punct {
+      color: var(--muted);
+    }
     @media (max-width: 980px) {
       .hero, .grid-3, .grid-2 {
         grid-template-columns: 1fr;
@@ -594,7 +597,9 @@
           <span data-i18n="footer_by">Built by</span> <a href="https://github.com/0xCyberBerserker">0xCyberBerserker</a>.
           <div class="maker-line">
             <span data-i18n="footer_made">Made with 🖤 in Barcelona City</span>
-            <img src="assets/spain-flag.svg" alt="Flag of Spain">
+            <span class="maker-punct">,</span>
+            <img src="assets/spain-flag.svg" alt="">
+            <span class="maker-punct">.</span>
           </div>
         </div>
         <div>
