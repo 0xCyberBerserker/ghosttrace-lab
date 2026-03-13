@@ -192,6 +192,8 @@ Generic helpers:
 The landing page lives in [`docs/index.html`](./docs/index.html) and is published on GitHub Pages:
 
 - [https://0xcyberberserker.github.io/ghosttrace-lab/](https://0xcyberberserker.github.io/ghosttrace-lab/)
+- English: [https://0xcyberberserker.github.io/ghosttrace-lab/en/](https://0xcyberberserker.github.io/ghosttrace-lab/en/)
+- Español: [https://0xcyberberserker.github.io/ghosttrace-lab/es/](https://0xcyberberserker.github.io/ghosttrace-lab/es/)
 
 ---
 
@@ -364,3 +366,5 @@ Helpers genéricos:
 La landing vive en [`docs/index.html`](./docs/index.html) y se publica en GitHub Pages:
 
 - [https://0xcyberberserker.github.io/ghosttrace-lab/](https://0xcyberberserker.github.io/ghosttrace-lab/)
+- Inglés: [https://0xcyberberserker.github.io/ghosttrace-lab/en/](https://0xcyberberserker.github.io/ghosttrace-lab/en/)
+- Español: [https://0xcyberberserker.github.io/ghosttrace-lab/es/](https://0xcyberberserker.github.io/ghosttrace-lab/es/)
