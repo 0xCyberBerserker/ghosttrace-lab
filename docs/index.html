@@ -189,15 +189,17 @@
     .hero {
       padding: 5.8rem 0 4rem;
       display: grid;
-      grid-template-columns: 1.02fr 0.98fr;
-      gap: 2.4rem;
+      grid-template-columns: minmax(0, 1.08fr) minmax(420px, 0.92fr);
+      gap: 3rem;
       align-items: center;
     }
     .hero h1 {
       margin: 1rem 0 1rem;
-      font-size: clamp(2.9rem, 7vw, 5.2rem);
-      line-height: 0.96;
+      max-width: 11.5ch;
+      font-size: clamp(2.7rem, 5.8vw, 4.75rem);
+      line-height: 0.98;
       letter-spacing: -0.05em;
+      text-wrap: balance;
     }
     .hero-copy {
       color: var(--muted);
@@ -271,6 +273,9 @@
       border: 1px solid var(--border);
       background: var(--panel-strong);
       box-shadow: var(--shadow);
+      width: 100%;
+      max-width: 520px;
+      justify-self: end;
       padding: 1.1rem;
       position: relative;
       overflow: hidden;
@@ -301,6 +306,49 @@
       width: 100%;
       border-radius: 22px;
       border: 1px solid rgba(70, 243, 255, 0.12);
+    }
+    .hero-card-inner {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 0.9rem;
+      min-height: 380px;
+      padding: 2rem 1.85rem 1.9rem;
+      position: relative;
+      z-index: 1;
+    }
+    .hero-mascot {
+      font-size: 7rem;
+      line-height: 0.9;
+      text-shadow: 0 0 28px rgba(255,255,255,0.10), 0 0 36px rgba(70,243,255,0.10);
+    }
+    .hero-kicker {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.82rem;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      color: var(--muted);
+    }
+    .hero-card-copy {
+      font-size: 1.14rem;
+      color: var(--text);
+      max-width: 30ch;
+      line-height: 1.65;
+    }
+    .hero-card-meta {
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.8rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--cyan);
+    }
+    .hero-card-author {
+      margin-top: auto;
+      font-family: "IBM Plex Mono", monospace;
+      font-size: 0.78rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      color: var(--muted);
     }
     section {
       padding: 1.4rem 0 4rem;
@@ -493,9 +541,11 @@
       .hero {
         gap: 1.45rem;
         padding-top: 4rem;
+        grid-template-columns: 1fr;
       }
       .hero h1 {
         font-size: clamp(2.45rem, 11.5vw, 3.35rem);
+        max-width: none;
       }
       .hero-copy {
         font-size: 1rem;
@@ -507,7 +557,12 @@
       .hero-actions .cta-secondary {
         flex: 1 1 100%;
       }
+      .hero-card {
+        max-width: none;
+        justify-self: stretch;
+      }
       .hero-card-inner {
+        min-height: auto;
         padding: 1.7rem 1.25rem 1.45rem;
       }
       .hero-mascot {
@@ -568,18 +623,18 @@
         </div>
       </div>
       <div class="hero-card">
-        <div class="hero-card-inner" style="display:flex;flex-direction:column;align-items:flex-start;gap:0.65rem;padding:1.55rem 1.4rem 1.5rem;position:relative;z-index:1;">
-          <div class="hero-mascot" style="font-size:5.4rem;line-height:0.9;text-shadow:0 0 28px rgba(255,255,255,0.10),0 0 36px rgba(70,243,255,0.10);">👻</div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.82rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);">
+        <div class="hero-card-inner">
+          <div class="hero-mascot">👻</div>
+          <div class="hero-kicker">
             GhostTrace Lab
           </div>
-          <div style="font-size:1.05rem;color:var(--text);max-width:30ch;line-height:1.6;" data-i18n="card_copy">
+          <div class="hero-card-copy" data-i18n="card_copy">
             AI-assisted reverse engineering workbench for static triage, guided decompilation, and sandbox-aware workflows.
           </div>
-          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.76rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--cyan);" data-i18n="card_model">
+          <div class="hero-card-meta" data-i18n="card_model">
             Default Ollama model: huihui_ai/qwen3.5-abliterated:4b
           </div>
-          <a class="ghost-link" href="https://github.com/0xCyberBerserker" style="font-family:'IBM Plex Mono',monospace;font-size:0.76rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--muted);" data-i18n="card_author">
+          <a class="ghost-link hero-card-author" href="https://github.com/0xCyberBerserker" data-i18n="card_author">
             By 0xCyberBerserker
           </a>
         </div>
