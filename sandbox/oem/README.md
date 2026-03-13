@@ -54,6 +54,6 @@ Shared AI configuration:
 - environment variables also expose the same host-side Ollama target:
   - `OLLAMA_HOST=host.docker.internal`
   - `OLLAMA_BASE_URL=http://host.docker.internal:11434`
-  - `OLLAMA_MODEL=qwen3-coder-next:latest`
+  - `OLLAMA_MODEL=huihui_ai/qwen3.5-abliterated:4b`
 
 The provisioning is idempotent inside the guest. To force a clean first-boot reinstall, recreate the Windows storage volume so the OS is installed from scratch again.

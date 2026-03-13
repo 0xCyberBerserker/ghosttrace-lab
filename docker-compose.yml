@@ -21,7 +21,7 @@ services:
     environment:
       API_BASE: "http://host.docker.internal:11434/v1"
       API_KEY: "ollama"
-      MODEL_NAME: "qwen3-coder-next:latest"
+      MODEL_NAME: "huihui_ai/qwen3.5-abliterated:4b"
       GHIDRAAAS_BASE: "http://ghidraaas:8080/ghidra/api"
       JOB_METADATA_PATH: "/app/data/job_metadata.json"
       UPLOADS_DIR: "/app/data/uploads"

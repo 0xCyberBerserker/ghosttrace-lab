@@ -1,15 +1,13 @@
 # GhostTrace
 
-![GhostTrace banner](docs/assets/ghosttrace-banner.svg)
-
-GhostTrace is an AI-assisted reverse engineering workbench for binary triage, guided decompilation, and sandbox-aware operator workflows.
+👻 GhostTrace is an AI-assisted reverse engineering workbench for binary triage, guided decompilation, and sandbox-aware operator workflows.
 
 It combines a cyberpunk web UI, `Ghidraaas` for static analysis, `Ollama` for local reasoning, cached triage artifacts, and a reproducible Windows sandbox lab with SSH and debugger bridge support.
 
 ## Highlights
 
 - Static-analysis-first workflow powered by `Ghidraaas`
-- Local LLM integration via `Ollama` and `qwen3-coder-next:latest`
+- Local LLM integration via `Ollama` and `huihui_ai/qwen3.5-abliterated:4b`
 - Cached imports, strings, functions, and decompilation
 - Auto-generated triage reports per analysis job
 - Persistent job management in the web UI
@@ -62,7 +60,7 @@ http://localhost:5000
 - local model available:
 
 ```text
-qwen3-coder-next:latest
+huihui_ai/qwen3.5-abliterated:4b
 ```
 
 ## Shared AI Configuration
@@ -73,7 +71,12 @@ Current defaults:
 
 - provider: `ollama`
 - API base: `http://host.docker.internal:11434/v1`
-- model: `qwen3-coder-next:latest`
+- model: `huihui_ai/qwen3.5-abliterated:4b`
+
+The current repo is aligned so the same Ollama model is used on both sides:
+
+- `webui` uses `MODEL_NAME=huihui_ai/qwen3.5-abliterated:4b`
+- `windows_sandbox` uses `OLLAMA_MODEL=huihui_ai/qwen3.5-abliterated:4b`
 
 This config is mounted into:
 

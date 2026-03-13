@@ -8,7 +8,7 @@
   <meta property="og:title" content="GhostTrace — AI Reverse Engineering Workbench">
   <meta property="og:description" content="AI-assisted reverse engineering workbench with Ghidraaas, local Ollama reasoning, triage reports, and a Windows sandbox lab.">
   <meta property="og:type" content="website">
-  <meta property="og:image" content="assets/ghosttrace-banner.svg">
+  <meta property="og:image" content="favicon.svg">
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="GhostTrace — AI Reverse Engineering Workbench">
   <meta name="twitter:description" content="Static triage, guided decompilation, debugger-aware workflows, and a Windows sandbox lab in one operator-focused stack.">
@@ -337,7 +337,18 @@
         </div>
       </div>
       <div class="hero-card">
-        <img src="assets/ghosttrace-banner.svg" alt="GhostTrace banner artwork">
+        <div style="display:flex;flex-direction:column;align-items:flex-start;gap:0.5rem;padding:1.6rem 1.4rem 1.5rem;">
+          <div style="font-size:2.8rem;line-height:1;">👻</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.82rem;letter-spacing:0.22em;text-transform:uppercase;color:var(--muted);">
+            GhostTrace Lab
+          </div>
+          <div style="font-size:1.05rem;color:var(--text);max-width:30ch;line-height:1.6;">
+            AI-assisted reverse engineering workbench for static triage, guided decompilation, and sandbox-aware workflows.
+          </div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:0.76rem;letter-spacing:0.16em;text-transform:uppercase;color:var(--cyan);">
+            Default Ollama model: huihui_ai/qwen3.5-abliterated:4b
+          </div>
+        </div>
       </div>
     </section>
 
@@ -415,7 +426,7 @@
           <ul>
             <li>Flask web UI with job management, chat, triage and x64dbg views</li>
             <li>Ghidraaas backend with cached imports, strings, functions and decompilation</li>
-            <li>Ollama-compatible assistant orchestration for local model usage</li>
+            <li>Ollama-compatible assistant orchestration using `huihui_ai/qwen3.5-abliterated:4b` by default</li>
             <li>Persistent triage reports and dynamic evidence ingestion</li>
           </ul>
         </article>
