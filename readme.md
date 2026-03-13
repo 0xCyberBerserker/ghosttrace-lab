@@ -120,6 +120,11 @@ The repo is aligned so the same Ollama model is used on both sides:
 - `Dynamic Correlation`
   Bring in sandbox findings and debugger evidence without losing the static-analysis context.
 
+### Roadmap and Benchmark Bench
+
+- Roadmap: [`ROADMAP.md`](./ROADMAP.md)
+- Benchmark bench: [`samples/benchmarks.md`](./samples/benchmarks.md)
+
 ### Auto Triage Reports
 
 Endpoint:
@@ -295,6 +300,11 @@ El repo está alineado para usar el mismo modelo en ambos lados:
   Sacar pistas de telemetría, actualización o comunicación remota a partir de evidencia estática.
 - `Correlación dinámica`
   Mezclar hallazgos de la sandbox y del depurador sin perder el contexto del análisis estático.
+
+### Hoja de ruta y banco de benchmarks
+
+- Hoja de ruta: [`ROADMAP.md`](./ROADMAP.md)
+- Banco de benchmarks: [`samples/benchmarks.md`](./samples/benchmarks.md)
 
 ### Informes automáticos de triage
 
