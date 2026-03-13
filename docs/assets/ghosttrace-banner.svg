@@ -39,9 +39,6 @@
 
   <text x="534" y="250" fill="#EAFBFF" font-family="'Segoe UI', Arial, sans-serif" font-size="88" font-weight="700" letter-spacing="-2">Ghost Trace</text>
   <text x="538" y="306" fill="#8CB2C2" font-family="Consolas, 'Courier New', monospace" font-size="24" letter-spacing="2">AI REVERSE ENGINEERING WORKBENCH</text>
-  <text x="538" y="382" fill="#CFEFF8" font-family="'Segoe UI', Arial, sans-serif" font-size="29">Static triage, guided decompilation, sandbox workflows.</text>
-  <text x="538" y="426" fill="#CFEFF8" font-family="'Segoe UI', Arial, sans-serif" font-size="29">One operator surface for binaries, reports, and debugger traces.</text>
-
-  <rect x="538" y="478" width="248" height="52" rx="26" fill="#0B1627" stroke="#46F3FF" stroke-opacity="0.26"/>
-  <text x="572" y="511" fill="#A7FAFF" font-family="Consolas, 'Courier New', monospace" font-size="21" letter-spacing="2">GHOSTTRACE LAB</text>
+  <rect x="538" y="354" width="248" height="52" rx="26" fill="#0B1627" stroke="#46F3FF" stroke-opacity="0.26"/>
+  <text x="572" y="387" fill="#A7FAFF" font-family="Consolas, 'Courier New', monospace" font-size="21" letter-spacing="2">GHOSTTRACE LAB</text>
 </svg>
