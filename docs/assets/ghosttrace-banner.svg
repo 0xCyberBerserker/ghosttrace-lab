@@ -27,9 +27,34 @@
   <circle cx="646" cy="332" r="8" fill="#A6FF47"/>
   <circle cx="1012" cy="332" r="8" fill="#FF4FD8"/>
 
-  <text x="178" y="380" font-family="'Segoe UI Emoji', 'Apple Color Emoji', 'Noto Color Emoji', sans-serif" font-size="210">👻</text>
-  <path d="M386 250C424 266 452 290 470 324" stroke="#46F3FF" stroke-width="7" stroke-linecap="round"/>
-  <circle cx="478" cy="336" r="10" fill="#46F3FF"/>
+  <defs>
+    <linearGradient id="ghostBody" x1="210" y1="172" x2="348" y2="382" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FFF8FF"/>
+      <stop offset="0.58" stop-color="#F0E8FF"/>
+      <stop offset="1" stop-color="#DABEFF"/>
+    </linearGradient>
+    <linearGradient id="ghostMouth" x1="268" y1="246" x2="314" y2="292" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF4FD8"/>
+      <stop offset="1" stop-color="#7D32FF"/>
+    </linearGradient>
+  </defs>
+
+  <g transform="translate(178 166)">
+    <ellipse cx="106" cy="58" rx="76" ry="58" fill="#FFFFFF" fill-opacity="0.14" filter="url(#glow)"/>
+    <path d="M108 22C70 22 40 52 40 92V150C40 169 55 184 74 184C81 184 88 182 94 177L108 165L122 177C128 182 135 184 142 184C149 184 157 182 163 177L177 165L191 177C197 182 204 184 211 184C230 184 245 169 245 150V92C245 52 215 22 177 22H108Z" fill="url(#ghostBody)"/>
+    <path d="M108 22C70 22 40 52 40 92V150C40 169 55 184 74 184C81 184 88 182 94 177L108 165L122 177C128 182 135 184 142 184C149 184 157 182 163 177L177 165L191 177C197 182 204 184 211 184C230 184 245 169 245 150V92C245 52 215 22 177 22H108Z" stroke="#E5CFFF" stroke-width="4"/>
+    <path d="M70 82L44 70" stroke="#E5CFFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M215 82L241 70" stroke="#E5CFFF" stroke-width="10" stroke-linecap="round"/>
+    <path d="M111 92L125 84" stroke="#2A1C45" stroke-width="8" stroke-linecap="round"/>
+    <path d="M174 84L188 92" stroke="#2A1C45" stroke-width="8" stroke-linecap="round"/>
+    <ellipse cx="124" cy="109" rx="8" ry="10" fill="#1F1638"/>
+    <ellipse cx="176" cy="109" rx="8" ry="10" fill="#1F1638"/>
+    <path d="M120 134C120 118 133 106 149 106C165 106 178 118 178 134V142C178 162 162 178 142 178H136C116 178 100 162 100 142V134H120Z" fill="url(#ghostMouth)"/>
+    <path d="M118 135C118 148 130 159 145 159C160 159 172 148 172 135" fill="#FF7AEE"/>
+    <path d="M112 118C126 132 140 138 149 138C160 138 171 132 184 118" stroke="#FFB2F4" stroke-width="6" stroke-linecap="round"/>
+    <path d="M248 116C280 130 304 154 320 184" stroke="#46F3FF" stroke-width="7" stroke-linecap="round"/>
+    <circle cx="328" cy="196" r="10" fill="#46F3FF"/>
+  </g>
 
   <text x="534" y="250" fill="#EAFBFF" font-family="'Segoe UI', Arial, sans-serif" font-size="88" font-weight="700" letter-spacing="-2">Ghost Trace</text>
   <text x="538" y="306" fill="#8CB2C2" font-family="Consolas, 'Courier New', monospace" font-size="24" letter-spacing="2">AI REVERSE ENGINEERING WORKBENCH</text>
