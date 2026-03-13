@@ -165,12 +165,12 @@ The optional `windows-sandbox` profile provides:
 - `SSH` on `127.0.0.1:2222`
 - shared samples through the `Shared` desktop folder
 
-Pinned guest credentials:
+#### Default local lab credentials
 
 - username: `Docker`
 - password: `admin`
 
-These defaults are meant for a disposable local lab. If you expose the sandbox beyond localhost, change them immediately.
+These defaults are only meant for a disposable local lab. If you expose the sandbox beyond localhost, change them immediately.
 
 ### Host-Side Helpers
 
@@ -339,12 +339,12 @@ El perfil opcional `windows-sandbox` ofrece:
 - `SSH` en `127.0.0.1:2222`
 - muestras compartidas a través de la carpeta `Shared`
 
-Credenciales fijadas:
+#### Credenciales locales por defecto
 
 - usuario: `Docker`
 - contraseña: `admin`
 
-Estas credenciales están pensadas para un laboratorio local desechable. Si expones la sandbox fuera de localhost, cámbialas inmediatamente.
+Estas credenciales están pensadas solo para un laboratorio local desechable. Si expones la sandbox fuera de localhost, cámbialas inmediatamente.
 
 ### Utilidades desde el host
 
