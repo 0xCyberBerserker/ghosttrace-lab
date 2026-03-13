@@ -199,7 +199,7 @@ The landing page lives in [`docs/index.html`](./docs/index.html) and is publishe
 
 ## Español
 
-GhostTrace reúne una interfaz de operador con estética cyberpunk, `Ghidraaas` para análisis estático, `Ollama` para razonamiento local, artefactos de triage cacheados y un laboratorio Windows reproducible con SSH y un puente de depuración.
+GhostTrace reúne una interfaz de operador con estética cyberpunk, `Ghidraaas` para análisis estático, `Ollama` para razonamiento local, artefactos de triage en caché y un laboratorio Windows reproducible con SSH y un puente de depuración.
 
 ### Puntos fuertes
 
@@ -207,9 +207,9 @@ GhostTrace reúne una interfaz de operador con estética cyberpunk, `Ghidraaas` 
 - Integración local con `Ollama` y `huihui_ai/qwen3.5-abliterated:4b`
 - Caché de imports, strings, funciones y decompilación
 - Informes de triage automáticos por análisis
-- Gestión persistente de jobs en la UI
+- Gestión persistente de trabajos en la interfaz
 - Perfil de sandbox Windows con `noVNC`, `RDP` y `SSH`
-- Puente de `x64dbg` para flujos de depuración asistidos
+- Puente de `x64dbg` para flujos de depuración asistida
 
 ### Nota de responsabilidad
 
@@ -227,11 +227,11 @@ Subida binaria -> Web UI -> Ghidraaas -> Artefactos cacheados -> AI Operator / C
 Componentes principales:
 
 - `webui/`
-  Aplicación Flask, gestión de jobs, operador IA, chat, vista de triage y vista de debugger.
+  Aplicación Flask, gestión de trabajos, operador IA, chat, vista de triage y vista del depurador.
 - `Ghidraaas/`
   Backend Ghidra-as-a-Service de Cisco Talos adaptado a este stack.
 - `sandbox/`
-  Provisionado de sandbox Windows, utilidades SSH desde el host, herramientas del puente y automatización OEM.
+  Aprovisionamiento de sandbox Windows, utilidades SSH desde el host, herramientas del puente y automatización OEM.
 - `docs/`
   Landing pública para GitHub Pages.
 
@@ -259,7 +259,7 @@ http://localhost:5000
 ### Requisitos
 
 - Docker Desktop
-- Ollama corriendo en el host
+- Ollama en ejecución en el host
 - modelo disponible localmente:
 
 ```text
@@ -283,14 +283,14 @@ El repo está alineado para usar el mismo modelo en ambos lados:
 
 ### Flujo de análisis
 
-- `Static Triage`
-  Entender propósito probable, subsistemas sospechosos, comportamiento de instalador y rutas de código prioritarias.
-- `PE / API Behavior`
-  Usar imports y decompilación para razonar sobre registro, ficheros, servicios, crypto y procesos.
-- `Network Clues`
-  Sacar pistas de telemetría, updater o comunicación remota a partir de evidencia estática.
-- `Dynamic Correlation`
-  Mezclar findings de sandbox y debugger sin perder el contexto del análisis estático.
+- `Triage estático`
+  Entender el propósito probable, los subsistemas sospechosos, el comportamiento del instalador y las rutas de código prioritarias.
+- `Comportamiento PE / API`
+  Usar imports y decompilación para razonar sobre registro, ficheros, servicios, criptografía y procesos.
+- `Pistas de red`
+  Sacar pistas de telemetría, actualización o comunicación remota a partir de evidencia estática.
+- `Correlación dinámica`
+  Mezclar hallazgos de la sandbox y del depurador sin perder el contexto del análisis estático.
 
 ### Informes automáticos de triage
 
@@ -317,7 +317,7 @@ Para activar prosa de triage generada por LLM:
 TRIAGE_USE_LLM=1
 ```
 
-### Carril de evidencia dinámica
+### Canal de evidencia dinámica
 
 GhostTrace no ejecuta binarios desconocidos automáticamente en el flujo por defecto. En su lugar, soporta ingestión estructurada de evidencia desde entornos controlados.
 
@@ -328,7 +328,7 @@ POST /evidence/<job_id>
 GET  /evidence/<job_id>
 ```
 
-Esto permite correlacionar imports, strings, decompilación, artefactos de sandbox y findings del debugger.
+Esto permite correlacionar imports, strings, decompilación, artefactos de sandbox y hallazgos del depurador.
 
 ### Laboratorio Windows
 
@@ -346,16 +346,16 @@ Credenciales fijadas:
 
 Estas credenciales están pensadas para un laboratorio local desechable. Si expones la sandbox fuera de localhost, cámbialas inmediatamente.
 
-### Helpers desde el host
+### Utilidades desde el host
 
-Helpers Windows:
+Utilidades para Windows:
 
 - [`Invoke-WindowsSandboxSSH.ps1`](./sandbox/host-tools/Invoke-WindowsSandboxSSH.ps1)
 - [`Invoke-WindowsSandboxPS.ps1`](./sandbox/host-tools/Invoke-WindowsSandboxPS.ps1)
 - [`Copy-ToWindowsSandbox.ps1`](./sandbox/host-tools/Copy-ToWindowsSandbox.ps1)
 - [`Copy-FromWindowsSandbox.ps1`](./sandbox/host-tools/Copy-FromWindowsSandbox.ps1)
 
-Helpers genéricos:
+Utilidades genéricas:
 
 - [`Invoke-SandboxSSH.ps1`](./sandbox/host-tools/Invoke-SandboxSSH.ps1)
 - [`Copy-ToSandbox.ps1`](./sandbox/host-tools/Copy-ToSandbox.ps1)
