@@ -43,6 +43,8 @@ GhostTrace is built for legitimate reverse engineering, malware analysis, DFIR, 
 
 Like any serious binary-analysis stack, it can be misused. That decision belongs to the operator, not the project. If you point GhostTrace at targets, software, or environments without proper authorization, you own the legal, ethical, and operational consequences. Use it smart. Use it lawfully. Good hands. Better judgment.
 
+Improvement ideas are always welcome, and thoughtful criticism will be taken seriously to keep sharpening the project.
+
 ### Architecture
 
 ```text
@@ -216,6 +218,8 @@ GhostTrace reúne una interfaz de operador con estética cyberpunk, `Ghidraaas` 
 GhostTrace está pensado para reverse engineering legítimo, análisis de malware, DFIR, investigación y trabajo defensivo.
 
 Como cualquier stack serio de análisis binario, puede usarse mal. Esa decisión pertenece al operador, no al proyecto. Si apuntas GhostTrace contra objetivos, software o entornos sin la debida autorización, asumes toda la responsabilidad por las consecuencias legales, éticas y operativas. Úsalo con cabeza. Úsalo dentro de la ley. Buen pulso. Mejor criterio.
+
+Cualquier idea de mejora será bienvenida, y toda crítica con criterio se tendrá en cuenta para seguir afilando el proyecto.
 
 ### Arquitectura
 
