@@ -1,13 +1,17 @@
-# GhostTrace
-
-[![site](https://img.shields.io/badge/site-ghosttrace--lab-0a1324?style=for-the-badge&logo=githubpages&logoColor=46f3ff&labelColor=07111d)](https://0xcyberberserker.github.io/ghosttrace-lab/)
-![ollama](https://img.shields.io/badge/ollama-local-0a1324?style=for-the-badge&logo=ollama&logoColor=ffffff&labelColor=07111d)
-![model](https://img.shields.io/badge/model-qwen3.5--abliterated%3A4b-0a1324?style=for-the-badge&logo=openai&logoColor=ff4fd8&labelColor=07111d)
-![backend](https://img.shields.io/badge/backend-ghidraaas-0a1324?style=for-the-badge&logo=gnuprivacyguard&logoColor=46f3ff&labelColor=07111d)
-![sandbox](https://img.shields.io/badge/lab-windows%20sandbox-0a1324?style=for-the-badge&logo=windows11&logoColor=46f3ff&labelColor=07111d)
-![debugger](https://img.shields.io/badge/debugger-x64dbg%20bridge-0a1324?style=for-the-badge&logo=gnubash&logoColor=a6ff47&labelColor=07111d)
-
-👻 GhostTrace is an AI-assisted reverse engineering workbench for binary triage, guided decompilation, and sandbox-aware operator workflows.
+<div align="center">
+  <h1>👻 GhostTrace</h1>
+  <p><strong>AI reverse engineering workbench for binary triage, guided decompilation, and sandbox-aware operator workflows.</strong></p>
+  <p>
+    <a href="https://0xcyberberserker.github.io/ghosttrace-lab/"><img alt="site" src="https://img.shields.io/badge/site-ghosttrace--lab-0a1324?style=for-the-badge&logo=githubpages&logoColor=46f3ff&labelColor=07111d"></a>
+    <img alt="ollama" src="https://img.shields.io/badge/ollama-local-0a1324?style=for-the-badge&logo=ollama&logoColor=ffffff&labelColor=07111d">
+    <img alt="model" src="https://img.shields.io/badge/model-qwen3.5--abliterated%3A4b-0a1324?style=for-the-badge&logo=openai&logoColor=ff4fd8&labelColor=07111d">
+  </p>
+  <p>
+    <img alt="backend" src="https://img.shields.io/badge/backend-ghidraaas-0a1324?style=for-the-badge&logo=gnuprivacyguard&logoColor=46f3ff&labelColor=07111d">
+    <img alt="sandbox" src="https://img.shields.io/badge/lab-windows%20sandbox-0a1324?style=for-the-badge&logo=windows11&logoColor=46f3ff&labelColor=07111d">
+    <img alt="debugger" src="https://img.shields.io/badge/debugger-x64dbg%20bridge-0a1324?style=for-the-badge&logo=gnubash&logoColor=a6ff47&labelColor=07111d">
+  </p>
+</div>
 
 It combines a cyberpunk web UI, `Ghidraaas` for static analysis, `Ollama` for local reasoning, cached triage artifacts, and a reproducible Windows sandbox lab with SSH and debugger bridge support.
 
