@@ -47,9 +47,56 @@ Improvement ideas are always welcome, and thoughtful criticism will be taken ser
 
 ### Architecture
 
-```text
-Binary Upload -> Web UI -> Ghidraaas -> Cached Artifacts -> AI Operator / Chat / Triage
-                                      \-> Sandbox Queue -> Windows Lab -> x64dbg Bridge
+```mermaid
+flowchart LR
+    classDef svc fill:#0b1220,stroke:#46f3ff,stroke-width:1.5px,color:#e9fbff,rx:8,ry:8
+    classDef infra fill:#050810,stroke:#6b7280,stroke-dasharray:3 3,color:#9ca3af,rx:12,ry:12
+    classDef sandbox fill:#041208,stroke:#22c55e,stroke-width:1.5px,color:#bbf7d0,rx:10,ry:10
+    classDef operator fill:#111827,stroke:#f97316,stroke-width:1.5px,color:#fed7aa,rx:10,ry:10
+
+    subgraph Operator["🧑‍💻 Operator Workspace"]
+      direction TB
+      Browser["Web UI\n(Flask + Tailwind)"]:::operator
+    end
+
+    subgraph Backend["Core Services"]
+      direction TB
+      WebUI["webui\nGunicorn app.py"]:::svc
+      Ghidraaas["Ghidraaas\nREST backend"]:::svc
+      Ollama["Ollama\nLLM runtime"]:::svc
+      Rabbit["RabbitMQ\nqueues"]:::svc
+      SandboxRunner["sandbox_runner\nHTTP + worker"]:::svc
+    end
+
+    subgraph Storage["Analysis State"]
+      direction TB
+      VolJobs["JobStore (SQLite)\n/ ghosttrace.db"]:::infra
+      VolUploads["Uploads volume\n/ uploads/"]:::infra
+      VolEvidence["Dynamic evidence\n/ dynamic_evidence/"]:::infra
+      VolTriage["Triage reports\n/ triage_reports/"]:::infra
+    end
+
+    subgraph WindowsLab["Windows Sandbox Lab"]
+      direction TB
+      WinVM["dockurr/windows\n+ OEM tooling"]:::sandbox
+      X64dbg["x64dbg + MCP\nbridge plugin"]:::sandbox
+    end
+
+    Browser -->|"HTTP /"| WebUI
+    WebUI -->|"HTTP /ghidra/api"| Ghidraaas
+    WebUI -->|"OpenAI compat\nAPI_BASE"| Ollama
+    WebUI <-.->|"JSON jobs + evidence"| VolJobs
+    WebUI <-.->|"Upload stream"| VolUploads
+    WebUI <-.->|"JSON artifacts"| VolEvidence
+    WebUI <-.->|"JSON triage"| VolTriage
+
+    WebUI -->|"HTTP /sandbox_*"| SandboxRunner
+    SandboxRunner -->|"AMQP\ntriage & sandbox queues"| Rabbit
+    SandboxRunner <-.->|"shared samples\n/ bridge state"| VolUploads
+
+    WinVM <-.->|"Shared folder\n/Shared"| VolUploads
+    WinVM <-.->|"Bridge JSON\nvia runner"| SandboxRunner
+    WinVM -->|"Debugger\nstate + findings"| X64dbg
 ```
 
 Core components:
@@ -157,14 +204,41 @@ The repo is aligned so the same Ollama model is used on both sides:
 
 ### Analysis Workflow
 
-- `Static Triage`
-  Understand likely purpose, suspicious subsystems, installer behavior, and priority code paths.
-- `PE / API Behavior`
-  Use imports and decompilation to reason about registry, file, service, crypto, and process behavior.
-- `Network Clues`
-  Surface likely telemetry, update, or remote communication paths from static evidence.
-- `Dynamic Correlation`
-  Bring in sandbox findings and debugger evidence without losing the static-analysis context.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Op as Operator
+    participant UI as Web UI
+    participant G as Ghidraaas
+    participant LLM as Ollama
+    participant Q as RabbitMQ
+    participant SR as Sandbox Runner
+    participant WS as Windows Sandbox
+    participant DB as JobStore / Evidence
+
+    Op->>UI: Upload sample.exe
+    UI->>G: POST /analyze_sample (binary stream)
+    G-->>UI: 200 "Analysis completed"
+    UI->>DB: Save job metadata + uploads
+    UI-->>Op: job_id + status: DONE
+
+    Op->>UI: Ask triage questions (Chat)
+    UI->>LLM: ChatCompletion + tools (functions/imports/strings)
+    UI->>G: get_functions_list / get_imports_list / get_strings_list
+    G-->>UI: Cached triage artifacts
+    LLM-->>UI: Triage summary + next steps
+    UI->>DB: Cache triage report JSON/MD
+
+    Op->>UI: Switch to Validate (runtime check)
+    UI->>SR: POST /run { job_id, filename }
+    SR->>Q: Enqueue sandbox run
+    SR->>WS: (out-of-band) execute sample in VM
+    WS-->>SR: Logs / traces / debugger data
+    SR->>DB: POST /evidence/<job_id> (artifacts)
+    UI->>LLM: ChatCompletion + get_dynamic_evidence
+    LLM-->>UI: Correlated static + dynamic findings
+    UI-->>Op: Explain confirmed / falsified behavior
+```
 
 ### Roadmap and Benchmark Bench
 
