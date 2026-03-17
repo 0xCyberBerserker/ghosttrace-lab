@@ -5,7 +5,7 @@
   <p>
     <a href="https://0xcyberberserker.github.io/ghosttrace-lab/"><img alt="site" src="https://img.shields.io/badge/site-ghosttrace--lab-0a1324?style=for-the-badge&logo=githubpages&logoColor=46f3ff&labelColor=07111d"></a>
     <img alt="ollama" src="https://img.shields.io/badge/ollama-local-0a1324?style=for-the-badge&logo=ollama&logoColor=ffffff&labelColor=07111d">
-    <img alt="model" src="https://img.shields.io/badge/model-qwen3.5--abliterated%3A4b-0a1324?style=for-the-badge&logo=openai&logoColor=ff4fd8&labelColor=07111d">
+    <img alt="model" src="https://img.shields.io/badge/model-Godmoded%2Fllama3--lexi--uncensored-0a1324?style=for-the-badge&logo=openai&logoColor=ff4fd8&labelColor=07111d">
   </p>
   <p>
     <img alt="backend" src="https://img.shields.io/badge/backend-ghidraaas-0a1324?style=for-the-badge&logo=gnuprivacyguard&logoColor=46f3ff&labelColor=07111d">
@@ -30,7 +30,7 @@ GhostTrace ties together a cyberpunk operator UI, `Ghidraaas` for static analysi
 ### Highlights
 
 - Static-analysis-first workflow powered by `Ghidraaas`
-- Local LLM integration via `Ollama` and `huihui_ai/qwen3.5-abliterated:4b`
+- Local LLM integration via `Ollama` and `Godmoded/llama3-lexi-uncensored`
 - Cached imports, strings, functions, and decompilation
 - Auto-generated triage reports per analysis job
 - Persistent job management in the web UI
@@ -78,6 +78,47 @@ docker build -t ghidraaas .
 docker compose up --build
 ```
 
+The containerized `webui` runs behind `gunicorn` in the Compose stack. The Flask development server is still only for local direct execution.
+
+Optional operator protection for the Web UI is available through HTTP Basic auth:
+
+```text
+OPERATOR_USERNAME=operator
+OPERATOR_PASSWORD=change-me
+```
+
+If both variables are set, GhostTrace requires operator credentials for the human-facing Web UI and API routes, while internal sandbox-to-web callbacks still use the shared internal token path.
+
+GhostTrace now also supports RabbitMQ-backed background workers in the Compose stack. The default setup starts `rabbitmq`, a dedicated `webui_worker` for triage, and a `sandbox_runner_worker` for sandbox run queue processing.
+
+Both `webui` and `sandbox_runner` now expose an observability-friendly `/health` endpoint with request IDs and readiness details. Responses also include an `X-Request-ID` header so logs can be correlated across services.
+The Web UI also exposes `/metrics/summary` for a JSON operator snapshot and `/metrics` for Prometheus-style text metrics.
+
+The main `sandbox_runner` container now runs behind `gunicorn` as well. The bridge polling thread is only enabled in the HTTP-facing runner process, not in the separate queue worker, so the stack avoids duplicate bridge consumers.
+
+Frontend assets no longer depend on runtime CDNs for Tailwind, jQuery, Marked, or Google Fonts. Generated and vendored frontend assets live under `webui/static/css/` and `webui/static/vendor/`.
+
+If you change utility classes or refresh frontend vendor assets, regenerate them with:
+
+```powershell
+npm install
+npm run build:frontend
+```
+
+For the new browser smoke check of the main shell, install Playwright Chromium once and then run:
+
+```powershell
+npx playwright install chromium
+npm run test:e2e:smoke
+npm run test:e2e:release
+```
+
+The smoke script expects the app at `http://127.0.0.1:5000/` by default and writes screenshots under `output/playwright/`.
+It also writes a JSON report to `output/playwright/ghosttrace-smoke-report.json` with step timings, the opened job id, and a visible UI snapshot, and it fails if it detects actionable browser `pageerror` events or console errors.
+The release check reads that report and fails if the total runtime, key lane timings, or final visible health state drift past configurable thresholds.
+
+A baseline GitHub Actions CI workflow now covers frontend asset generation, Python compile checks, and the Web UI plus sandbox runner test suites. The browser smoke is kept separate for now because it still expects a live stack with at least one seeded analysis job.
+
 3. Open the app:
 
 ```text
@@ -87,12 +128,15 @@ http://localhost:5000
 ### Requirements
 
 - Docker Desktop
-- Ollama running on the host
-- local model available:
+- enough disk space for the Ollama model
+
+The stack now starts its own `ollama` container and automatically pulls:
 
 ```text
-huihui_ai/qwen3.5-abliterated:4b
+Godmoded/llama3-lexi-uncensored
 ```
+
+`ollama` is configured to request all available Docker GPUs for inference.
 
 ### Shared AI Configuration
 
@@ -101,13 +145,15 @@ GhostTrace keeps its shared AI runtime settings in [`ai-config.json`](./ai-confi
 Current defaults:
 
 - provider: `ollama`
-- API base: `http://host.docker.internal:11434/v1`
-- model: `huihui_ai/qwen3.5-abliterated:4b`
+- API base: `http://ollama:11434/v1`
+- model: `Godmoded/llama3-lexi-uncensored`
+- local state DB: `/app/data/ghosttrace.db`
 
 The repo is aligned so the same Ollama model is used on both sides:
 
-- `webui` uses `MODEL_NAME=huihui_ai/qwen3.5-abliterated:4b`
-- `windows_sandbox` uses `OLLAMA_MODEL=huihui_ai/qwen3.5-abliterated:4b`
+- `webui` uses `MODEL_NAME=Godmoded/llama3-lexi-uncensored`
+- `windows_sandbox` uses `OLLAMA_MODEL=Godmoded/llama3-lexi-uncensored`
+- `docker-compose` wires Ollama internally as `http://ollama:11434`
 
 ### Analysis Workflow
 
@@ -172,12 +218,31 @@ The optional `windows-sandbox` profile provides:
 - `SSH` on `127.0.0.1:2222`
 - shared samples through the `Shared` desktop folder
 
-#### Default local lab credentials
+#### Local lab credentials
 
-- username: `Docker`
-- password: `admin`
+The optional Windows lab now uses:
 
-These defaults are only meant for a disposable local lab. If you expose the sandbox beyond localhost, change them immediately.
+- default username: `Docker`
+- auto-generated password created at sandbox startup
+- persisted credentials stored in `sandbox/credentials/windows-sandbox.env`
+
+The password is generated by the `windows_sandbox` container itself at runtime and then exposed in the Web UI. That keeps the flow automatic without baking a static secret into the repo or requiring manual pre-steps.
+
+If you ever want to pre-generate or rotate that file manually:
+
+```powershell
+python scripts/ensure_windows_sandbox_credentials.py
+```
+
+The Web UI loads and shows the generated lab credentials once the optional sandbox has started at least once.
+
+The sandbox ports are bound to `127.0.0.1` by default:
+
+- `noVNC` on `http://127.0.0.1:8006`
+- `RDP` on `127.0.0.1:3389`
+- `SSH` on `127.0.0.1:2222`
+
+If you intentionally expose the sandbox beyond localhost, treat it as a privileged lab host and set unique credentials first.
 
 ### Host-Side Helpers
 
@@ -211,7 +276,7 @@ GhostTrace reúne una interfaz de operador con estética cyberpunk, `Ghidraaas` 
 ### Puntos fuertes
 
 - Flujo centrado en análisis estático apoyado por `Ghidraaas`
-- Integración local con `Ollama` y `huihui_ai/qwen3.5-abliterated:4b`
+- Integración local con `Ollama` y `Godmoded/llama3-lexi-uncensored`
 - Caché de imports, strings, funciones y decompilación
 - Informes de triage automáticos por análisis
 - Gestión persistente de trabajos en la interfaz
@@ -259,6 +324,33 @@ docker build -t ghidraaas .
 docker compose up --build
 ```
 
+En el stack con Compose, `webui` arranca detrás de `gunicorn`. El servidor de desarrollo de Flask queda solo para ejecución local directa.
+
+La Web UI admite protección opcional de operador con HTTP Basic auth:
+
+```text
+OPERATOR_USERNAME=operator
+OPERATOR_PASSWORD=cambia-esto
+```
+
+Si defines ambas variables, GhostTrace pedirá credenciales de operador en las rutas humanas de la Web UI y de la API, mientras que las callbacks internas de la sandbox seguirán usando el token interno compartido.
+
+GhostTrace también admite ahora workers en segundo plano con RabbitMQ dentro del stack de Compose. La configuración por defecto levanta `rabbitmq`, un consumidor dedicado `webui_worker` para triage y `sandbox_runner_worker` para procesar la cola de sandbox.
+
+Además, `webui` y `sandbox_runner` exponen ahora un endpoint `/health` orientado a observabilidad, con detalles de readiness e IDs de petición. Las respuestas incluyen `X-Request-ID` para poder correlacionar logs entre servicios.
+La Web UI también expone `/metrics/summary` como resumen JSON para operador y `/metrics` en formato de texto estilo Prometheus.
+
+El contenedor principal de `sandbox_runner` también se ejecuta ahora detrás de `gunicorn`. El hilo del bridge solo se activa en el proceso HTTP del runner y no en el worker separado de la cola, así evitamos consumidores duplicados del bridge.
+
+Los assets del frontend ya no dependen de CDNs en runtime para Tailwind, jQuery, Marked ni Google Fonts. Los assets generados y versionados viven en `webui/static/css/` y `webui/static/vendor/`.
+
+Si cambias clases utility o quieres refrescar los vendor del frontend, regénéralos con:
+
+```powershell
+npm install
+npm run build:frontend
+```
+
 3. Abre la app:
 
 ```text
@@ -268,12 +360,15 @@ http://localhost:5000
 ### Requisitos
 
 - Docker Desktop
-- Ollama en ejecución en el host
-- modelo disponible localmente:
+- espacio suficiente en disco para el modelo de Ollama
+
+El stack ahora arranca su propio contenedor `ollama` y descarga automáticamente:
 
 ```text
-huihui_ai/qwen3.5-abliterated:4b
+Godmoded/llama3-lexi-uncensored
 ```
+
+`ollama` queda configurado para pedir todas las GPU disponibles en Docker para la inferencia.
 
 ### Configuración compartida de IA
 
@@ -282,13 +377,15 @@ GhostTrace mantiene la configuración compartida en [`ai-config.json`](./ai-conf
 Valores actuales:
 
 - proveedor: `ollama`
-- API base: `http://host.docker.internal:11434/v1`
-- modelo: `huihui_ai/qwen3.5-abliterated:4b`
+- API base: `http://ollama:11434/v1`
+- modelo: `Godmoded/llama3-lexi-uncensored`
+- base local de estado: `/app/data/ghosttrace.db`
 
 El repo está alineado para usar el mismo modelo en ambos lados:
 
-- `webui` usa `MODEL_NAME=huihui_ai/qwen3.5-abliterated:4b`
-- `windows_sandbox` usa `OLLAMA_MODEL=huihui_ai/qwen3.5-abliterated:4b`
+- `webui` usa `MODEL_NAME=Godmoded/llama3-lexi-uncensored`
+- `windows_sandbox` usa `OLLAMA_MODEL=Godmoded/llama3-lexi-uncensored`
+- `docker-compose` conecta Ollama internamente como `http://ollama:11434`
 
 ### Flujo de análisis
 
@@ -353,12 +450,31 @@ El perfil opcional `windows-sandbox` ofrece:
 - `SSH` en `127.0.0.1:2222`
 - muestras compartidas a través de la carpeta `Shared`
 
-#### Credenciales locales por defecto
+#### Credenciales del laboratorio local
 
-- usuario: `Docker`
-- contraseña: `admin`
+El laboratorio Windows opcional ahora usa:
 
-Estas credenciales están pensadas solo para un laboratorio local desechable. Si expones la sandbox fuera de localhost, cámbialas inmediatamente.
+- usuario por defecto: `Docker`
+- contraseña autogenerada en el arranque de la sandbox
+- credenciales persistidas en `sandbox/credentials/windows-sandbox.env`
+
+La contraseña la genera la propia `windows_sandbox` en runtime y luego la muestra la Web UI. Así el flujo es automático sin dejar un secreto fijo en el repo ni depender de un paso manual previo.
+
+Si alguna vez quieres generar o rotar ese archivo manualmente:
+
+```powershell
+python scripts/ensure_windows_sandbox_credentials.py
+```
+
+La Web UI carga y muestra esas credenciales una vez que la sandbox opcional se haya arrancado al menos una vez.
+
+Los puertos de la sandbox quedan ligados a `127.0.0.1` por defecto:
+
+- `noVNC` en `http://127.0.0.1:8006`
+- `RDP` en `127.0.0.1:3389`
+- `SSH` en `127.0.0.1:2222`
+
+Si decides exponer la sandbox fuera de localhost, trátala como un host privilegiado de laboratorio y define primero credenciales únicas.
 
 ### Utilidades desde el host
 
