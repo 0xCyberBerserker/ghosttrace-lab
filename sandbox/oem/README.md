@@ -51,9 +51,9 @@ Bootstrap state handling:
 Shared AI configuration:
 
 - the project-wide LLM settings are exposed inside the guest through `%USERPROFILE%\Desktop\shared\config\ai-config.json`
-- environment variables also expose the same host-side Ollama target:
-  - `OLLAMA_HOST=host.docker.internal`
-  - `OLLAMA_BASE_URL=http://host.docker.internal:11434`
+- environment variables also expose the same Compose-side Ollama target:
+  - `OLLAMA_HOST=ollama`
+  - `OLLAMA_BASE_URL=http://ollama:11434`
   - `OLLAMA_MODEL=huihui_ai/qwen3.5-abliterated:4b`
 
 The provisioning is idempotent inside the guest. To force a clean first-boot reinstall, recreate the Windows storage volume so the OS is installed from scratch again.

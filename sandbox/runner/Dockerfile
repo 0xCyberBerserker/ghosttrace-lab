@@ -13,4 +13,4 @@ COPY sandbox/runner /app/sandbox_runner
 
 EXPOSE 9001
 
-CMD ["python", "/app/sandbox_runner/app.py"]
+CMD ["gunicorn", "--chdir", "/app/sandbox_runner", "--bind", "0.0.0.0:9001", "--worker-class", "gthread", "--workers", "1", "--threads", "4", "--timeout", "120", "app:app"]

@@ -1,12 +1,6 @@
-FROM mcr.microsoft.com/windows:ltsc2019
+FROM dockurr/windows:latest
 
-SHELL ["cmd", "/S", "/C"]
+COPY sandbox/windows/entrypoint.sh /usr/local/bin/ghosttrace-windows-entrypoint.sh
+RUN chmod +x /usr/local/bin/ghosttrace-windows-entrypoint.sh
 
-RUN mkdir C:\sandbox
-
-WORKDIR C:\sandbox
-
-VOLUME ["C:\\sandbox\\binaries"]
-
-REM Default entrypoint: interactive shell inside the sandbox
-CMD ["cmd.exe"]
+ENTRYPOINT ["/usr/bin/tini", "-s", "/usr/local/bin/ghosttrace-windows-entrypoint.sh"]

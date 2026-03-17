@@ -3,11 +3,20 @@ import os
 import shutil
 import threading
 import time
+import hmac
 from datetime import datetime, timezone
 from pathlib import Path
 
 import requests
 from flask import Flask, jsonify, request
+from observability import init_observability
+from task_queue import (
+    RABBITMQ_SANDBOX_QUEUE,
+    RABBITMQ_X64DBG_QUEUE,
+    consume_json,
+    publish_json,
+    rabbitmq_enabled,
+)
 
 
 app = Flask(__name__)
@@ -18,10 +27,40 @@ WEBUI_BASE = os.getenv("WEBUI_BASE", "http://webui:5000")
 X64DBG_DIR = Path(os.getenv("X64DBG_DIR", "/queue/x64dbg"))
 BRIDGE_DIR = Path(os.getenv("BRIDGE_DIR", "/bridge"))
 BRIDGE_POLL_INTERVAL = float(os.getenv("BRIDGE_POLL_INTERVAL", "2.5"))
+INTERNAL_API_TOKEN = os.getenv("INTERNAL_API_TOKEN")
+RUNNER_ENABLE_BRIDGE = os.getenv("RUNNER_ENABLE_BRIDGE", "0").lower() in {"1", "true", "yes", "on"}
+_bridge_thread_started = False
+_bridge_thread_lock = threading.Lock()
+
+
+def _runner_readiness():
+    checks = {
+        "samples_dir_ready": SAMPLES_DIR.exists() or SAMPLES_DIR.parent.exists(),
+        "queue_dir_ready": QUEUE_DIR.exists() or QUEUE_DIR.parent.exists(),
+        "bridge_dir_ready": BRIDGE_DIR.exists() or BRIDGE_DIR.parent.exists(),
+        "rabbitmq_enabled": rabbitmq_enabled(),
+    }
+    return {
+        "ready": checks["samples_dir_ready"] and checks["queue_dir_ready"] and checks["bridge_dir_ready"],
+        "checks": checks,
+    }
+
+
+init_observability(app, "sandbox_runner", _runner_readiness)
 
 
 def _utc_now():
     return datetime.now(timezone.utc).isoformat()
+
+
+def _require_internal_token():
+    if not INTERNAL_API_TOKEN:
+        return None
+
+    provided = request.headers.get("X-Internal-Token", "")
+    if not hmac.compare_digest(provided, INTERNAL_API_TOKEN):
+        return jsonify({"error": "unauthorized"}), 401
+    return None
 
 
 def _job_path(job_id: str) -> Path:
@@ -45,6 +84,65 @@ def _load_job(job_id: str):
 def _save_job(job_id: str, payload):
     QUEUE_DIR.mkdir(parents=True, exist_ok=True)
     _job_path(job_id).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def _build_run_payload(job_id: str, filename: str):
+    sample_path = _sample_path(job_id)
+    return {
+        "job_id": job_id,
+        "filename": filename,
+        "sample_path": str(sample_path),
+        "sample_present": sample_path.exists(),
+        "status": "queued",
+        "queued_at": _utc_now(),
+        "notes": [
+            "Runner queued safely. External sandbox execution must be operated separately."
+        ],
+    }
+
+
+def process_run_request(job_id: str, filename: str):
+    payload = _build_run_payload(job_id, filename)
+    _save_job(job_id, payload)
+    return payload
+
+
+def process_run_message(payload: dict):
+    job_id = payload.get("job_id")
+    filename = payload.get("filename")
+    if not job_id or not filename:
+        return
+    process_run_request(job_id, filename)
+
+
+def process_x64dbg_request(job_id: str, request_payload: dict):
+    payload = _append_x64dbg_request(job_id, request_payload)
+    _save_x64dbg_state(job_id, {
+        "status": "waiting_for_debugger",
+        "last_request_at": request_payload["requested_at"],
+        "last_requested_action": request_payload["action"],
+    })
+    _write_bridge_requests_snapshot(job_id)
+    _write_bridge_state_snapshot(job_id)
+    return payload
+
+
+def process_x64dbg_message(payload: dict):
+    job_id = payload.get("job_id")
+    request_payload = payload.get("request")
+    if not job_id or not isinstance(request_payload, dict):
+        return
+    process_x64dbg_request(job_id, request_payload)
+
+
+def start_sandbox_queue_worker():
+    threading.Thread(
+        target=consume_json,
+        args=(RABBITMQ_X64DBG_QUEUE, process_x64dbg_message),
+        daemon=True,
+        name="sandbox-x64dbg-queue-consumer",
+    ).start()
+    consume_json(RABBITMQ_SANDBOX_QUEUE, process_run_message)
 
 
 def _delete_job_artifacts(job_id: str):
@@ -275,23 +373,35 @@ def _bridge_worker():
         time.sleep(BRIDGE_POLL_INTERVAL)
 
 
+def _start_bridge_worker_once():
+    global _bridge_thread_started
+    with _bridge_thread_lock:
+        if _bridge_thread_started:
+            return
+        threading.Thread(target=_bridge_worker, daemon=True, name="sandbox-bridge-worker").start()
+        _bridge_thread_started = True
+
+
 def _forward_evidence(job_id: str, artifacts):
+    headers = {}
+    if INTERNAL_API_TOKEN:
+        headers["X-Internal-Token"] = INTERNAL_API_TOKEN
     response = requests.post(
         f"{WEBUI_BASE.rstrip('/')}/evidence/{job_id}",
         json={"artifacts": artifacts},
         timeout=30,
+        headers=headers,
     )
     response.raise_for_status()
     return response.json()
 
 
-@app.get("/health")
-def health():
-    return jsonify({"status": "ok"})
-
-
 @app.post("/run")
 def queue_run():
+    unauthorized = _require_internal_token()
+    if unauthorized:
+        return unauthorized
+
     data = request.get_json(silent=True) or {}
     job_id = data.get("job_id")
     filename = data.get("filename")
@@ -299,20 +409,11 @@ def queue_run():
     if not job_id or not filename:
         return jsonify({"error": "job_id and filename are required"}), 400
 
-    sample_path = _sample_path(job_id)
-    payload = {
-        "job_id": job_id,
-        "filename": filename,
-        "sample_path": str(sample_path),
-        "sample_present": sample_path.exists(),
-        "status": "queued",
-        "queued_at": _utc_now(),
-        "notes": [
-            "Runner queued safely. External sandbox execution must be operated separately."
-        ],
-    }
-
-    _save_job(job_id, payload)
+    payload = _build_run_payload(job_id, filename)
+    if rabbitmq_enabled():
+        publish_json(RABBITMQ_SANDBOX_QUEUE, {"job_id": job_id, "filename": filename})
+    else:
+        process_run_request(job_id, filename)
     return jsonify(payload), 202
 
 
@@ -327,6 +428,10 @@ def get_job(job_id: str):
 
 @app.delete("/jobs/<job_id>")
 def delete_job(job_id: str):
+    unauthorized = _require_internal_token()
+    if unauthorized:
+        return unauthorized
+
     removed = _delete_job_artifacts(job_id)
     return jsonify({
         "job_id": job_id,
@@ -337,6 +442,10 @@ def delete_job(job_id: str):
 
 @app.post("/jobs/<job_id>/evidence")
 def ingest_job_evidence(job_id: str):
+    unauthorized = _require_internal_token()
+    if unauthorized:
+        return unauthorized
+
     data = request.get_json(silent=True) or {}
     artifacts = data.get("artifacts")
     if not isinstance(artifacts, list):
@@ -368,12 +477,20 @@ def ingest_job_evidence(job_id: str):
 
 @app.get("/jobs/<job_id>/x64dbg")
 def get_x64dbg_state(job_id: str):
+    unauthorized = _require_internal_token()
+    if unauthorized:
+        return unauthorized
+
     _write_bridge_state_snapshot(job_id)
     return jsonify(_get_x64dbg_state(job_id))
 
 
 @app.post("/jobs/<job_id>/x64dbg")
 def update_x64dbg_state(job_id: str):
+    unauthorized = _require_internal_token()
+    if unauthorized:
+        return unauthorized
+
     data = request.get_json(silent=True) or {}
     state = _save_x64dbg_state(job_id, data)
     _write_bridge_state_snapshot(job_id)
@@ -392,12 +509,20 @@ def update_x64dbg_state(job_id: str):
 
 @app.get("/jobs/<job_id>/x64dbg/findings")
 def get_x64dbg_findings(job_id: str):
+    unauthorized = _require_internal_token()
+    if unauthorized:
+        return unauthorized
+
     _write_bridge_state_snapshot(job_id)
     return jsonify(_get_x64dbg_findings(job_id))
 
 
 @app.post("/jobs/<job_id>/x64dbg/findings")
 def add_x64dbg_findings(job_id: str):
+    unauthorized = _require_internal_token()
+    if unauthorized:
+        return unauthorized
+
     data = request.get_json(silent=True) or {}
     findings = data.get("findings")
     if not isinstance(findings, list):
@@ -410,12 +535,20 @@ def add_x64dbg_findings(job_id: str):
 
 @app.get("/jobs/<job_id>/x64dbg/requests")
 def get_x64dbg_requests(job_id: str):
+    unauthorized = _require_internal_token()
+    if unauthorized:
+        return unauthorized
+
     _write_bridge_requests_snapshot(job_id)
     return jsonify(_get_x64dbg_requests(job_id))
 
 
 @app.post("/jobs/<job_id>/x64dbg/requests")
 def add_x64dbg_request(job_id: str):
+    unauthorized = _require_internal_token()
+    if unauthorized:
+        return unauthorized
+
     data = request.get_json(silent=True) or {}
     action = data.get("action")
     if not action:
@@ -428,22 +561,27 @@ def add_x64dbg_request(job_id: str):
         "requested_at": _utc_now(),
         "status": "queued",
     }
-    payload = _append_x64dbg_request(job_id, request_payload)
-    _save_x64dbg_state(job_id, {
-        "status": "waiting_for_debugger",
-        "last_request_at": request_payload["requested_at"],
-        "last_requested_action": action,
-    })
-    _write_bridge_requests_snapshot(job_id)
-    _write_bridge_state_snapshot(job_id)
+    if rabbitmq_enabled():
+        publish_json(
+            RABBITMQ_X64DBG_QUEUE,
+            {"job_id": job_id, "request": request_payload},
+        )
+        queued_requests = _get_x64dbg_requests(job_id)["requests"]
+    else:
+        payload = process_x64dbg_request(job_id, request_payload)
+        queued_requests = payload["requests"]
     return jsonify({
         "job_id": job_id,
         "status": "queued",
         "request": request_payload,
-        "requests": payload["requests"],
+        "requests": queued_requests,
     }), 202
 
 
+if RUNNER_ENABLE_BRIDGE:
+    _start_bridge_worker_once()
+
+
 if __name__ == "__main__":
-    threading.Thread(target=_bridge_worker, daemon=True).start()
+    _start_bridge_worker_once()
     app.run(host="0.0.0.0", port=9001, debug=False)
