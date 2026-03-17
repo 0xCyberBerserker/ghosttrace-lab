@@ -41,26 +41,28 @@
             --operator-accent: rgba(113, 229, 255, 0.14);
         }
         body[data-theme="fallout-3-terminal"] {
-            --bg-0: #07110a;
-            --bg-1: #0e160b;
-            --panel: rgba(9, 19, 10, 0.9);
-            --panel-strong: rgba(10, 22, 11, 0.98);
-            --border: rgba(123, 255, 155, 0.34);
-            --cyan: #8bff9d;
-            --pink: #d7ff76;
-            --lime: #b6ff72;
-            --amber: #d8b66d;
-            --text: #d9ffcd;
-            --muted: #86b486;
-            --shadow: inset 0 0 0 1px rgba(182, 255, 114, 0.05), 0 0 0 1px rgba(139, 255, 157, 0.14), 0 0 26px rgba(139, 255, 157, 0.08), 0 0 60px rgba(101, 255, 136, 0.06);
+            --bg-0: #020904;
+            --bg-1: #050b06;
+            --panel: rgba(3, 12, 5, 0.94);
+            --panel-strong: rgba(5, 16, 7, 0.98);
+            --border: rgba(126, 255, 155, 0.38);
+            --cyan: #7bff99;
+            --pink: #7bff99;
+            --lime: #9bffb3;
+            --amber: #9bffb3;
+            --text: #d8ffcf;
+            --muted: #6ea57c;
+            --shadow:
+                inset 0 0 0 1px rgba(123, 255, 155, 0.08),
+                0 0 24px rgba(123, 255, 155, 0.16);
             --font-body: 'IBM Plex Mono', monospace;
-            --theme-grid: rgba(139, 255, 157, 0.055);
-            --theme-scanline: rgba(139, 255, 157, 0.06);
-            --sidebar-bg: linear-gradient(180deg, rgba(8, 17, 9, 0.99), rgba(7, 14, 7, 0.96));
-            --hero-bg: linear-gradient(135deg, rgba(14, 29, 14, 0.98), rgba(9, 18, 9, 0.94));
-            --panel-glow: rgba(139, 255, 157, 0.12);
-            --operator-accent: rgba(182, 255, 114, 0.14);
-            --terminal-line: rgba(182, 255, 114, 0.12);
+            --theme-grid: rgba(123, 255, 155, 0.06);
+            --theme-scanline: rgba(123, 255, 155, 0.045);
+            --sidebar-bg: linear-gradient(180deg, rgba(3, 10, 5, 0.98), rgba(2, 8, 4, 0.96));
+            --hero-bg: linear-gradient(135deg, rgba(6, 18, 9, 0.98), rgba(3, 12, 6, 0.96));
+            --panel-glow: rgba(123, 255, 155, 0.16);
+            --operator-accent: rgba(123, 255, 155, 0.16);
+            --terminal-line: rgba(123, 255, 155, 0.15);
         }
         body[data-theme="amber-command"] {
             --bg-0: #120c07;
@@ -93,7 +95,8 @@
                 radial-gradient(circle at bottom center, rgba(166, 255, 71, 0.08), transparent 28%),
                 linear-gradient(135deg, var(--bg-0), var(--bg-1) 52%, #05070f);
             color: var(--text);
-            overflow: hidden;
+            overflow-x: hidden;
+            overflow-y: auto;
         }
         body::before {
             content: "";
@@ -126,8 +129,40 @@
             box-shadow: var(--shadow);
             backdrop-filter: blur(18px);
         }
+        .workspace-tabs {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.15rem 0.2rem 0.35rem;
+        }
+        .workspace-tab {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 4.5rem;
+            padding: 0.32rem 0.7rem;
+            border-radius: 999px;
+            border: 1px solid rgba(71, 245, 255, 0.2);
+            background: rgba(6, 12, 28, 0.86);
+            color: rgba(186, 220, 233, 0.9);
+            font-family: var(--font-mono);
+            font-size: 0.74rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+        }
+        .workspace-tab-label {
+            white-space: nowrap;
+        }
+        .workspace-tab.is-active {
+            border-color: rgba(255, 79, 216, 0.7);
+            background: radial-gradient(circle at top left, rgba(255, 79, 216, 0.22), transparent 62%),
+                        radial-gradient(circle at bottom right, rgba(71, 245, 255, 0.18), transparent 64%),
+                        rgba(6, 12, 28, 0.96);
+            color: #ffffff;
+            box-shadow: 0 0 18px rgba(255, 79, 216, 0.26);
+        }
         .context-help {
-            padding: 0.5rem 0.65rem;
+            padding: 0.4rem 0.6rem;
         }
         .context-help-title {
             font-size: 0.72rem;
@@ -138,8 +173,6 @@
         .workflow-brief-next,
         .phase-hero-text,
         .phase-hero-meta-copy,
-        .operator-guide-copy,
-        .operator-secondary-copy,
         .reconstruction-secondary-copy,
         .upload-return-copy,
         .active-job-copy,
@@ -149,6 +182,19 @@
             -webkit-line-clamp: 2;
             overflow: hidden;
             text-overflow: ellipsis;
+        }
+        @media (min-width: 1600px) {
+            .context-help-copy,
+            .workflow-mode-copy,
+            .workflow-brief-next,
+            .phase-hero-text,
+            .phase-hero-meta-copy,
+            .reconstruction-secondary-copy,
+            .upload-return-copy,
+            .active-job-copy,
+            .chat-composer-guide-text {
+                -webkit-line-clamp: 4;
+            }
         }
         .phase-hero {
             gap: 0.75rem;
@@ -182,8 +228,8 @@
             margin-top: 0.75rem !important;
         }
         .live-session-shell {
-            padding-top: 0.95rem !important;
-            padding-bottom: 0.95rem !important;
+            padding-top: 0.75rem !important;
+            padding-bottom: 0.75rem !important;
         }
         .live-session-shell .workspace-header {
             min-height: 4.9rem;
@@ -204,8 +250,8 @@
             margin-left: auto;
         }
         .live-session-shell .phase-hero {
-            gap: 0.95rem;
-            padding: 0.92rem 1rem;
+            gap: 0.7rem;
+            padding: 0.78rem 0.9rem;
         }
         .live-session-shell .phase-hero-title {
             font-size: 1.03rem;
@@ -218,6 +264,12 @@
             text-overflow: clip;
             -webkit-line-clamp: unset;
             line-height: 1.5;
+        }
+        .phase-hero-meta-block {
+            min-width: 12rem;
+        }
+        #chat-container {
+            overflow-y: auto;
         }
         .live-session-shell .workspace-progress-status-copy {
             line-height: 1.45;
@@ -247,6 +299,9 @@
             background: var(--sidebar-bg);
             backdrop-filter: blur(18px);
             box-shadow: inset -1px 0 0 rgba(71, 245, 255, 0.12);
+        }
+        .app-sidebar {
+            overflow-y: auto;
         }
         input::placeholder, textarea::placeholder {
             color: var(--muted);
@@ -2537,10 +2592,6 @@
             border-radius: 1rem;
             background: linear-gradient(135deg, rgba(9, 16, 37, 0.9), rgba(19, 11, 36, 0.84));
             box-shadow: inset 0 0 0 1px rgba(255, 79, 216, 0.04);
-            flex: 0 0 auto;
-            min-height: 0;
-            max-height: min(24rem, 36vh);
-            overflow-y: auto;
         }
         .operator-guide-strip,
         .operator-secondary-shell {

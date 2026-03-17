@@ -1,4 +1,4 @@
-<div class="app-main flex-1 flex flex-col h-full overflow-hidden p-4 md:p-6">
+<div class="app-main flex-1 flex flex-col h-full p-4 md:p-6">
     <div id="welcome-message" class="welcome-grid flex-grow flex items-center justify-center panel">
         <div class="relative z-10 max-w-2xl text-center px-8">
             <div class="eyebrow mb-4">System Awaiting Target</div>
@@ -6,8 +6,18 @@
             <p class="mt-4 text-base text-cyan-100/60">Upload a sample or reopen a job to begin analysis and validation.</p>
         </div>
     </div>
-    <div id="chat-container" class="hidden flex-grow flex-col overflow-hidden min-h-0">
-        <div class="panel live-session-shell flex flex-col flex-grow overflow-hidden min-h-0 p-4 md:p-5">
+    <div id="chat-container" class="hidden flex-grow flex-col min-h-0">
+        <div class="panel live-session-shell flex flex-col flex-grow p-4 md:p-5">
+            <div class="workspace-tabs mb-2">
+                <template x-for="viewName in visibleViews()" :key="viewName">
+                    <button type="button"
+                            class="workspace-tab"
+                            :class="{ 'is-active': isViewActive(viewName) }"
+                            @click="openView(viewName)">
+                        <span class="workspace-tab-label" x-text="viewLabel(viewName)"></span>
+                    </button>
+                </template>
+            </div>
             <div class="section-heading workspace-header">
                 <div class="section-heading-main workspace-header-main">
                     <div class="eyebrow mb-1">Live Session</div>
@@ -44,7 +54,7 @@
                     <div class="phase-hero-title" x-text="primaryTitle()"></div>
                     <div class="phase-hero-text" x-text="primaryNextStep()"></div>
                 </div>
-                <div class="phase-hero-meta">
+                <div class="phase-hero-meta" x-show="workflowMode !== 'validate'" x-cloak>
                     <div class="phase-hero-meta-block">
                         <div class="phase-hero-meta-label">Current target</div>
                         <div class="phase-hero-meta-value" x-text="currentTargetLabel()"></div>
@@ -67,7 +77,7 @@
                 <div class="context-help-copy" x-show="workflowMode === 'analyze'" x-cloak>Use Chat, then Triage, then Reconstruct.</div>
                 <div class="context-help-copy" x-show="workflowMode === 'validate'" x-cloak>Use x64dbg only for one concrete runtime confirmation.</div>
             </div>
-            <div class="workspace-progress-shell mb-4" x-show="hasActiveJob" x-cloak>
+            <div class="workspace-progress-shell mb-4" x-show="hasActiveJob && workflowMode !== 'validate'" x-cloak>
                 <div class="workspace-progress-copy">
                     <div>
                         <div class="context-help-title">Investigation path</div>
@@ -155,7 +165,7 @@
                     </div>
                 </div>
             </div>
-            <div id="chat-view" class="flex flex-col flex-grow min-h-0">
+            <div id="chat-view" class="flex flex-col flex-grow min-h-0" x-show="activeView === 'chat'" x-cloak>
                 <div class="pane-header">
                     <div>
                         <div class="eyebrow mb-2">Chat Workspace</div>
@@ -175,8 +185,8 @@
                     <div id="chat-composer-guide-actions" class="chat-composer-guide-actions"></div>
                 </div>
             </div>
-            <div id="triage-view" class="hidden flex-grow min-h-0 mb-4">
-                <div class="triage-shell w-full h-full overflow-y-auto p-5">
+            <div id="triage-view" class="hidden flex-grow min-h-0 mb-4" x-show="activeView === 'triage'" x-cloak>
+                <div class="triage-shell w-full p-5">
                     <div class="pane-header">
                         <div>
                             <div class="eyebrow mb-2">Triage Workspace</div>
@@ -229,8 +239,8 @@
                     </div>
                 </div>
             </div>
-            <div id="x64dbg-view" class="hidden flex-grow min-h-0 mb-4">
-                <div class="triage-shell w-full h-full overflow-y-auto p-5">
+            <div id="x64dbg-view" class="hidden flex-grow min-h-0 mb-4" x-show="activeView === 'x64dbg'" x-cloak>
+                <div class="triage-shell w-full p-5">
                     <div class="pane-header">
                         <div>
                             <div class="eyebrow mb-2">Debugger Workspace</div>
@@ -421,10 +431,10 @@
                                             <div>SSH: <span id="windows-lab-ssh" class="mono">127.0.0.1:2222</span></div>
                                         </div>
                                         <div id="windows-lab-credentials-status" class="mono text-xs text-cyan-200/60 mt-3">Loading generated lab credentials...</div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
                     </div>
                 </div>
             </div>
