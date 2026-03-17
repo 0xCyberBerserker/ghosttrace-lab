@@ -1,0 +1,101 @@
+name: E2E Smoke
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - ".github/workflows/e2e-smoke.yml"
+      - "scripts/run_e2e_smoke.mjs"
+      - "scripts/check_e2e_report.mjs"
+      - "webui/**"
+      - "package.json"
+      - "package-lock.json"
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      GHOSTTRACE_E2E_FIXTURE: "1"
+      API_BASE: "http://fixture-ollama.local/v1"
+      MODEL_NAME: "fixture-model"
+      GHIDRAAAS_BASE: "http://fixture-ghidra.local/ghidra/api"
+      SANDBOX_RUNNER_URL: "http://fixture-sandbox.local"
+      JOB_METADATA_PATH: "${{ github.workspace }}/.tmp-e2e/job_metadata.json"
+      JOB_STORE_DB_PATH: "${{ github.workspace }}/.tmp-e2e/ghosttrace.db"
+      DYNAMIC_EVIDENCE_DIR: "${{ github.workspace }}/.tmp-e2e/dynamic_evidence"
+      TRIAGE_REPORT_DIR: "${{ github.workspace }}/.tmp-e2e/triage_reports"
+      UPLOADS_DIR: "${{ github.workspace }}/.tmp-e2e/uploads"
+      WINDOWS_SANDBOX_CREDENTIALS_PATH: "${{ github.workspace }}/.tmp-e2e/windows-sandbox.env"
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Install Playwright browser
+        run: npx playwright install chromium
+
+      - name: Start fixture web UI
+        shell: bash
+        run: |
+          mkdir -p .tmp-e2e
+          python webui/app.py > .tmp-e2e/webui.log 2>&1 &
+          echo $! > .tmp-e2e/webui.pid
+
+      - name: Wait for fixture web UI
+        shell: bash
+        run: |
+          for i in {1..30}; do
+            if curl -fsS http://127.0.0.1:5000/health > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          echo "Fixture web UI did not become ready in time."
+          cat .tmp-e2e/webui.log || true
+          exit 1
+
+      - name: Run smoke
+        run: npm run test:e2e:smoke
+
+      - name: Run release check
+        run: npm run test:e2e:release
+
+      - name: Upload smoke artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ghosttrace-e2e-artifacts
+          path: |
+            output/playwright/
+            .tmp-e2e/webui.log
+
+      - name: Stop fixture web UI
+        if: always()
+        shell: bash
+        run: |
+          if [ -f .tmp-e2e/webui.pid ]; then
+            kill "$(cat .tmp-e2e/webui.pid)" || true
+          fi

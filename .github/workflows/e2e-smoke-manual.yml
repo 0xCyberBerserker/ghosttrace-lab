@@ -1,0 +1,32 @@
+name: E2E Smoke Manual
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install frontend dependencies
+        run: npm ci
+
+      - name: Install Playwright browser
+        run: npx playwright install chromium
+
+      - name: Explain current limitation
+        run: |
+          echo "The browser smoke currently expects a live GhostTrace stack with at least one existing analysis job."
+          echo "Keep this workflow manual until a deterministic CI fixture job is added."

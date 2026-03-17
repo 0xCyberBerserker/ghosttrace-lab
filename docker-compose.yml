@@ -10,25 +10,113 @@ services:
       - ghidra_projects:/opt/ghidra_projects
       - ghidra_output:/opt/ghidraaas/output
 
+  rabbitmq:
+    image: rabbitmq:3.13-management
+    container_name: ghosttrace-rabbitmq
+    ports:
+      - "127.0.0.1:5672:5672"
+      - "127.0.0.1:15672:15672"
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    gpus: all
+    environment:
+      NVIDIA_VISIBLE_DEVICES: "all"
+      NVIDIA_DRIVER_CAPABILITIES: "compute,utility"
+    volumes:
+      - ollama_data:/root/.ollama
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 20s
+
+  ollama_pull:
+    image: ollama/ollama:latest
+    container_name: ollama-pull
+    depends_on:
+      ollama:
+        condition: service_healthy
+    environment:
+      OLLAMA_HOST: "http://ollama:11434"
+    entrypoint:
+      - /bin/sh
+      - -c
+    command:
+      - ollama pull Godmoded/llama3-lexi-uncensored
+    restart: "no"
+
   webui:
     build: .
     container_name: ghidraaas-ai-webui
     depends_on:
-      - ghidraaas
-      - sandbox_runner
+      ghidraaas:
+        condition: service_started
+      sandbox_runner:
+        condition: service_started
+      rabbitmq:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      ollama_pull:
+        condition: service_completed_successfully
     ports:
       - "5000:5000"
     environment:
-      API_BASE: "http://host.docker.internal:11434/v1"
+      API_BASE: "http://ollama:11434/v1"
       API_KEY: "ollama"
-      MODEL_NAME: "huihui_ai/qwen3.5-abliterated:4b"
+      MODEL_NAME: "Godmoded/llama3-lexi-uncensored"
       GHIDRAAAS_BASE: "http://ghidraaas:8080/ghidra/api"
       JOB_METADATA_PATH: "/app/data/job_metadata.json"
+      JOB_STORE_DB_PATH: "/app/data/ghosttrace.db"
       UPLOADS_DIR: "/app/data/uploads"
       SANDBOX_RUNNER_URL: "http://sandbox_runner:9001"
+      SANDBOX_SHARED_TOKEN: "${SANDBOX_SHARED_TOKEN:-}"
+      INTERNAL_API_TOKEN: "${SANDBOX_SHARED_TOKEN:-}"
+      OPERATOR_USERNAME: "${OPERATOR_USERNAME:-}"
+      OPERATOR_PASSWORD: "${OPERATOR_PASSWORD:-}"
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/%2f}"
+      RATE_LIMIT_UPLOAD_COUNT: "${RATE_LIMIT_UPLOAD_COUNT:-10}"
+      RATE_LIMIT_CHAT_COUNT: "${RATE_LIMIT_CHAT_COUNT:-30}"
+      RATE_LIMIT_REVEAL_COUNT: "${RATE_LIMIT_REVEAL_COUNT:-6}"
+      RATE_LIMIT_X64DBG_COUNT: "${RATE_LIMIT_X64DBG_COUNT:-30}"
     volumes:
       - webui_data:/app/data
       - sandbox_bin:/app/data/uploads
+      - ./sandbox/credentials:/app/config/sandbox
+      - ./ai-config.json:/app/config/ai-config.json:ro
+
+  webui_worker:
+    build: .
+    container_name: ghidraaas-ai-webui-worker
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      ollama:
+        condition: service_healthy
+      ollama_pull:
+        condition: service_completed_successfully
+      ghidraaas:
+        condition: service_started
+    command: ["python", "/app/webui/worker.py"]
+    environment:
+      API_BASE: "http://ollama:11434/v1"
+      API_KEY: "ollama"
+      MODEL_NAME: "Godmoded/llama3-lexi-uncensored"
+      GHIDRAAAS_BASE: "http://ghidraaas:8080/ghidra/api"
+      TRIAGE_REPORT_DIR: "/app/data/triage_reports"
+      DYNAMIC_EVIDENCE_DIR: "/app/data/dynamic_evidence"
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/%2f}"
+    volumes:
+      - webui_data:/app/data
       - ./ai-config.json:/app/config/ai-config.json:ro
 
   sandbox_runner:
@@ -41,8 +129,33 @@ services:
       QUEUE_DIR: "/queue"
       WEBUI_BASE: "http://webui:5000"
       BRIDGE_DIR: "/bridge"
+      INTERNAL_API_TOKEN: "${SANDBOX_SHARED_TOKEN:-}"
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/%2f}"
+      RUNNER_ENABLE_BRIDGE: "1"
     ports:
-      - "9001:9001"
+      - "127.0.0.1:9001:9001"
+    volumes:
+      - sandbox_bin:/shared
+      - sandbox_runner_data:/queue
+      - sandbox_bridge:/bridge
+
+  sandbox_runner_worker:
+    build:
+      context: .
+      dockerfile: sandbox/runner/Dockerfile
+    container_name: sandbox-runner-worker
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+    command: ["python", "/app/sandbox_runner/worker.py"]
+    environment:
+      SAMPLES_DIR: "/shared"
+      QUEUE_DIR: "/queue"
+      WEBUI_BASE: "http://webui:5000"
+      BRIDGE_DIR: "/bridge"
+      INTERNAL_API_TOKEN: "${SANDBOX_SHARED_TOKEN:-}"
+      RABBITMQ_URL: "${RABBITMQ_URL:-amqp://guest:guest@rabbitmq:5672/%2f}"
+      RUNNER_ENABLE_BRIDGE: "0"
     volumes:
       - sandbox_bin:/shared
       - sandbox_runner_data:/queue
@@ -50,22 +163,24 @@ services:
 
   windows_sandbox:
     profiles: ["windows-sandbox"]
-    image: dockurr/windows
+    build:
+      context: .
+      dockerfile: sandbox/windows/Dockerfile
     container_name: windows-sandbox
     environment:
       VERSION: "11l"
-      USERNAME: "Docker"
-      PASSWORD: "admin"
+      WINDOWS_SANDBOX_USERNAME: "Docker"
+      WINDOWS_SANDBOX_CREDENTIALS_DIR: "/run/ghosttrace-credentials"
       REGION: "es-ES"
       KEYBOARD: "es-ES"
       LANGUAGE: "English"
-      OLLAMA_HOST: "host.docker.internal"
-      OLLAMA_BASE_URL: "http://host.docker.internal:11434"
-      OLLAMA_MODEL: "huihui_ai/qwen3.5-abliterated:4b"
+      OLLAMA_HOST: "ollama"
+      OLLAMA_BASE_URL: "http://ollama:11434"
+      OLLAMA_MODEL: "Godmoded/llama3-lexi-uncensored"
     ports:
-      - "8006:8006"
-      - "3389:3389"
-      - "2222:22"
+      - "127.0.0.1:8006:8006"
+      - "127.0.0.1:3389:3389"
+      - "127.0.0.1:2222:22"
     devices:
       - /dev/kvm
       - /dev/vhost-net
@@ -80,6 +195,7 @@ services:
     # such as KVM / TUN and a working macvlan-capable Docker environment.
     volumes:
       - ./sandbox/oem:/oem
+      - ./sandbox/credentials:/run/ghosttrace-credentials
       - sandbox_bin:/shared
       - sandbox_bridge:/shared/bridge
       - ./ai-config.json:/shared/config/ai-config.json:ro
@@ -89,6 +205,7 @@ services:
 volumes:
   ghidra_projects:
   ghidra_output:
+  ollama_data:
   webui_data:
   sandbox_bin:
   sandbox_storage:

@@ -13,4 +13,4 @@ COPY webui ./webui
 
 EXPOSE 5000
 
-CMD ["python", "webui/app.py"]
+CMD ["gunicorn", "--chdir", "/app/webui", "--bind", "0.0.0.0:5000", "--worker-class", "gthread", "--workers", "2", "--threads", "4", "--timeout", "120", "app:app"]

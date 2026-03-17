@@ -1,10 +1,15 @@
 .venv/
 .playwright-cli/
 .tmp-assets/
+.claude/
 data/
+node_modules/
 
 __pycache__/
 *.pyc
+output/
+webui/tests/__pycache__/
+sandbox/runner/tests/__pycache__/
 
 sandbox/runner/__pycache__/
 webui/__pycache__/
@@ -12,3 +17,4 @@ webui/__pycache__/
 sandbox/host-tools/ssh-helper-test.txt
 
 *.log
+sandbox/credentials/*.env

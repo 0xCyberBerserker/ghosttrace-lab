@@ -1,8 +1,8 @@
 {
   "provider": "ollama",
-  "api_base": "http://host.docker.internal:11434/v1",
+  "api_base": "http://ollama:11434/v1",
   "api_key": "ollama",
-  "model_name": "huihui_ai/qwen3.5-abliterated:4b",
+  "model_name": "Godmoded/llama3-lexi-uncensored",
   "notes": [
     "This project uses a single Ollama host endpoint for the main web assistant and any optional sandbox-side AI helpers.",
     "The Windows sandbox does not run a separate LLM stack by default.",

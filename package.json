@@ -1,0 +1,19 @@
+{
+  "name": "ghosttrace-ui-assets",
+  "private": true,
+  "scripts": {
+    "build:tailwind": "tailwindcss -c tailwind.config.js -i ./webui/static/css/tailwind.src.css -o ./webui/static/css/tailwind.generated.css --minify",
+    "build:vendor": "node ./scripts/build_vendor_assets.mjs",
+    "build:frontend": "npm run build:vendor && npm run build:tailwind",
+    "test:e2e:smoke": "node ./scripts/run_e2e_smoke.mjs",
+    "test:e2e:release": "node ./scripts/check_e2e_report.mjs"
+  },
+  "devDependencies": {
+    "@fontsource/ibm-plex-mono": "^5.2.7",
+    "@fontsource/space-grotesk": "^5.2.6",
+    "jquery": "^3.7.1",
+    "marked": "^17.0.4",
+    "playwright": "^1.52.0",
+    "tailwindcss": "^3.4.17"
+  }
+}
