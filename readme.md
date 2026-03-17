@@ -283,6 +283,17 @@ GET  /evidence/<job_id>
 
 This lets the platform correlate imports, strings, decompilation, sandbox artifacts, and debugger findings.
 
+### Reconstruction (targets, hypotheses, drafts)
+
+The Web UI exposes an LLM-assisted reconstruction lane for generating validation targets, hypotheses, draft artifacts, and validation plans from triage and evidence:
+
+- `GET /reconstruction/<job_id>` — list bundle
+- `POST /reconstruction/<job_id>/targets`, `.../targets/generate`
+- `POST /reconstruction/<job_id>/hypotheses`, `.../hypotheses/generate`
+- `POST /reconstruction/<job_id>/drafts`, `.../drafts/generate`
+- `POST /reconstruction/<job_id>/validation_plans`, `.../validation_plans/generate`
+- `GET /reconstruction/<job_id>/drafts/<artifact_id>/export`
+
 ### Windows Sandbox Lab
 
 The optional `windows-sandbox` profile provides:
@@ -367,9 +378,56 @@ Cualquier idea de mejora será bienvenida, y toda crítica con criterio se tendr
 
 ### Arquitectura
 
-```text
-Subida binaria -> Web UI -> Ghidraaas -> Artefactos cacheados -> AI Operator / Chat / Triage
-                                         \-> Cola sandbox -> Laboratorio Windows -> Puente x64dbg
+```mermaid
+flowchart LR
+    classDef svc fill:#0b1220,stroke:#46f3ff,stroke-width:1.5px,color:#e9fbff,rx:8,ry:8
+    classDef infra fill:#050810,stroke:#6b7280,stroke-dasharray:3 3,color:#9ca3af,rx:12,ry:12
+    classDef sandbox fill:#041208,stroke:#22c55e,stroke-width:1.5px,color:#bbf7d0,rx:10,ry:10
+    classDef operator fill:#111827,stroke:#f97316,stroke-width:1.5px,color:#fed7aa,rx:10,ry:10
+
+    subgraph Operator["🧑‍💻 Espacio de operador"]
+      direction TB
+      Browser["Web UI\n(Flask + Tailwind)"]:::operator
+    end
+
+    subgraph Backend["Servicios principales"]
+      direction TB
+      WebUI["webui\nGunicorn app.py"]:::svc
+      Ghidraaas["Ghidraaas\nREST backend"]:::svc
+      Ollama["Ollama\nRuntime LLM"]:::svc
+      Rabbit["RabbitMQ\ncolas"]:::svc
+      SandboxRunner["sandbox_runner\nHTTP + worker"]:::svc
+    end
+
+    subgraph Storage["Estado del análisis"]
+      direction TB
+      VolJobs["JobStore (SQLite)\n/ ghosttrace.db"]:::infra
+      VolUploads["Volumen uploads\n/ uploads/"]:::infra
+      VolEvidence["Evidencia dinámica\n/ dynamic_evidence/"]:::infra
+      VolTriage["Informes triage\n/ triage_reports/"]:::infra
+    end
+
+    subgraph WindowsLab["Laboratorio Windows"]
+      direction TB
+      WinVM["dockurr/windows\n+ herramientas OEM"]:::sandbox
+      X64dbg["x64dbg + MCP\nplugin bridge"]:::sandbox
+    end
+
+    Browser -->|"HTTP /"| WebUI
+    WebUI -->|"HTTP /ghidra/api"| Ghidraaas
+    WebUI -->|"API compat OpenAI\nAPI_BASE"| Ollama
+    WebUI <-.->|"JSON jobs + evidencia"| VolJobs
+    WebUI <-.->|"Stream upload"| VolUploads
+    WebUI <-.->|"Artefactos JSON"| VolEvidence
+    WebUI <-.->|"JSON triage"| VolTriage
+
+    WebUI -->|"HTTP /sandbox_*"| SandboxRunner
+    SandboxRunner -->|"AMQP\ncolas triage y sandbox"| Rabbit
+    SandboxRunner <-.->|"muestras compartidas\n/ estado bridge"| VolUploads
+
+    WinVM <-.->|"Carpeta compartida\n/Shared"| VolUploads
+    WinVM <-.->|"JSON bridge\nvía runner"| SandboxRunner
+    WinVM -->|"Estado depurador\n+ hallazgos"| X64dbg
 ```
 
 Componentes principales:
@@ -425,6 +483,20 @@ npm install
 npm run build:frontend
 ```
 
+Para el smoke test del navegador sobre el shell principal, instala Chromium de Playwright una vez y ejecuta:
+
+```powershell
+npx playwright install chromium
+npm run test:e2e:smoke
+npm run test:e2e:release
+```
+
+El script de smoke espera la app en `http://127.0.0.1:5000/` por defecto y guarda capturas en `output/playwright/`.
+También escribe un informe JSON en `output/playwright/ghosttrace-smoke-report.json` con tiempos por paso, el job_id abierto y un snapshot visible de la UI, y falla si detecta eventos `pageerror` o errores de consola accionables.
+El chequeo de release lee ese informe y falla si el tiempo total, los tiempos clave o el estado de salud visible final se desvían de umbrales configurables.
+
+El workflow de CI de GitHub Actions cubre generación de assets del frontend, comprobaciones de compilación Python y las suites de tests de Web UI y sandbox runner. El smoke del navegador se mantiene aparte por ahora porque sigue esperando un stack en vivo con al menos un job de análisis precargado.
+
 3. Abre la app:
 
 ```text
@@ -463,14 +535,41 @@ El repo está alineado para usar el mismo modelo en ambos lados:
 
 ### Flujo de análisis
 
-- `Triage estático`
-  Entender el propósito probable, los subsistemas sospechosos, el comportamiento del instalador y las rutas de código prioritarias.
-- `Comportamiento PE / API`
-  Usar imports y decompilación para razonar sobre registro, ficheros, servicios, criptografía y procesos.
-- `Pistas de red`
-  Sacar pistas de telemetría, actualización o comunicación remota a partir de evidencia estática.
-- `Correlación dinámica`
-  Mezclar hallazgos de la sandbox y del depurador sin perder el contexto del análisis estático.
+```mermaid
+sequenceDiagram
+    autonumber
+    actor Op as Operador
+    participant UI as Web UI
+    participant G as Ghidraaas
+    participant LLM as Ollama
+    participant Q as RabbitMQ
+    participant SR as Sandbox Runner
+    participant WS as Windows Sandbox
+    participant DB as JobStore / Evidencia
+
+    Op->>UI: Sube sample.exe
+    UI->>G: POST /analyze_sample (stream binario)
+    G-->>UI: 200 "Análisis completado"
+    UI->>DB: Guarda metadata del job + uploads
+    UI-->>Op: job_id + status: DONE
+
+    Op->>UI: Preguntas de triage (Chat)
+    UI->>LLM: ChatCompletion + tools (functions/imports/strings)
+    UI->>G: get_functions_list / get_imports_list / get_strings_list
+    G-->>UI: Artefactos de triage cacheados
+    LLM-->>UI: Resumen triage + siguientes pasos
+    UI->>DB: Cachea informe triage JSON/MD
+
+    Op->>UI: Cambia a Validate (comprobación en runtime)
+    UI->>SR: POST /run { job_id, filename }
+    SR->>Q: Encola ejecución sandbox
+    SR->>WS: (fuera de banda) ejecuta muestra en VM
+    WS-->>SR: Logs / trazas / datos depurador
+    SR->>DB: POST /evidence/<job_id> (artefactos)
+    UI->>LLM: ChatCompletion + get_dynamic_evidence
+    LLM-->>UI: Hallazgos estáticos + dinámicos correlacionados
+    UI-->>Op: Explica comportamiento confirmado / falsificado
+```
 
 ### Hoja de ruta y banco de benchmarks
 
@@ -514,6 +613,17 @@ GET  /evidence/<job_id>
 ```
 
 Esto permite correlacionar imports, strings, decompilación, artefactos de sandbox y hallazgos del depurador.
+
+### Reconstrucción (targets, hipótesis, borradores)
+
+La Web UI expone un flujo de reconstrucción asistido por LLM para generar targets de validación, hipótesis, borradores y planes de validación a partir del triage y la evidencia:
+
+- `GET /reconstruction/<job_id>` — listar bundle
+- `POST /reconstruction/<job_id>/targets`, `.../targets/generate`
+- `POST /reconstruction/<job_id>/hypotheses`, `.../hypotheses/generate`
+- `POST /reconstruction/<job_id>/drafts`, `.../drafts/generate`
+- `POST /reconstruction/<job_id>/validation_plans`, `.../validation_plans/generate`
+- `GET /reconstruction/<job_id>/drafts/<artifact_id>/export`
 
 ### Laboratorio Windows
 

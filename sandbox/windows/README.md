@@ -1,49 +1,42 @@
 ## Windows sandbox container
 
-This directory defines a minimal Windows container that you can use as a manual sandbox for executing binaries and collecting dynamic artifacts that feed the main AI Reverse Engineering stack.
+This directory defines the Windows sandbox used by the optional `windows-sandbox` Compose profile. The main stack uses `dockurr/windows`, which provides a full Windows VM with OEM provisioning, noVNC, RDP, SSH, and shared folders.
 
 ### Base image
 
-The sandbox uses the official Windows base image from Microsoft:
+The sandbox uses `dockurr/windows`:
 
-- Image: `mcr.microsoft.com/windows:ltsc2019`
-- Reference: `https://hub.docker.com/r/microsoft/windows`
+- Image: `dockurr/windows:latest`
+- Reference: `https://hub.docker.com/r/dockurr/windows`
 
-Windows containers require a matching Windows host build and Docker configured in **Windows containers** mode (not Linux containers). You cannot run this container side by side with the existing Linux-based services (`ghidraaas`, `webui`) on the same Docker engine instance.
+The `windows-sandbox` profile requires Docker Desktop with KVM/QEMU support (typically Linux hosts or WSL2 with nested virtualization). It cannot run side by side with the Linux-based services on the same engine when using Windows containers mode; `dockurr/windows` runs as a Linux container that emulates Windows.
 
-### Building the sandbox image
+### Running via Docker Compose
 
-From the repository root, run:
+From the repository root:
+
+```powershell
+docker compose --profile windows-sandbox up --build
+```
+
+This starts the full stack plus the Windows sandbox. Ports:
+
+- noVNC: `http://127.0.0.1:8006`
+- RDP: `127.0.0.1:3389`
+- SSH: `127.0.0.1:2222`
+
+Samples are shared via the `Shared` folder on the Windows desktop. Credentials are auto-generated and exposed in the Web UI once the sandbox has started at least once.
+
+### Standalone build (advanced)
+
+For a minimal standalone image without the full OEM lab:
 
 ```powershell
 cd sandbox/windows
 docker build -t ai-re-sandbox-windows .
 ```
 
-### Running the sandbox
-
-To start an interactive sandbox session:
-
-```powershell
-docker run --rm -it ai-re-sandbox-windows
-```
-
-This drops you into `cmd.exe` inside the container, with `C:\sandbox` as the working directory.
-
-You can also mount a host directory containing binaries and an output directory for artifacts, for example:
-
-```powershell
-docker run --rm -it ^
-  -v C:\path\to\samples:C:\sandbox\samples ^
-  -v C:\path\to\artifacts:C:\sandbox\artifacts ^
-  ai-re-sandbox-windows
-```
-
-Inside the container you can then:
-
-- Copy a binary from `C:\sandbox\samples`
-- Execute it under the constraints you choose (e.g., with additional tooling installed in a derived image)
-- Save logs, traces, or other dynamic evidence into `C:\sandbox\artifacts`
+The Compose profile uses the same Dockerfile but wires OEM, bridge tools, and shared volumes from the root context.
 
 ### Feeding dynamic artifacts back into the web UI
 

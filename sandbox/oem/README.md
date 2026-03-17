@@ -54,6 +54,6 @@ Shared AI configuration:
 - environment variables also expose the same Compose-side Ollama target:
   - `OLLAMA_HOST=ollama`
   - `OLLAMA_BASE_URL=http://ollama:11434`
-  - `OLLAMA_MODEL=huihui_ai/qwen3.5-abliterated:4b`
+  - `OLLAMA_MODEL=Godmoded/llama3-lexi-uncensored`
 
 The provisioning is idempotent inside the guest. To force a clean first-boot reinstall, recreate the Windows storage volume so the OS is installed from scratch again.
