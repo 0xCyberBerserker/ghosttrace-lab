@@ -15,6 +15,14 @@ jobs:
   validate:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    env:
+      GHOSTTRACE_TMP_DATA: ${{ github.workspace }}/.tmp-data
+      JOB_METADATA_PATH: ${{ env.GHOSTTRACE_TMP_DATA }}/job_metadata.json
+      UPLOADS_DIR: ${{ env.GHOSTTRACE_TMP_DATA }}/uploads
+      DYNAMIC_EVIDENCE_DIR: ${{ env.GHOSTTRACE_TMP_DATA }}/dynamic_evidence
+      TRIAGE_REPORT_DIR: ${{ env.GHOSTTRACE_TMP_DATA }}/triage_reports
+      JOB_STORE_DB_PATH: ${{ env.GHOSTTRACE_TMP_DATA }}/ghosttrace.db
+      WINDOWS_SANDBOX_CREDENTIALS_PATH: ${{ env.GHOSTTRACE_TMP_DATA }}/windows-sandbox.env
 
     steps:
       - name: Check out repository
