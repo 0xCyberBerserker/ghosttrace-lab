@@ -7,6 +7,7 @@ from typing import Any, Dict, List, Tuple
 
 import requests
 from openai import OpenAI
+from task_queue import RABBITMQ_TRIAGE_QUEUE, publish_json, consume_json, rabbitmq_enabled
 
 
 GHIDRAAAS_BASE = os.getenv("GHIDRAAAS_BASE", "http://localhost:8080/ghidra/api")
@@ -16,6 +17,7 @@ API_BASE = os.getenv("API_BASE")
 API_KEY = os.getenv("API_KEY", "ollama")
 MODEL_NAME = os.getenv("MODEL_NAME")
 TRIAGE_USE_LLM = os.getenv("TRIAGE_USE_LLM", "0").lower() in {"1", "true", "yes", "on"}
+OLLAMA_THINK = os.getenv("OLLAMA_THINK", "false").lower()
 
 _jobs_in_progress = set()
 _jobs_lock = threading.Lock()
@@ -289,6 +291,9 @@ def _llm_markdown(summary: Dict[str, Any]) -> str:
         return _fallback_markdown(summary)
 
     client = OpenAI(base_url=API_BASE, api_key=API_KEY)
+    request_kwargs = {}
+    if "ollama" in API_BASE.lower() and OLLAMA_THINK in {"0", "false", "no", "off"}:
+        request_kwargs["extra_body"] = {"think": False}
     prompt = (
         "You are generating an evidence-grounded reverse-engineering triage report.\n"
         "Use these labels literally in the report: `static evidence`, `dynamic evidence`, `inference`.\n"
@@ -306,6 +311,7 @@ def _llm_markdown(summary: Dict[str, Any]) -> str:
                 {"role": "system", "content": "Produce a Markdown reverse-engineering triage report."},
                 {"role": "user", "content": prompt},
             ],
+            **request_kwargs,
         )
         content = response.choices[0].message.content or ""
         return content.strip() or _fallback_markdown(summary)
@@ -350,7 +356,7 @@ def generate_triage_report(job_id: str, filename: str | None = None) -> Dict[str
     return report_json
 
 
-def queue_triage_report(job_id: str, filename: str | None = None) -> bool:
+def _run_local_triage_worker(job_id: str, filename: str | None = None) -> bool:
     with _jobs_lock:
         if job_id in _jobs_in_progress:
             return False
@@ -365,6 +371,37 @@ def queue_triage_report(job_id: str, filename: str | None = None) -> bool:
 
     threading.Thread(target=worker, daemon=True).start()
     return True
+
+
+def queue_triage_report(job_id: str, filename: str | None = None) -> bool:
+    if rabbitmq_enabled():
+        return publish_json(
+            RABBITMQ_TRIAGE_QUEUE,
+            {"job_id": job_id, "filename": filename},
+        )
+    return _run_local_triage_worker(job_id, filename)
+
+
+def process_triage_message(payload: Dict[str, Any]) -> None:
+    job_id = payload.get("job_id")
+    filename = payload.get("filename")
+    if not job_id:
+        return
+
+    with _jobs_lock:
+        if job_id in _jobs_in_progress:
+            return
+        _jobs_in_progress.add(job_id)
+
+    try:
+        generate_triage_report(job_id, filename)
+    finally:
+        with _jobs_lock:
+            _jobs_in_progress.discard(job_id)
+
+
+def start_triage_worker() -> None:
+    consume_json(RABBITMQ_TRIAGE_QUEUE, process_triage_message)
 
 
 def get_cached_triage_report(job_id: str) -> Dict[str, Any] | None:

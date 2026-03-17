@@ -11,6 +11,7 @@ from openai import OpenAI
 GHIDRAAAS_BASE = os.getenv("GHIDRAAAS_BASE", "http://localhost:8080/ghidra/api")
 DYNAMIC_EVIDENCE_DIR = Path(os.getenv("DYNAMIC_EVIDENCE_DIR", "/app/data/dynamic_evidence"))
 WEBUI_BASE = os.getenv("WEBUI_BASE", "http://localhost:5000")
+OLLAMA_THINK = os.getenv("OLLAMA_THINK", "false").lower()
 
 SYSTEM_PROMPT = """You are a helpful reverse engineering assistant operating on a binary identified by job_id.
 
@@ -186,6 +187,10 @@ PROCESSING_READY_MESSAGES = {
 }
 PROCESSING_RETRY_ATTEMPTS = 4
 PROCESSING_RETRY_DELAY_SECONDS = 5
+FINAL_ANSWER_FALLBACK_PROMPT = (
+    "Provide only the final analyst-facing answer in Markdown. "
+    "Do not emit hidden reasoning or planning text."
+)
 
 
 def _parse_response(response: requests.Response) -> Dict[str, Any]:
@@ -329,6 +334,37 @@ def _retry_processing_result(function_name: str, args: Dict[str, Any]) -> Dict[s
         return {"status": "processing"}
     return retried_result
 
+
+def _extract_message_content(message: Any) -> str:
+    content = getattr(message, "content", None)
+    if isinstance(content, str):
+        return content.strip()
+    if isinstance(content, list):
+        parts = []
+        for item in content:
+            if isinstance(item, dict) and item.get("type") == "text":
+                parts.append(str(item.get("text", "")))
+            elif hasattr(item, "text"):
+                parts.append(str(item.text))
+        return "".join(parts).strip()
+    return ""
+
+
+def _supports_tools_error(exc: Exception) -> bool:
+    message = str(exc).lower()
+    return (
+        "does not support tools" in message
+        or "tool-planning request failed" in message and "support tools" in message
+        or "tools" in message and "invalid_request_error" in message
+    )
+
+
+def _trim_text(value: str, limit: int = 8000) -> str:
+    value = (value or "").strip()
+    if len(value) <= limit:
+        return value
+    return f"{value[:limit].rstrip()}\n\n...[truncated]..."
+
 class GhidraAssistant:
     def __init__(self):
         base_url = os.getenv("API_BASE")
@@ -344,6 +380,9 @@ class GhidraAssistant:
            api_key=os.getenv("API_KEY", "not-used")
         )
         self.model = model_name
+        self.request_kwargs = {}
+        if "ollama" in base_url.lower() and OLLAMA_THINK in {"0", "false", "no", "off"}:
+            self.request_kwargs["extra_body"] = {"think": False}
 
         self.available_tools = {
             "list_functions": lambda **kwargs: list_functions(kwargs["job_id"]),
@@ -360,6 +399,86 @@ class GhidraAssistant:
                 kwargs.get("address"),
             ),
         }
+
+    def _build_no_tools_context(self, job_id: str) -> str:
+        context_sections = []
+
+        triage_payload = _webui_get(f"/triage/{job_id}")
+        if triage_payload.get("markdown"):
+            context_sections.append(
+                "## Cached Triage Report\n" + _trim_text(triage_payload["markdown"], limit=12000)
+            )
+        elif triage_payload.get("status") in {"queued", "processing"}:
+            context_sections.append(
+                "## Cached Triage Report\nTriage is still processing and is not yet ready."
+            )
+
+        dynamic_payload = get_dynamic_evidence(job_id)
+        dynamic_summary = dynamic_payload.get("summary", {})
+        context_sections.append(
+            "## Dynamic Evidence Summary\n"
+            + json.dumps(
+                {
+                    "artifact_count": dynamic_summary.get("artifact_count", 0),
+                    "artifact_types": dynamic_summary.get("artifact_types", {}),
+                    "highlight_count": dynamic_summary.get("highlight_count", 0),
+                    "highlights": dynamic_summary.get("highlights", [])[:10],
+                },
+                ensure_ascii=True,
+            )
+        )
+
+        x64dbg_state = get_x64dbg_state(job_id)
+        if not x64dbg_state.get("error"):
+            context_sections.append(
+                "## x64dbg Bridge State\n" + json.dumps(x64dbg_state, ensure_ascii=True)
+            )
+
+        x64dbg_findings = list_x64dbg_findings(job_id)
+        findings = x64dbg_findings.get("findings", [])
+        if findings:
+            context_sections.append(
+                "## x64dbg Findings\n" + json.dumps(findings[:10], ensure_ascii=True)
+            )
+
+        if not context_sections:
+            context_sections.append(
+                "## Available Context\nNo cached triage or runtime evidence is available yet."
+            )
+
+        return "\n\n".join(context_sections)
+
+    def _stream_without_tools(self, messages: list[dict[str, Any]], job_id: str) -> Generator[str, None, None]:
+        fallback_messages = list(messages)
+        fallback_messages.append(
+            {
+                "role": "system",
+                "content": (
+                    "Tool use is unavailable for the current model. "
+                    "Answer using only the cached GhostTrace context provided below, "
+                    "and clearly label any inference that is not directly grounded in the context."
+                ),
+            }
+        )
+        fallback_messages.append(
+            {
+                "role": "system",
+                "content": self._build_no_tools_context(job_id),
+            }
+        )
+
+        try:
+            fallback_response = self.client.chat.completions.create(
+                model=self.model,
+                messages=fallback_messages + [{"role": "user", "content": FINAL_ANSWER_FALLBACK_PROMPT}],
+                **self.request_kwargs,
+            )
+        except Exception as exc:
+            raise RuntimeError(f"LLM no-tools fallback failed: {exc}") from exc
+
+        fallback_content = _extract_message_content(fallback_response.choices[0].message)
+        if fallback_content:
+            yield json.dumps({"type": "token", "content": fallback_content})
         
     def chat_completion_stream(self, user_message: str, job_id: str) -> Generator[str, None, None]:
         contextual_message = f"For job_id '{job_id}', {user_message}"
@@ -375,9 +494,18 @@ class GhidraAssistant:
                     model=self.model,
                     messages=messages,
                     tools=TOOLS,
-                    tool_choice="auto"
+                    tool_choice="auto",
+                    **self.request_kwargs,
                 )
             except Exception as exc:
+                if _supports_tools_error(exc):
+                    yield json.dumps({
+                        "type": "tool_state",
+                        "state": "idle",
+                        "content": "This model cannot use tools directly. Falling back to cached GhostTrace context.",
+                    })
+                    yield from self._stream_without_tools(messages, job_id)
+                    return
                 raise RuntimeError(f"LLM tool-planning request failed: {exc}") from exc
             message = first_response.choices[0].message
             messages.append(message)
@@ -485,12 +613,31 @@ class GhidraAssistant:
             stream = self.client.chat.completions.create(
                 model=self.model,
                 messages=messages,
-                stream=True
+                stream=True,
+                **self.request_kwargs,
             )
         except Exception as exc:
             raise RuntimeError(f"LLM streaming request failed: {exc}") from exc
 
+        emitted_visible_content = False
         for chunk in stream:
             content = chunk.choices[0].delta.content
             if content:
+                emitted_visible_content = True
                 yield json.dumps({"type": "token", "content": content})
+
+        if emitted_visible_content:
+            return
+
+        try:
+            fallback_response = self.client.chat.completions.create(
+                model=self.model,
+                messages=messages + [{"role": "user", "content": FINAL_ANSWER_FALLBACK_PROMPT}],
+                **self.request_kwargs,
+            )
+        except Exception as exc:
+            raise RuntimeError(f"LLM final-answer fallback failed: {exc}") from exc
+
+        fallback_content = _extract_message_content(fallback_response.choices[0].message)
+        if fallback_content:
+            yield json.dumps({"type": "token", "content": fallback_content})

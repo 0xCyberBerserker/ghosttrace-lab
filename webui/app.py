@@ -1,22 +1,110 @@
-# Biniam Demissie
-# 09/29/2025
-import hashlib
 import json
 import os
+import hmac
 from pathlib import Path
 import requests
+from assistant_guidance import build_assistant_next_steps
 from flask import Flask, render_template, request, jsonify, Response
+from ghidra_client import GhidraClient
 from ghidra_assistant import GhidraAssistant 
+from input_validation import (
+    normalize_job_label,
+    require_json_body,
+    validate_draft_artifact_payload,
+    validate_artifacts_payload,
+    validate_hypothesis_payload,
+    validate_reconstruction_generate_payload,
+    validate_reconstruction_target_payload,
+    validate_validation_plan_payload,
+    validate_x64dbg_findings_payload,
+    validate_x64dbg_request_payload,
+    validate_x64dbg_state_payload,
+)
+from sandbox_credentials import SandboxCredentialsManager
+from observability import init_observability
+from security import RateLimitRule, init_security
+from job_service import JobService
+from job_store import JobStore
+from job_workflow import JobWorkflow
+from metrics import build_metrics_summary, build_prometheus_metrics
+from sandbox_client import SandboxClient
 from triage_report import get_cached_triage_report, queue_triage_report
+from reconstruction_service import ReconstructionService
+from e2e_fixture import E2EFixture
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = int(os.getenv("MAX_UPLOAD_SIZE_BYTES", str(100 * 1024 * 1024)))
+app.config["OPERATOR_USERNAME"] = os.getenv("OPERATOR_USERNAME", "")
+app.config["OPERATOR_PASSWORD"] = os.getenv("OPERATOR_PASSWORD", "")
+app.config["RATE_LIMIT_UPLOAD"] = RateLimitRule(
+    limit=int(os.getenv("RATE_LIMIT_UPLOAD_COUNT", "10")),
+    window_seconds=int(os.getenv("RATE_LIMIT_UPLOAD_WINDOW_SECONDS", "60")),
+)
+app.config["RATE_LIMIT_CHAT"] = RateLimitRule(
+    limit=int(os.getenv("RATE_LIMIT_CHAT_COUNT", "30")),
+    window_seconds=int(os.getenv("RATE_LIMIT_CHAT_WINDOW_SECONDS", "60")),
+)
+app.config["RATE_LIMIT_REVEAL"] = RateLimitRule(
+    limit=int(os.getenv("RATE_LIMIT_REVEAL_COUNT", "6")),
+    window_seconds=int(os.getenv("RATE_LIMIT_REVEAL_WINDOW_SECONDS", "60")),
+)
+app.config["RATE_LIMIT_X64DBG"] = RateLimitRule(
+    limit=int(os.getenv("RATE_LIMIT_X64DBG_COUNT", "30")),
+    window_seconds=int(os.getenv("RATE_LIMIT_X64DBG_WINDOW_SECONDS", "60")),
+)
 assistant = GhidraAssistant()
 GHIDRAAAS_BASE = os.getenv("GHIDRAAAS_BASE", "http://localhost:8080/ghidra/api")
 JOB_METADATA_PATH = Path(os.getenv("JOB_METADATA_PATH", "/app/data/job_metadata.json"))
 DYNAMIC_EVIDENCE_DIR = Path(os.getenv("DYNAMIC_EVIDENCE_DIR", "/app/data/dynamic_evidence"))
 UPLOADS_DIR = Path(os.getenv("UPLOADS_DIR", "/app/data/uploads"))
+JOB_STORE_DB_PATH = Path(os.getenv("JOB_STORE_DB_PATH", "/app/data/ghosttrace.db"))
 SANDBOX_RUNNER_URL = os.getenv("SANDBOX_RUNNER_URL")
+SANDBOX_SHARED_TOKEN = os.getenv("SANDBOX_SHARED_TOKEN")
+INTERNAL_API_TOKEN = os.getenv("INTERNAL_API_TOKEN") or SANDBOX_SHARED_TOKEN
 TRIAGE_REPORT_DIR = Path(os.getenv("TRIAGE_REPORT_DIR", "/app/data/triage_reports"))
+WINDOWS_SANDBOX_CREDENTIALS_PATH = Path(
+    os.getenv("WINDOWS_SANDBOX_CREDENTIALS_PATH", "/app/config/sandbox/windows-sandbox.env")
+)
+E2E_FIXTURE_ENABLED = os.getenv("GHOSTTRACE_E2E_FIXTURE", "").lower() in {"1", "true", "yes", "on"}
+job_store = JobStore(
+    metadata_path=JOB_METADATA_PATH,
+    uploads_dir=UPLOADS_DIR,
+    dynamic_evidence_dir=DYNAMIC_EVIDENCE_DIR,
+    triage_report_dir=TRIAGE_REPORT_DIR,
+    db_path=JOB_STORE_DB_PATH,
+)
+sandbox_credentials = SandboxCredentialsManager(WINDOWS_SANDBOX_CREDENTIALS_PATH)
+e2e_fixture = E2EFixture(job_store, TRIAGE_REPORT_DIR, WINDOWS_SANDBOX_CREDENTIALS_PATH) if E2E_FIXTURE_ENABLED else None
+if e2e_fixture is not None:
+    e2e_fixture.seed()
+init_security(app)
+
+
+def _webui_readiness():
+    if E2E_FIXTURE_ENABLED:
+        return {
+            "ready": True,
+            "checks": {
+                "sqlite_db_present": True,
+                "ollama_configured": True,
+                "ghidra_configured": True,
+                "sandbox_runner_configured": True,
+                "e2e_fixture": True,
+            },
+        }
+    checks = {
+        "sqlite_db_present": JOB_STORE_DB_PATH.exists(),
+        "ollama_configured": bool(os.getenv("API_BASE") and os.getenv("MODEL_NAME")),
+        "ghidra_configured": bool(GHIDRAAAS_BASE),
+        "sandbox_runner_configured": bool(SANDBOX_RUNNER_URL),
+    }
+    return {
+        "ready": checks["sqlite_db_present"] and checks["ollama_configured"] and checks["ghidra_configured"],
+        "checks": checks,
+    }
+
+
+init_observability(app, "webui", _webui_readiness)
 
 
 def _response_error_details(response: requests.Response) -> str:
@@ -35,427 +123,92 @@ def _parse_json_response(response: requests.Response):
         return None
 
 
-def _load_job_metadata():
-    if not JOB_METADATA_PATH.exists():
-        return {}
-    try:
-        raw = json.loads(JOB_METADATA_PATH.read_text(encoding="utf-8"))
-        if not isinstance(raw, dict):
-            return {}
-
-        normalized = {}
-        dirty = False
-        for job_id, value in raw.items():
-            if isinstance(value, str):
-                normalized[job_id] = {"filename": value}
-                dirty = True
-            elif isinstance(value, dict):
-                normalized[job_id] = value
-            else:
-                dirty = True
-
-        if dirty:
-            _save_job_metadata(normalized)
-        return normalized
-    except (OSError, json.JSONDecodeError):
-        return {}
-
-
-def _save_job_metadata(metadata):
-    JOB_METADATA_PATH.parent.mkdir(parents=True, exist_ok=True)
-    JOB_METADATA_PATH.write_text(json.dumps(metadata, indent=2), encoding="utf-8")
-
-
-def _record_job_filename(job_id, filename):
-    metadata = _load_job_metadata()
-    entry = metadata.get(job_id, {})
-    if not isinstance(entry, dict):
-        entry = {"filename": str(entry)}
-    entry["filename"] = filename
-    metadata[job_id] = entry
-    _save_job_metadata(metadata)
-
-
-def _update_job_metadata(job_id, **updates):
-    metadata = _load_job_metadata()
-    entry = metadata.get(job_id, {})
-    if not isinstance(entry, dict):
-        entry = {"filename": str(entry)}
-
-    allowed = {"filename", "label", "archived"}
-    for key, value in updates.items():
-        if key not in allowed:
-            continue
-        if value is None or value == "":
-            entry.pop(key, None)
-        else:
-            entry[key] = value
-
-    if entry:
-        metadata[job_id] = entry
-    elif job_id in metadata:
-        del metadata[job_id]
-    _save_job_metadata(metadata)
-    return entry
-
-
-def _delete_job_filename(job_id):
-    metadata = _load_job_metadata()
-    if job_id in metadata:
-        del metadata[job_id]
-        _save_job_metadata(metadata)
-
-
-def _job_display_name(job):
-    return job.get("label") or job.get("filename") or f"{job.get('job_id', '')[:8]}.bin"
-
-
-def _save_uploaded_sample(job_id: str, file_storage) -> Path:
-    """
-    Persist the raw uploaded sample on disk so that external sandboxes
-    (for example a Windows VM) can execute it for dynamic analysis.
-    """
-    UPLOADS_DIR.mkdir(parents=True, exist_ok=True)
-    sample_path = UPLOADS_DIR / f"{job_id}.bin"
-
-    file_storage.stream.seek(0)
-    with sample_path.open("wb") as f_out:
-        for chunk in iter(lambda: file_storage.stream.read(4096), b""):
-            if not chunk:
-                break
-            f_out.write(chunk)
-
-    return sample_path
-
-
-def _trigger_sandbox_run(job_id: str, filename: str):
-    """
-    Notify an external sandbox runner that a new sample is ready.
-    The sandbox runner is responsible for executing the binary safely
-    and posting dynamic evidence to /evidence/<job_id>.
-    """
-    if not SANDBOX_RUNNER_URL:
-        return
-
-    payload = {
-        "job_id": job_id,
-        "filename": filename,
-    }
-
-    try:
-        requests.post(
-            SANDBOX_RUNNER_URL.rstrip("/") + "/run",
-            json=payload,
-            timeout=10,
-        )
-    except requests.exceptions.RequestException:
-        # Dynamic analysis is best-effort and should not break static analysis.
-        return
-
-
-def _evidence_path(job_id):
-    return DYNAMIC_EVIDENCE_DIR / f"{job_id}.json"
-
-
-def _load_dynamic_evidence(job_id):
-    path = _evidence_path(job_id)
-    if not path.exists():
-        return {"job_id": job_id, "artifacts": []}
-    try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-        payload.setdefault("job_id", job_id)
-        payload.setdefault("artifacts", [])
-        return payload
-    except (OSError, json.JSONDecodeError):
-        return {"job_id": job_id, "artifacts": []}
-
-
-def _save_dynamic_evidence(job_id, payload):
-    DYNAMIC_EVIDENCE_DIR.mkdir(parents=True, exist_ok=True)
-    _evidence_path(job_id).write_text(json.dumps(payload, indent=2), encoding="utf-8")
+ghidra_client = GhidraClient(GHIDRAAAS_BASE, _response_error_details)
+sandbox_client = SandboxClient(SANDBOX_RUNNER_URL, _response_error_details, auth_token=SANDBOX_SHARED_TOKEN)
+job_service = JobService(
+    job_store,
+    ghidra_client=ghidra_client,
+    sandbox_client=sandbox_client,
+    ghidra_base=GHIDRAAAS_BASE,
+    response_error_details=_response_error_details,
+)
+job_workflow = JobWorkflow(
+    job_store=job_store,
+    job_service=job_service,
+    ghidra_client=ghidra_client,
+    sandbox_client=sandbox_client,
+    queue_triage_report=queue_triage_report,
+)
+reconstruction_service = ReconstructionService(job_store)
 
 
 def _summarize_evidence(payload):
-    artifacts = payload.get("artifacts", [])
-    artifact_types = {}
-    suspicious_hits = []
-    for artifact in artifacts:
-        artifact_type = artifact.get("type", "unknown")
-        artifact_types[artifact_type] = artifact_types.get(artifact_type, 0) + 1
-        for hit in artifact.get("highlights", []):
-            suspicious_hits.append(hit)
-
-    return {
-        "artifact_count": len(artifacts),
-        "artifact_types": artifact_types,
-        "highlight_count": len(suspicious_hits),
-        "highlights": suspicious_hits[:30],
-    }
-
-
-def _fetch_projects(timeout=30):
-    response = requests.get(f"{GHIDRAAAS_BASE}/list_projects/", timeout=timeout)
-    if not response.ok:
-        raise requests.HTTPError(_response_error_details(response), response=response)
-    payload = _parse_json_response(response) or {}
-    return payload.get("projects", [])
-
-
-def _sandbox_runner_request(method: str, path: str, **kwargs):
-    if not SANDBOX_RUNNER_URL:
-        raise RuntimeError("SANDBOX_RUNNER_URL is not configured.")
-
-    response = requests.request(
-        method=method,
-        url=SANDBOX_RUNNER_URL.rstrip("/") + path,
-        timeout=kwargs.pop("timeout", 30),
-        **kwargs,
-    )
-    if not response.ok:
-        raise requests.HTTPError(_response_error_details(response), response=response)
-    return _parse_json_response(response) or {}
+    return job_store.summarize_evidence(payload)
 
 
 def _safe_x64dbg_snapshot(job_id):
-    if not SANDBOX_RUNNER_URL:
-        return {
-            "state": {"status": "unavailable"},
-            "findings": {"findings": []},
-            "requests": {"requests": []},
-        }
-
-    snapshot = {
-        "state": {"status": "idle"},
-        "findings": {"findings": []},
-        "requests": {"requests": []},
-    }
-    try:
-        snapshot["state"] = _sandbox_runner_request("GET", f"/jobs/{job_id}/x64dbg", timeout=10)
-    except Exception:
-        pass
-    try:
-        snapshot["findings"] = _sandbox_runner_request("GET", f"/jobs/{job_id}/x64dbg/findings", timeout=10)
-    except Exception:
-        pass
-    try:
-        snapshot["requests"] = _sandbox_runner_request("GET", f"/jobs/{job_id}/x64dbg/requests", timeout=10)
-    except Exception:
-        pass
-    return snapshot
+    return sandbox_client.safe_x64dbg_snapshot(job_id)
 
 
-def _delete_local_job_artifacts(job_id):
-    removed = {}
-    paths = {
-        "dynamic_evidence": _evidence_path(job_id),
-        "uploaded_sample": UPLOADS_DIR / f"{job_id}.bin",
-        "triage_json": TRIAGE_REPORT_DIR / f"{job_id}.json",
-        "triage_markdown": TRIAGE_REPORT_DIR / f"{job_id}.md",
-    }
+def _require_internal_token():
+    if not INTERNAL_API_TOKEN:
+        return None
 
-    for label, path in paths.items():
-        try:
-            if path.exists():
-                path.unlink()
-                removed[label] = True
-            else:
-                removed[label] = False
-        except OSError:
-            removed[label] = False
+    provided = request.headers.get("X-Internal-Token", "")
+    if not hmac.compare_digest(provided, INTERNAL_API_TOKEN):
+        return jsonify({"error": "unauthorized"}), 401
+    return None
 
-    _delete_job_filename(job_id)
-    removed["job_metadata"] = True
-    return removed
-
-
-def _reset_local_job_runtime_artifacts(job_id):
-    removed = {}
-    for label, path in {
-        "dynamic_evidence": _evidence_path(job_id),
-        "triage_json": TRIAGE_REPORT_DIR / f"{job_id}.json",
-        "triage_markdown": TRIAGE_REPORT_DIR / f"{job_id}.md",
-    }.items():
-        try:
-            if path.exists():
-                path.unlink()
-                removed[label] = True
-            else:
-                removed[label] = False
-        except OSError:
-            removed[label] = False
-    return removed
-
-
-def _assistant_next_steps(job_id):
-    metadata_entry = _load_job_metadata().get(job_id, {})
-    if not isinstance(metadata_entry, dict):
-        metadata_entry = {"filename": str(metadata_entry)}
-    filename = metadata_entry.get("label") or metadata_entry.get("filename") or f"{job_id[:8]}.bin"
-    triage = get_cached_triage_report(job_id)
-    evidence = _load_dynamic_evidence(job_id)
-    evidence_summary = _summarize_evidence(evidence)
-    x64dbg = _safe_x64dbg_snapshot(job_id)
-    x64dbg_state = x64dbg.get("state", {})
-    x64dbg_findings = x64dbg.get("findings", {}).get("findings", [])
-    x64dbg_requests = x64dbg.get("requests", {}).get("requests", [])
-
-    summary = {
-        "triage_status": (triage or {}).get("status", "missing"),
-        "dynamic_artifacts": evidence_summary.get("artifact_count", 0),
-        "x64dbg_status": x64dbg_state.get("status", "idle"),
-        "x64dbg_findings": len(x64dbg_findings),
-        "x64dbg_requests": len(x64dbg_requests),
-    }
-
-    capabilities = []
-    if triage and triage.get("status") == "completed":
-        capabilities = triage.get("summary", {}).get("capabilities", [])
-
-    suggestions = []
-    stage = "analysis"
-    stage_headline = "Static analysis is the current focus."
-    stage_copy = "Use the report, imports, strings, and function list to build the first explanation of the target."
-    alerts = []
-
-    if not triage or triage.get("status") in {"processing", "queued"}:
-        stage = "triage_building"
-        stage_headline = "The assistant is still assembling the first-pass triage."
-        stage_copy = "Stay in triage while Ghidra finishes preparing artifacts, then pivot into the most valuable functions."
-        suggestions.append({
-            "kind": "open_view",
-            "label": "Open Triage",
-            "description": "Watch the cached triage report while Ghidra finishes preparing artifacts.",
-            "payload": {"view": "triage"},
-        })
-        suggestions.append({
-            "kind": "chat_prompt",
-            "label": "Ask For Static Triage",
-            "description": "Use the assistant to summarize current static capabilities while the full report warms up.",
-            "payload": {"prompt": "Summarize the binary's main capabilities and likely purpose."},
-        })
-    else:
-        stage = "triage_ready"
-        stage_headline = "Triage is ready and the target is ripe for guided inspection."
-        stage_copy = "Start by explaining the most interesting functions and deciding whether you need runtime confirmation."
-        suggestions.append({
-            "kind": "chat_prompt",
-            "label": "Explain Priority Functions",
-            "description": "Ask the assistant to focus on the most valuable static functions before diving deeper.",
-            "payload": {"prompt": "Use the triage report to explain which priority functions should be investigated first and why."},
-        })
-
-    if summary["dynamic_artifacts"] == 0:
-        alerts.append({
-            "level": "warning",
-            "title": "No dynamic evidence attached yet",
-            "description": "The assistant can go deeper once the sandbox starts feeding behavior or telemetry back into this job.",
-        })
-        suggestions.append({
-            "kind": "chat_prompt",
-            "label": "Plan Dynamic Collection",
-            "description": "Ask for a collection plan that matches the current static evidence.",
-            "payload": {"prompt": "Based on the current imports, strings, and triage report, what dynamic evidence should I collect next?"}
-        })
-    else:
-        alerts.append({
-            "level": "info",
-            "title": "Fresh dynamic evidence available",
-            "description": f"{summary['dynamic_artifacts']} dynamic artifact(s) are attached and ready for correlation.",
-        })
-
-    if "process_execution" in capabilities or "filesystem" in capabilities or summary["x64dbg_status"] != "idle":
-        stage = "debug_ready"
-        stage_headline = "The target is ready for live debugger-guided validation."
-        stage_copy = "Use x64dbg to confirm the most important execution path and feed those findings back into the assistant."
-        if not x64dbg_findings:
-            suggestions.append({
-                "kind": "debug_request",
-                "label": "Trace APIs",
-                "description": "Queue an API tracing request through the x64dbg bridge.",
-                "payload": {
-                    "action": "trace_api",
-                    "notes": "Trace high-signal WinAPI calls around process creation, file writes, and registry changes."
-                },
-            })
-            suggestions.append({
-                "kind": "debug_request",
-                "label": "Entry Breakpoint",
-                "description": "Pause near the PE entry point and capture initial debugger context.",
-                "payload": {
-                    "action": "set_breakpoint",
-                    "address": "0x401000",
-                    "notes": "Pause at the PE entry point and capture register state."
-                },
-            })
-        else:
-            stage = "debug_active"
-            stage_headline = "Debugger findings are flowing back into the platform."
-            stage_copy = "Correlate those findings with the triage report so the assistant can explain the real execution path."
-            alerts.append({
-                "level": "success",
-                "title": "Debugger findings imported",
-                "description": f"{len(x64dbg_findings)} finding(s) have already been captured for this job.",
-            })
-            suggestions.append({
-                "kind": "open_view",
-                "label": "Open x64dbg View",
-                "description": "Inspect the live debugger state, findings, and queued actions.",
-                "payload": {"view": "x64dbg"},
-            })
-            suggestions.append({
-                "kind": "chat_prompt",
-                "label": "Interpret Debugger Findings",
-                "description": "Ask the assistant to connect x64dbg findings back to the static triage.",
-                "payload": {"prompt": "Correlate the current x64dbg findings with the static triage report and explain the likely execution path."},
-            })
-
-    checklist = [
-        {
-            "id": "triage",
-            "label": "Review cached triage",
-            "description": "Confirm capabilities, imports, strings, and priority functions before you pivot deeper.",
-            "status": "completed" if summary["triage_status"] == "completed" else "active" if stage == "triage_building" else "pending",
-        },
-        {
-            "id": "dynamic",
-            "label": "Attach or inspect dynamic evidence",
-            "description": "Bring in sandbox artifacts or telemetry so the assistant can validate static inferences.",
-            "status": "completed" if summary["dynamic_artifacts"] > 0 else "active" if summary["triage_status"] == "completed" else "pending",
-        },
-        {
-            "id": "debug",
-            "label": "Drive a debugger session",
-            "description": "Use x64dbg requests and findings to validate runtime behavior.",
-            "status": "completed" if summary["x64dbg_findings"] > 0 else "active" if summary["x64dbg_status"] != "idle" else "pending",
-        },
-    ]
-
-    primary_action = suggestions[0] if suggestions else None
-    digest_payload = {
-        "stage": stage,
-        "summary": summary,
-        "suggestions": suggestions[:5],
-        "alerts": alerts,
-    }
-    state_digest = hashlib.sha256(json.dumps(digest_payload, sort_keys=True).encode("utf-8")).hexdigest()[:16]
-
-    return {
-        "job_id": job_id,
-        "filename": filename,
-        "stage": stage,
-        "state_digest": state_digest,
-        "summary": summary,
-        "stage_headline": stage_headline,
-        "stage_copy": stage_copy,
-        "alerts": alerts[:4],
-        "checklist": checklist,
-        "primary_action": primary_action,
-        "suggestions": suggestions[:5],
-    }
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
+
+@app.route('/sandbox/windows_lab_credentials', methods=['GET'])
+def get_windows_lab_credentials():
+    payload = sandbox_credentials.load_credentials()
+    if not payload:
+        return jsonify({
+            "error": "Windows sandbox credentials are not available yet. Start the optional windows_sandbox profile once to generate them."
+        }), 404
+    response = jsonify({
+        "username": payload.get("USERNAME", sandbox_credentials.default_username),
+        "password_available": bool(payload.get("PASSWORD")),
+        "vnc_url": "http://127.0.0.1:8006",
+        "rdp_host": "127.0.0.1:3389",
+        "ssh_host": "127.0.0.1:2222",
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route('/sandbox/windows_lab_credentials/reveal', methods=['POST'])
+def reveal_windows_lab_credentials():
+    payload = sandbox_credentials.load_credentials()
+    if not payload or not payload.get("PASSWORD"):
+        return jsonify({
+            "error": "Windows sandbox credentials are not available yet. Start the optional windows_sandbox profile once to generate them."
+        }), 404
+
+    response = jsonify({
+        "username": payload.get("USERNAME", sandbox_credentials.default_username),
+        "password": payload.get("PASSWORD"),
+    })
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+@app.route('/metrics/summary', methods=['GET'])
+def metrics_summary():
+    summary = e2e_fixture.metrics_summary() if e2e_fixture is not None else build_metrics_summary(job_store, TRIAGE_REPORT_DIR)
+    return jsonify(summary)
+
+
+@app.route('/metrics', methods=['GET'])
+def metrics_text():
+    summary = e2e_fixture.metrics_summary() if e2e_fixture is not None else build_metrics_summary(job_store, TRIAGE_REPORT_DIR)
+    return Response(build_prometheus_metrics(summary), mimetype="text/plain; version=0.0.4; charset=utf-8")
 
 @app.route('/upload', methods=['POST'])
 def upload_file():
@@ -466,33 +219,12 @@ def upload_file():
         return jsonify({"error": "No selected file"}), 400
 
     try:
-        file.stream.seek(0)
-        sha256_hash = hashlib.sha256()
-        for chunk in iter(lambda: file.stream.read(4096), b""):
-            sha256_hash.update(chunk)
-        job_id = sha256_hash.hexdigest()
-
-        _reset_local_job_runtime_artifacts(job_id)
-        if SANDBOX_RUNNER_URL:
-            try:
-                _sandbox_runner_request("DELETE", f"/jobs/{job_id}", timeout=15)
-            except Exception:
-                pass
-
-        _save_uploaded_sample(job_id, file)
-
-        file.stream.seek(0)
-        files = {"sample": (file.filename, file.stream, "application/octet-stream")}
-        response = requests.post(f"{GHIDRAAAS_BASE}/analyze_sample/", files=files, timeout=600)
+        response, job_id, safe_filename = job_workflow.upload_and_analyze(file)
         if not response.ok:
             return jsonify({
-                "error": f"Ghidraaas analysis failed for {file.filename}. {_response_error_details(response)}"
+                "error": f"Ghidraaas analysis failed for {safe_filename}. {_response_error_details(response)}"
             }), 502
-
-        _record_job_filename(job_id, file.filename)
-        _trigger_sandbox_run(job_id, file.filename)
-        queue_triage_report(job_id, file.filename)
-        return jsonify({"job_id": job_id, "status": "DONE"})
+        return jsonify({"job_id": job_id, "status": "ANALYZING", "filename": safe_filename})
         
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Failed to connect to Ghidra service: {e}"}), 500
@@ -521,20 +253,12 @@ def chat():
 
 @app.route('/jobs', methods=['GET'])
 def list_jobs():
+    if e2e_fixture is not None:
+        jobs = [job.to_dict() for job in job_service.list_jobs(e2e_fixture.list_jobs())]
+        return jsonify({"jobs": jobs})
     try:
-        metadata = _load_job_metadata()
-        payload_projects = _fetch_projects(timeout=30)
-        jobs = []
-        for job in payload_projects:
-            entry = metadata.get(job.get("job_id"), {})
-            if not isinstance(entry, dict):
-                entry = {"filename": str(entry)}
-            jobs.append({
-                **job,
-                "filename": entry.get("filename"),
-                "label": entry.get("label"),
-                "archived": bool(entry.get("archived", False)),
-            })
+        payload_projects = ghidra_client.list_projects(timeout=30)
+        jobs = [job.to_dict() for job in job_service.list_jobs(payload_projects)]
         return jsonify({"jobs": jobs})
     except requests.exceptions.RequestException as e:
         return jsonify({"error": f"Failed to list jobs from Ghidraaas: {e}"}), 502
@@ -542,12 +266,16 @@ def list_jobs():
 
 @app.route('/jobs/<job_id>', methods=['PATCH'])
 def update_job(job_id):
+    ok, error = require_json_body(request)
+    if not ok:
+        message, status_code = error
+        return jsonify({"error": message}), status_code
+
     payload = request.get_json(silent=True) or {}
     updates = {}
 
     if "label" in payload:
-        label = str(payload.get("label") or "").strip()
-        updates["label"] = label or None
+        updates["label"] = normalize_job_label(payload.get("label"))
 
     if "archived" in payload:
         updates["archived"] = bool(payload.get("archived"))
@@ -555,49 +283,17 @@ def update_job(job_id):
     if not updates:
         return jsonify({"error": "No supported job updates provided"}), 400
 
-    entry = _update_job_metadata(job_id, **updates)
+    job = job_service.update_job(job_id, **updates)
     return jsonify({
         "job_id": job_id,
         "status": "updated",
-        "job": {
-            "job_id": job_id,
-            "filename": entry.get("filename"),
-            "label": entry.get("label"),
-            "archived": bool(entry.get("archived", False)),
-            "display_name": entry.get("label") or entry.get("filename") or f"{job_id[:8]}.bin",
-        },
+        "job": job.to_dict(),
     })
 
 
 @app.route('/jobs/<job_id>', methods=['DELETE'])
 def delete_job(job_id):
-    summary = {
-        "job_id": job_id,
-        "ghidraaas": {"status": "skipped"},
-        "sandbox_runner": {"status": "skipped"},
-        "local": {},
-    }
-
-    try:
-        response = requests.get(f"{GHIDRAAAS_BASE}/analysis_terminated/{job_id}", timeout=60)
-        if response.ok:
-            summary["ghidraaas"] = {"status": "deleted"}
-        else:
-            summary["ghidraaas"] = {
-                "status": "error",
-                "detail": _response_error_details(response),
-            }
-    except requests.exceptions.RequestException as e:
-        summary["ghidraaas"] = {"status": "error", "detail": str(e)}
-
-    if SANDBOX_RUNNER_URL:
-        try:
-            runner_payload = _sandbox_runner_request("DELETE", f"/jobs/{job_id}", timeout=20)
-            summary["sandbox_runner"] = {"status": "deleted", **runner_payload}
-        except Exception as e:
-            summary["sandbox_runner"] = {"status": "error", "detail": str(e)}
-
-    summary["local"] = _delete_local_job_artifacts(job_id)
+    summary = job_service.delete_job(job_id)
     return jsonify({
         "job_id": job_id,
         "status": "deleted",
@@ -607,7 +303,7 @@ def delete_job(job_id):
 
 @app.route('/evidence/<job_id>', methods=['GET'])
 def get_dynamic_evidence(job_id):
-    payload = _load_dynamic_evidence(job_id)
+    payload = job_store.load_dynamic_evidence(job_id)
     return jsonify({
         **payload,
         "summary": _summarize_evidence(payload),
@@ -616,17 +312,27 @@ def get_dynamic_evidence(job_id):
 
 @app.route('/evidence/<job_id>', methods=['POST'])
 def record_dynamic_evidence(job_id):
-    data = request.get_json(silent=True) or {}
-    artifacts = data.get("artifacts")
-    if not isinstance(artifacts, list):
-        return jsonify({"error": "JSON body must include an 'artifacts' array"}), 400
+    unauthorized = _require_internal_token()
+    if unauthorized:
+        return unauthorized
 
-    payload = _load_dynamic_evidence(job_id)
+    ok, error = require_json_body(request)
+    if not ok:
+        message, status_code = error
+        return jsonify({"error": message}), status_code
+
+    data = request.get_json(silent=True) or {}
+    sanitized_payload, validation_error = validate_artifacts_payload(data)
+    if validation_error:
+        message, status_code = validation_error
+        return jsonify({"error": message}), status_code
+
+    payload = job_store.load_dynamic_evidence(job_id)
     existing = payload.get("artifacts", [])
-    existing.extend(artifacts)
+    existing.extend(sanitized_payload["artifacts"])
     payload["artifacts"] = existing
-    _save_dynamic_evidence(job_id, payload)
-    queue_triage_report(job_id, _load_job_metadata().get(job_id))
+    job_store.save_dynamic_evidence(job_id, payload)
+    queue_triage_report(job_id, job_service.triage_filename_hint(job_id))
     return jsonify({
         "job_id": job_id,
         "status": "recorded",
@@ -638,7 +344,7 @@ def record_dynamic_evidence(job_id):
 def get_triage_report(job_id):
     report = get_cached_triage_report(job_id)
     if report is None:
-        queued = queue_triage_report(job_id, _load_job_metadata().get(job_id))
+        queued = queue_triage_report(job_id, job_service.triage_filename_hint(job_id))
         return jsonify({
             "job_id": job_id,
             "status": "queued" if queued else "processing",
@@ -646,7 +352,7 @@ def get_triage_report(job_id):
 
     status = report.get("status", "unknown")
     if status == "processing":
-        queue_triage_report(job_id, _load_job_metadata().get(job_id))
+        queue_triage_report(job_id, job_service.triage_filename_hint(job_id))
         return jsonify(report), 202
 
     return jsonify(report)
@@ -659,11 +365,7 @@ def export_triage_report(job_id):
         return jsonify({"error": "Triage report is not ready yet"}), 409
 
     export_format = str(request.args.get("format", "md")).lower()
-    metadata = _load_job_metadata().get(job_id, {})
-    if not isinstance(metadata, dict):
-        metadata = {"filename": str(metadata)}
-    base_name = metadata.get("label") or metadata.get("filename") or f"{job_id[:12]}"
-    safe_name = "".join(ch if ch.isalnum() or ch in ("-", "_", ".") else "_" for ch in base_name).strip("._") or job_id[:12]
+    safe_name = job_service.export_filename_root(job_id)
 
     if export_format == "json":
         body = json.dumps(report, indent=2)
@@ -683,8 +385,10 @@ def export_triage_report(job_id):
 
 @app.route('/debug/x64dbg/<job_id>', methods=['GET'])
 def get_x64dbg_state(job_id):
+    if e2e_fixture is not None:
+        return jsonify(e2e_fixture.x64dbg_state(job_id))
     try:
-        return jsonify(_sandbox_runner_request("GET", f"/jobs/{job_id}/x64dbg", timeout=15))
+        return jsonify(sandbox_client.request("GET", f"/jobs/{job_id}/x64dbg", timeout=15))
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503
     except requests.exceptions.RequestException as e:
@@ -693,9 +397,18 @@ def get_x64dbg_state(job_id):
 
 @app.route('/debug/x64dbg/<job_id>', methods=['POST'])
 def update_x64dbg_state(job_id):
+    ok, error = require_json_body(request)
+    if not ok:
+        message, status_code = error
+        return jsonify({"error": message}), status_code
+
     payload = request.get_json(silent=True) or {}
+    sanitized_payload, validation_error = validate_x64dbg_state_payload(payload)
+    if validation_error:
+        message, status_code = validation_error
+        return jsonify({"error": message}), status_code
     try:
-        return jsonify(_sandbox_runner_request("POST", f"/jobs/{job_id}/x64dbg", json=payload, timeout=20))
+        return jsonify(sandbox_client.request("POST", f"/jobs/{job_id}/x64dbg", json=sanitized_payload, timeout=20))
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503
     except requests.exceptions.RequestException as e:
@@ -704,8 +417,10 @@ def update_x64dbg_state(job_id):
 
 @app.route('/debug/x64dbg/<job_id>/findings', methods=['GET'])
 def get_x64dbg_findings(job_id):
+    if e2e_fixture is not None:
+        return jsonify(e2e_fixture.x64dbg_findings(job_id))
     try:
-        return jsonify(_sandbox_runner_request("GET", f"/jobs/{job_id}/x64dbg/findings", timeout=15))
+        return jsonify(sandbox_client.request("GET", f"/jobs/{job_id}/x64dbg/findings", timeout=15))
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503
     except requests.exceptions.RequestException as e:
@@ -714,9 +429,18 @@ def get_x64dbg_findings(job_id):
 
 @app.route('/debug/x64dbg/<job_id>/findings', methods=['POST'])
 def add_x64dbg_findings(job_id):
+    ok, error = require_json_body(request)
+    if not ok:
+        message, status_code = error
+        return jsonify({"error": message}), status_code
+
     payload = request.get_json(silent=True) or {}
+    sanitized_payload, validation_error = validate_x64dbg_findings_payload(payload)
+    if validation_error:
+        message, status_code = validation_error
+        return jsonify({"error": message}), status_code
     try:
-        return jsonify(_sandbox_runner_request("POST", f"/jobs/{job_id}/x64dbg/findings", json=payload, timeout=20))
+        return jsonify(sandbox_client.request("POST", f"/jobs/{job_id}/x64dbg/findings", json=sanitized_payload, timeout=20))
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503
     except requests.exceptions.RequestException as e:
@@ -725,8 +449,10 @@ def add_x64dbg_findings(job_id):
 
 @app.route('/debug/x64dbg/<job_id>/requests', methods=['GET'])
 def get_x64dbg_requests(job_id):
+    if e2e_fixture is not None:
+        return jsonify(e2e_fixture.x64dbg_requests(job_id))
     try:
-        return jsonify(_sandbox_runner_request("GET", f"/jobs/{job_id}/x64dbg/requests", timeout=15))
+        return jsonify(sandbox_client.request("GET", f"/jobs/{job_id}/x64dbg/requests", timeout=15))
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503
     except requests.exceptions.RequestException as e:
@@ -735,9 +461,18 @@ def get_x64dbg_requests(job_id):
 
 @app.route('/debug/x64dbg/<job_id>/requests', methods=['POST'])
 def add_x64dbg_request(job_id):
+    ok, error = require_json_body(request)
+    if not ok:
+        message, status_code = error
+        return jsonify({"error": message}), status_code
+
     payload = request.get_json(silent=True) or {}
+    sanitized_payload, validation_error = validate_x64dbg_request_payload(payload)
+    if validation_error:
+        message, status_code = validation_error
+        return jsonify({"error": message}), status_code
     try:
-        sandbox_payload = _sandbox_runner_request("POST", f"/jobs/{job_id}/x64dbg/requests", json=payload, timeout=20)
+        sandbox_payload = sandbox_client.request("POST", f"/jobs/{job_id}/x64dbg/requests", json=sanitized_payload, timeout=20)
         return jsonify(sandbox_payload), 202
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503
@@ -748,112 +483,289 @@ def add_x64dbg_request(job_id):
 @app.route('/assistant/next_steps/<job_id>', methods=['GET'])
 def assistant_next_steps(job_id):
     try:
-        return jsonify(_assistant_next_steps(job_id))
+        return jsonify(
+            build_assistant_next_steps(
+                job_id=job_id,
+                job_store=job_store,
+                triage_report=get_cached_triage_report(job_id),
+                x64dbg_snapshot=_safe_x64dbg_snapshot(job_id),
+            )
+        )
     except Exception as e:
         return jsonify({"error": f"Failed to compute assistant next steps: {e}"}), 500
+
+
+@app.route('/reconstruction/<job_id>', methods=['GET'])
+def get_reconstruction_bundle(job_id):
+    return jsonify(reconstruction_service.list_bundle(job_id))
+
+
+@app.route('/reconstruction/<job_id>/targets', methods=['POST'])
+def add_reconstruction_target(job_id):
+    ok, error = require_json_body(request)
+    if not ok:
+        message, status_code = error
+        return jsonify({"error": message}), status_code
+    payload = request.get_json(silent=True) or {}
+    sanitized_payload, validation_error = validate_reconstruction_target_payload(payload)
+    if validation_error:
+        message, status_code = validation_error
+        return jsonify({"error": message}), status_code
+    target = reconstruction_service.save_target(job_id, sanitized_payload)
+    return jsonify({"status": "stored", "target": target.to_dict()}), 201
+
+
+@app.route('/reconstruction/<job_id>/targets/generate', methods=['POST'])
+def generate_reconstruction_targets(job_id):
+    triage_report = get_cached_triage_report(job_id)
+    if not triage_report or triage_report.get("status") != "completed":
+        return jsonify({"error": "Completed triage report is required before generating reconstruction targets"}), 409
+
+    evidence_payload = job_store.load_dynamic_evidence(job_id)
+    targets = reconstruction_service.generate_targets(job_id, triage_report, evidence_payload)
+    return jsonify({
+        "status": "generated",
+        "job_id": job_id,
+        "targets": targets,
+    }), 201
+
+
+@app.route('/reconstruction/<job_id>/hypotheses', methods=['POST'])
+def add_reconstruction_hypothesis(job_id):
+    ok, error = require_json_body(request)
+    if not ok:
+        message, status_code = error
+        return jsonify({"error": message}), status_code
+    payload = request.get_json(silent=True) or {}
+    sanitized_payload, validation_error = validate_hypothesis_payload(payload)
+    if validation_error:
+        message, status_code = validation_error
+        return jsonify({"error": message}), status_code
+    hypothesis = reconstruction_service.save_hypothesis(job_id, sanitized_payload)
+    return jsonify({"status": "stored", "hypothesis": hypothesis.to_dict()}), 201
+
+
+@app.route('/reconstruction/<job_id>/hypotheses/generate', methods=['POST'])
+def generate_reconstruction_hypotheses(job_id):
+    triage_report = get_cached_triage_report(job_id)
+    if not triage_report or triage_report.get("status") != "completed":
+        return jsonify({"error": "Completed triage report is required before generating hypotheses"}), 409
+
+    targets = job_store.list_reconstruction_targets(job_id)
+    if not targets:
+        return jsonify({"error": "At least one reconstruction target is required before generating hypotheses"}), 409
+
+    evidence_payload = job_store.load_dynamic_evidence(job_id)
+    hypotheses = reconstruction_service.generate_hypotheses(job_id, triage_report, evidence_payload)
+    return jsonify({
+        "status": "generated",
+        "job_id": job_id,
+        "hypotheses": hypotheses,
+    }), 201
+
+
+@app.route('/reconstruction/<job_id>/drafts', methods=['POST'])
+def add_reconstruction_draft(job_id):
+    ok, error = require_json_body(request)
+    if not ok:
+        message, status_code = error
+        return jsonify({"error": message}), status_code
+    payload = request.get_json(silent=True) or {}
+    sanitized_payload, validation_error = validate_draft_artifact_payload(payload)
+    if validation_error:
+        message, status_code = validation_error
+        return jsonify({"error": message}), status_code
+    artifact = reconstruction_service.save_draft_artifact(job_id, sanitized_payload)
+    return jsonify({"status": "stored", "draft_artifact": artifact.to_dict()}), 201
+
+
+@app.route('/reconstruction/<job_id>/drafts/generate', methods=['POST'])
+def generate_reconstruction_drafts(job_id):
+    payload = request.get_json(silent=True) if request.is_json else None
+    sanitized_payload, validation_error = validate_reconstruction_generate_payload(payload)
+    if validation_error:
+        message, status_code = validation_error
+        return jsonify({"error": message}), status_code
+
+    triage_report = get_cached_triage_report(job_id)
+    if not triage_report or triage_report.get("status") != "completed":
+        return jsonify({"error": "Completed triage report is required before generating draft artifacts"}), 409
+
+    targets = job_store.list_reconstruction_targets(job_id)
+    if not targets:
+        return jsonify({"error": "At least one reconstruction target is required before generating draft artifacts"}), 409
+
+    hypotheses = job_store.list_hypotheses(job_id)
+    if not hypotheses:
+        return jsonify({"error": "At least one hypothesis is required before generating draft artifacts"}), 409
+
+    if sanitized_payload.get("target_id") and not reconstruction_service.get_target(job_id, sanitized_payload["target_id"]):
+        return jsonify({"error": "Requested reconstruction target does not exist"}), 404
+
+    evidence_payload = job_store.load_dynamic_evidence(job_id)
+    draft_artifacts = reconstruction_service.generate_drafts(
+        job_id,
+        triage_report,
+        evidence_payload,
+        target_id=sanitized_payload.get("target_id"),
+    )
+    return jsonify({
+        "status": "generated",
+        "job_id": job_id,
+        "draft_artifacts": draft_artifacts,
+    }), 201
+
+
+@app.route('/reconstruction/<job_id>/drafts/<artifact_id>/export', methods=['GET'])
+def export_reconstruction_draft(job_id, artifact_id):
+    bundle = reconstruction_service.export_draft_bundle(job_id, artifact_id)
+    if bundle is None:
+        return jsonify({"error": "Requested reconstruction artifact was not found"}), 404
+
+    export_format = str(request.args.get("format", "md")).lower()
+    safe_name = job_service.export_filename_root(job_id)
+
+    if export_format == "json":
+        body = json.dumps(bundle, indent=2)
+        mimetype = "application/json"
+        filename = f"{safe_name}-{artifact_id}.json"
+    else:
+        artifact = bundle["artifact"]
+        target = bundle.get("target") or {}
+        hypotheses = bundle.get("hypotheses") or []
+        plans = bundle.get("validation_plans") or []
+        lines = [
+            f"# {artifact.get('title') or 'Reconstruction Package'}",
+            "",
+            "## Summary",
+            artifact.get("summary") or "_No summary available._",
+            "",
+            "## Target",
+            f"- ID: `{target.get('target_id', artifact.get('target_id') or 'unscoped')}`",
+            f"- Title: {target.get('title', 'Unknown target')}",
+            f"- Scope: `{target.get('scope', 'unknown')}`",
+            f"- Validation status: `{artifact.get('validation_status', 'draft')}`",
+            "",
+            "## Assumptions",
+        ]
+        assumptions = artifact.get("assumptions") or []
+        if assumptions:
+            lines.extend([f"- {item}" for item in assumptions])
+        else:
+            lines.append("- No assumptions recorded.")
+        lines.extend([
+            "",
+            "## Evidence Links",
+        ])
+        evidence_links = artifact.get("evidence_links") or []
+        if evidence_links:
+            lines.extend([f"- {item}" for item in evidence_links])
+        else:
+            lines.append("- No evidence links recorded.")
+        lines.extend([
+            "",
+            "## Draft Body",
+            artifact.get("body") or "_No draft body available._",
+            "",
+            "## Hypotheses",
+        ])
+        if hypotheses:
+            for hypothesis in hypotheses:
+                lines.extend([
+                    f"### {hypothesis.get('title', 'Hypothesis')}",
+                    f"- Claim: {hypothesis.get('claim', '')}",
+                    f"- Confidence: `{hypothesis.get('confidence', 'unknown')}`",
+                    f"- Next step: {hypothesis.get('next_step', 'n/a')}",
+                ])
+        else:
+            lines.append("- No linked hypotheses recorded.")
+        lines.extend([
+            "",
+            "## Validation Plans",
+        ])
+        if plans:
+            for plan in plans:
+                lines.append(f"### {plan.get('title', 'Validation plan')}")
+                for check in plan.get("checks", []):
+                    lines.append(
+                        f"- [{ 'x' if check.get('status') == 'completed' else ' ' }] {check.get('label', 'Check')} | expected: {check.get('expected', 'n/a')} | method: {check.get('method', 'n/a')}"
+                    )
+                for risk in plan.get("open_risks", []):
+                    lines.append(f"- Open risk: {risk}")
+        else:
+            lines.append("- No validation plan recorded.")
+        body = "\n".join(lines)
+        mimetype = "text/markdown; charset=utf-8"
+        filename = f"{safe_name}-{artifact_id}.md"
+
+    return Response(
+        body,
+        mimetype=mimetype,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'},
+    )
+
+
+@app.route('/reconstruction/<job_id>/validation_plans', methods=['POST'])
+def add_reconstruction_validation_plan(job_id):
+    ok, error = require_json_body(request)
+    if not ok:
+        message, status_code = error
+        return jsonify({"error": message}), status_code
+    payload = request.get_json(silent=True) or {}
+    sanitized_payload, validation_error = validate_validation_plan_payload(payload)
+    if validation_error:
+        message, status_code = validation_error
+        return jsonify({"error": message}), status_code
+    plan = reconstruction_service.save_validation_plan(job_id, sanitized_payload)
+    return jsonify({"status": "stored", "validation_plan": plan.to_dict()}), 201
+
+
+@app.route('/reconstruction/<job_id>/validation_plans/generate', methods=['POST'])
+def generate_reconstruction_validation_plans(job_id):
+    payload = request.get_json(silent=True) if request.is_json else None
+    sanitized_payload, validation_error = validate_reconstruction_generate_payload(payload)
+    if validation_error:
+        message, status_code = validation_error
+        return jsonify({"error": message}), status_code
+
+    triage_report = get_cached_triage_report(job_id)
+    if not triage_report or triage_report.get("status") != "completed":
+        return jsonify({"error": "Completed triage report is required before generating validation plans"}), 409
+
+    targets = job_store.list_reconstruction_targets(job_id)
+    if not targets:
+        return jsonify({"error": "At least one reconstruction target is required before generating validation plans"}), 409
+
+    hypotheses = job_store.list_hypotheses(job_id)
+    if not hypotheses:
+        return jsonify({"error": "At least one hypothesis is required before generating validation plans"}), 409
+
+    if sanitized_payload.get("target_id") and not reconstruction_service.get_target(job_id, sanitized_payload["target_id"]):
+        return jsonify({"error": "Requested reconstruction target does not exist"}), 404
+
+    evidence_payload = job_store.load_dynamic_evidence(job_id)
+    validation_plans = reconstruction_service.generate_validation_plans(
+        job_id,
+        triage_report,
+        evidence_payload,
+        target_id=sanitized_payload.get("target_id"),
+    )
+    return jsonify({
+        "status": "generated",
+        "job_id": job_id,
+        "validation_plans": validation_plans,
+    }), 201
         
 @app.route('/status/<job_id>', methods=['GET'])
 def get_status(job_id):
-    metadata = _load_job_metadata()
+    if e2e_fixture is not None and job_id == e2e_fixture.job_id:
+        payload, status_code = e2e_fixture.status(job_id)
+        return jsonify(payload), status_code
     cached_triage = get_cached_triage_report(job_id)
-
-    if cached_triage:
-        triage_status = cached_triage.get("status")
-        if triage_status == "completed":
-            return jsonify({
-                "job_id": job_id,
-                "status": "done",
-                "phase": "triage_ready",
-            })
-        if triage_status in {"queued", "processing"}:
-            return jsonify({
-                "job_id": job_id,
-                "status": "analyzing",
-                "phase": "triage_building",
-            })
-
-    try:
-        projects = _fetch_projects(timeout=10)
-        project_exists = any(project.get("job_id") == job_id for project in projects)
-
-        if project_exists:
-            try:
-                functions_response = requests.get(
-                    f"{GHIDRAAAS_BASE}/get_functions_list/{job_id}",
-                    timeout=15,
-                )
-                if functions_response.status_code == 200:
-                    return jsonify({
-                        "job_id": job_id,
-                        "status": "done",
-                        "phase": "function_index_ready",
-                    })
-                if functions_response.status_code == 202:
-                    return jsonify({
-                        "job_id": job_id,
-                        "status": "analyzing",
-                        "phase": "function_indexing",
-                    })
-                if functions_response.status_code == 400:
-                    return jsonify({
-                        "job_id": job_id,
-                        "status": "analyzing",
-                        "phase": "ghidra_processing",
-                    })
-                return jsonify({
-                    "job_id": job_id,
-                    "status": "analyzing",
-                    "phase": "ghidra_processing",
-                    "warning": _response_error_details(functions_response),
-                })
-            except requests.Timeout:
-                return jsonify({
-                    "job_id": job_id,
-                    "status": "analyzing",
-                    "phase": "ghidra_processing",
-                    "warning": "Ghidraaas is still processing this sample.",
-                })
-
-        if job_id in metadata:
-            return jsonify({
-                "job_id": job_id,
-                "status": "analyzing",
-                "phase": "uploaded",
-            })
-
-        return jsonify({"job_id": job_id, "status": "pending"})
-    except requests.Timeout:
-        if job_id in metadata:
-            return jsonify({
-                "job_id": job_id,
-                "status": "analyzing",
-                "phase": "ghidra_processing",
-                "warning": "Ghidraaas is still busy processing this sample.",
-            })
-        return jsonify({"job_id": job_id, "status": "pending"})
-    except requests.HTTPError as error:
-        response = getattr(error, "response", None)
-        if response is not None and response.status_code == 400:
-            response_text = response.text.strip()
-            if "Sample has not been analyzed" in response_text:
-                return jsonify({"job_id": job_id, "status": "pending"})
-
-        if job_id in metadata:
-            return jsonify({
-                "job_id": job_id,
-                "status": "analyzing",
-                "phase": "ghidra_processing",
-            })
-        return jsonify({"job_id": job_id, "status": "error", "error": str(error)}), 502
-    except requests.exceptions.RequestException as e:
-        if job_id in metadata:
-            return jsonify({
-                "job_id": job_id,
-                "status": "analyzing",
-                "phase": "ghidra_processing",
-                "warning": f"Ghidraaas is temporarily unavailable: {e}",
-            })
-        return jsonify({"job_id": job_id, "status": "error", "error": str(e)}), 502
+    payload, status_code = job_service.get_status(job_id, cached_triage)
+    return jsonify(payload), status_code
 
 if __name__ == '__main__':
-    app.run(debug=True, host="0.0.0.0", port=5000)
+    flask_debug = os.getenv("FLASK_DEBUG", "").lower() in {"1", "true", "yes", "on"}
+    port = int(os.getenv("PORT", "5000"))
+    app.run(debug=flask_debug, host="0.0.0.0", port=port)

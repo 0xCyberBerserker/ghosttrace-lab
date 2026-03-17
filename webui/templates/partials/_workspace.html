@@ -1,0 +1,535 @@
+<div class="app-main flex-1 flex flex-col h-full overflow-hidden p-4 md:p-6">
+    <div id="welcome-message" class="welcome-grid flex-grow flex items-center justify-center panel">
+        <div class="relative z-10 max-w-2xl text-center px-8">
+            <div class="eyebrow mb-4">System Awaiting Target</div>
+            <h2 class="text-4xl font-bold text-white">Open An Analysis</h2>
+            <p class="mt-4 text-base text-cyan-100/60">Upload a sample or reopen a job to begin analysis and validation.</p>
+        </div>
+    </div>
+    <div id="chat-container" class="hidden flex-grow flex-col overflow-hidden min-h-0">
+        <div class="panel live-session-shell flex flex-col flex-grow overflow-hidden min-h-0 p-4 md:p-5">
+            <div class="section-heading workspace-header">
+                <div class="section-heading-main workspace-header-main">
+                    <div class="eyebrow mb-1">Live Session</div>
+                    <div class="text-lg font-semibold text-white">Analysis Workspace</div>
+                </div>
+                <div class="workspace-header-actions">
+                    <button type="button" class="collapse-toggle" data-collapse-target="workspace-tools" aria-expanded="false" aria-controls="workspace-tools">
+                        <span class="collapse-chevron">▾</span>
+                        <span>Workspace Tools</span>
+                    </button>
+                </div>
+            </div>
+            <div id="workspace-tools" class="workspace-tools-shell hidden mb-4">
+                <button type="button" id="help-mode-toggle" class="help-toggle">
+                    <span class="help-toggle-indicator"></span>
+                    <span id="help-mode-label">Help Mode Off</span>
+                </button>
+                <label class="theme-picker-shell">
+                    <span class="theme-picker-label">Theme</span>
+                    <select class="theme-picker-select" @change="applyTheme($event.target.value)">
+                        <template x-for="theme in themeOptions()" :key="theme.id">
+                            <option :value="theme.id" x-text="theme.label"></option>
+                        </template>
+                    </select>
+                </label>
+                <a href="http://127.0.0.1:8006" target="_blank" rel="noopener noreferrer" class="prompt-chip" x-show="shouldShowDebuggerAccess()" x-cloak>Open Windows VNC</a>
+                <div class="workspace-tool-pill">SSE</div>
+                <div class="workspace-tool-pill">Tool-Augmented</div>
+                <div class="workspace-tool-pill">Ollama</div>
+            </div>
+            <div class="phase-hero mb-4">
+                <div class="phase-hero-copy">
+                    <div class="eyebrow mb-2" x-text="workflowBadge()"></div>
+                    <div class="phase-hero-title" x-text="primaryTitle()"></div>
+                    <div class="phase-hero-text" x-text="primaryNextStep()"></div>
+                </div>
+                <div class="phase-hero-meta">
+                    <div class="phase-hero-meta-block">
+                        <div class="phase-hero-meta-label">Current target</div>
+                        <div class="phase-hero-meta-value" x-text="currentTargetLabel()"></div>
+                    </div>
+                    <div class="phase-hero-meta-block" x-show="hasActiveJob" x-cloak>
+                        <div class="phase-hero-meta-label">Current lane</div>
+                        <div class="phase-hero-meta-value" x-text="activeViewTitle()"></div>
+                        <div class="phase-hero-meta-copy" x-text="activeViewDescription()"></div>
+                    </div>
+                    <div class="phase-hero-meta-block">
+                        <div class="phase-hero-meta-label">Visual theme</div>
+                        <div class="phase-hero-meta-value" x-text="themeLabel()"></div>
+                        <div class="phase-hero-meta-copy" x-text="themeCopy()"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="context-help mb-4">
+                <div class="context-help-title">Workspace guide</div>
+                <div class="context-help-copy" x-show="workflowMode === 'upload'" x-cloak>Upload one binary, then continue in guided order.</div>
+                <div class="context-help-copy" x-show="workflowMode === 'analyze'" x-cloak>Use Chat, then Triage, then Reconstruct.</div>
+                <div class="context-help-copy" x-show="workflowMode === 'validate'" x-cloak>Use x64dbg only for one concrete runtime confirmation.</div>
+            </div>
+            <div class="workspace-progress-shell mb-4" x-show="hasActiveJob" x-cloak>
+                <div class="workspace-progress-copy">
+                    <div>
+                        <div class="context-help-title">Investigation path</div>
+                        <div class="context-help-copy">Finish one stage before jumping to the next.</div>
+                    </div>
+                    <div class="workspace-progress-status">
+                        <span class="workspace-progress-status-label">Current lane</span>
+                        <span class="workspace-progress-status-value" x-text="activeViewTitle()"></span>
+                        <span class="workspace-progress-status-copy" x-text="activeViewDescription()"></span>
+                    </div>
+                </div>
+                <div class="workspace-progress-grid">
+                    <template x-for="stage in stageDefinitions()" :key="stage.id">
+                        <button type="button" class="workspace-progress-card" :class="stageClass(stage)" @click="openStage(stage)">
+                            <div class="workspace-progress-header">
+                                <div>
+                                    <div class="workspace-progress-label" x-text="stage.label"></div>
+                                    <div class="workspace-progress-title" x-text="stage.title"></div>
+                                </div>
+                                <div class="workspace-progress-badge" x-text="stageBadge(stage)"></div>
+                            </div>
+                            <div class="workspace-progress-description" x-text="stage.description"></div>
+                            <div class="workspace-progress-action" x-text="stageActionLabel(stage)"></div>
+                        </button>
+                    </template>
+                </div>
+                <div class="workspace-step-shell">
+                    <div class="workspace-step-current">
+                        <div class="eyebrow mb-2">Current Step</div>
+                        <div class="workspace-step-title" x-text="currentStageTitle()"></div>
+                        <div class="workspace-step-copy" x-text="currentStageDescription()"></div>
+                    </div>
+                    <div class="workspace-step-next">
+                        <div class="eyebrow mb-2">Next Step</div>
+                        <div class="workspace-step-title" x-text="nextStageTitle()"></div>
+                        <div class="workspace-step-copy" x-text="nextStageDescription()"></div>
+                        <button type="button" class="jobs-toolbar-button mt-4" x-show="hasNextStage()" x-cloak @click="openNextStage()">Open Next Step</button>
+                    </div>
+                </div>
+            </div>
+            <div id="operator-shell" class="operator-shell mb-4 p-4 hidden" x-show="workflowMode !== 'upload'" x-cloak>
+                <div class="flex flex-wrap items-center justify-between gap-3 operator-header">
+                    <div class="operator-header-main">
+                        <div class="eyebrow mb-1">AI Operator</div>
+                        <div id="operator-title" class="text-white text-lg font-semibold">Stage-aware recommendations</div>
+                        <div id="operator-copy" class="operator-stage-copy">The assistant watches the current job and suggests the next useful step.</div>
+                    </div>
+                    <div class="operator-status-strip">
+                        <button type="button" id="autopilot-toggle" class="operator-toggle">
+                            <span class="operator-toggle-indicator"></span>
+                            <span id="autopilot-toggle-label">Autopilot Off</span>
+                        </button>
+                        <button type="button" class="collapse-toggle" data-collapse-target="operator-body" aria-expanded="true" aria-controls="operator-body">
+                            <span class="collapse-chevron">▾</span>
+                            <span>Operator</span>
+                        </button>
+                        <div id="operator-stage" class="triage-pill processing">Idle</div>
+                    </div>
+                </div>
+                <div id="operator-body">
+                    <div class="operator-guide-strip">
+                        <div>
+                            <div class="operator-guide-title">What to do now</div>
+                            <div class="operator-guide-copy">Follow the recommended step first. Open advanced controls only when needed.</div>
+                        </div>
+                    </div>
+                    <div id="operator-primary" class="operator-primary mt-4 hidden"></div>
+                    <div id="operator-alerts" class="operator-alerts mt-4"></div>
+                    <div id="operator-checklist" class="operator-checklist mt-4"></div>
+                    <div class="operator-secondary-shell mt-4">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div>
+                                <div class="eyebrow">Advanced Operator Detail</div>
+                                <div class="operator-secondary-copy">Open this only if you need more options, platform state, or alternate next steps.</div>
+                            </div>
+                            <button type="button" class="collapse-toggle" data-collapse-target="operator-advanced" aria-expanded="false" aria-controls="operator-advanced">
+                                <span class="collapse-chevron">▾</span>
+                                <span>Advanced</span>
+                            </button>
+                        </div>
+                        <div id="operator-advanced" class="hidden">
+                            <div id="operator-summary" class="operator-grid mt-4"></div>
+                            <div id="operator-actions" class="grid gap-3 mt-4"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="chat-view" class="flex flex-col flex-grow min-h-0">
+                <div class="pane-header">
+                    <div>
+                        <div class="eyebrow mb-2">Chat Workspace</div>
+                        <div class="pane-title">Assistant Conversation</div>
+                    </div>
+                </div>
+                <div class="context-help mb-4">
+                    <div class="context-help-title">How to use the chat well</div>
+                    <div class="context-help-copy">Summarize first, pick one suspicious path, then drill into one function at a time.</div>
+                </div>
+                <div id="chat-log" class="chat-log-surface flex-grow overflow-y-auto mb-4 pr-1"></div>
+                <div id="chat-composer-guide" class="chat-composer-guide hidden">
+                    <div class="chat-composer-guide-copy">
+                        <div id="chat-composer-guide-title" class="chat-composer-guide-title">Recommended next question</div>
+                        <div id="chat-composer-guide-text" class="chat-composer-guide-text">Use one of the guided prompts to keep the investigation narrow and evidence-driven.</div>
+                    </div>
+                    <div id="chat-composer-guide-actions" class="chat-composer-guide-actions"></div>
+                </div>
+            </div>
+            <div id="triage-view" class="hidden flex-grow min-h-0 mb-4">
+                <div class="triage-shell w-full h-full overflow-y-auto p-5">
+                    <div class="pane-header">
+                        <div>
+                            <div class="eyebrow mb-2">Triage Workspace</div>
+                            <div class="pane-title">Structured First Pass</div>
+                        </div>
+                    </div>
+                    <div class="context-help mb-4">
+                        <div class="context-help-title">Triage guide</div>
+                        <div class="context-help-copy">Start here first. Counters show scope and the report gives the next step.</div>
+                    </div>
+                    <div id="triage-status" class="triage-status-card">
+                        <div class="section-heading">
+                            <div class="section-heading-main">
+                                <div class="eyebrow mb-2">Auto Triage</div>
+                            </div>
+                        </div>
+                        <div class="text-white text-lg font-semibold">No job selected</div>
+                        <p class="mt-2 text-sm text-cyan-100/60">Choose an analysis job to load its cached triage report.</p>
+                    </div>
+                    <div id="triage-content" class="hidden mt-5 space-y-5">
+                        <div class="triage-summary-grid">
+                            <div class="triage-summary-card">
+                                <div class="triage-summary-label">Capabilities</div>
+                                <div id="triage-capabilities" class="triage-summary-value">0</div>
+                            </div>
+                            <div class="triage-summary-card">
+                                <div class="triage-summary-label">Interesting Imports</div>
+                                <div id="triage-import-count" class="triage-summary-value">0</div>
+                            </div>
+                            <div class="triage-summary-card">
+                                <div class="triage-summary-label">Strings</div>
+                                <div id="triage-string-count" class="triage-summary-value">0</div>
+                            </div>
+                            <div class="triage-summary-card">
+                                <div class="triage-summary-label">Dynamic Artifacts</div>
+                                <div id="triage-dynamic-count" class="triage-summary-value">0</div>
+                            </div>
+                        </div>
+                        <div class="triage-status-card">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <div class="eyebrow">Report State</div>
+                                    <div id="triage-report-title" class="text-white text-lg font-semibold mt-2">Cached report</div>
+                                </div>
+                                <div id="triage-pill" class="triage-pill ready">Ready</div>
+                            </div>
+                            <div id="triage-meta" class="triage-meta-list mt-4"></div>
+                        </div>
+                        <div id="triage-markdown" class="markdown-content panel p-5"></div>
+                    </div>
+                </div>
+            </div>
+            <div id="x64dbg-view" class="hidden flex-grow min-h-0 mb-4">
+                <div class="triage-shell w-full h-full overflow-y-auto p-5">
+                    <div class="pane-header">
+                        <div>
+                            <div class="eyebrow mb-2">Debugger Workspace</div>
+                            <div class="pane-title">Live x64dbg Bridge</div>
+                        </div>
+                        <div class="pane-header-actions">
+                            <button type="button" class="info-button" data-info-target="info-x64dbg-pane" aria-expanded="false" aria-controls="info-x64dbg-pane" title="What does this section do?">i</button>
+                        </div>
+                    </div>
+                    <div id="info-x64dbg-pane" class="info-panel hidden mb-4">
+                        <div class="info-panel-title">When to use x64dbg here</div>
+                        <div class="info-panel-copy">Use this after triage for runtime confirmation and focused debugger tasks.</div>
+                    </div>
+                    <div class="context-help mb-4">
+                        <div class="context-help-title">Debugger guide</div>
+                        <div class="context-help-copy">Read snapshot first, then queue one focused debugger request.</div>
+                    </div>
+                    <div id="x64dbg-status" class="triage-status-card operator-console-shell">
+                        <div class="section-heading">
+                            <div class="section-heading-main">
+                                <div class="eyebrow mb-2">x64dbg MCP</div>
+                            </div>
+                        </div>
+                        <div class="text-white text-lg font-semibold">No debugger session loaded</div>
+                        <p class="mt-2 text-sm text-cyan-100/60">Choose an analysis job to load debugger state, findings, and queued requests.</p>
+                    </div>
+                    <div id="x64dbg-content" class="hidden mt-5 space-y-5">
+                        <div>
+                            <div class="flex items-center justify-between gap-3 mb-3">
+                                <div class="eyebrow">Debugger Snapshot</div>
+                            </div>
+                            <div class="triage-summary-grid operator-console-grid">
+                                <div class="triage-summary-card">
+                                    <div class="triage-summary-label">Session</div>
+                                    <div id="x64dbg-session-status" class="triage-summary-value">idle</div>
+                                </div>
+                                <div class="triage-summary-card">
+                                    <div class="triage-summary-label">PID</div>
+                                    <div id="x64dbg-pid" class="triage-summary-value">-</div>
+                                </div>
+                                <div class="triage-summary-card">
+                                    <div class="triage-summary-label">Findings</div>
+                                    <div id="x64dbg-findings-count" class="triage-summary-value">0</div>
+                                </div>
+                                <div class="triage-summary-card">
+                                    <div class="triage-summary-label">Requests</div>
+                                    <div id="x64dbg-requests-count" class="triage-summary-value">0</div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="x64dbg-focus" class="reconstruction-focus-shell"></div>
+                        <div class="triage-status-card">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <div class="eyebrow">Bridge State</div>
+                                    <div id="x64dbg-title" class="text-white text-lg font-semibold mt-2">x64dbg MCP bridge</div>
+                                </div>
+                                <div class="flex items-center gap-3">
+                                    <div id="x64dbg-pill" class="triage-pill processing">Idle</div>
+                                </div>
+                            </div>
+                            <div id="x64dbg-meta" class="triage-meta-list mt-4"></div>
+                        </div>
+                        <div class="reconstruction-secondary-shell operator-console-section">
+                            <div class="reconstruction-secondary-header">
+                                <div>
+                                    <div class="eyebrow">Queued Requests</div>
+                                    <div class="reconstruction-secondary-copy">Use quick actions or open the composer only when you need a specific debugger task.</div>
+                                </div>
+                                <button type="button" class="collapse-toggle" data-collapse-target="x64dbg-requests-shell" aria-expanded="false" aria-controls="x64dbg-requests-shell">
+                                    <span class="collapse-chevron">▾</span>
+                                    <span>Details</span>
+                                </button>
+                            </div>
+                            <div id="x64dbg-requests-shell" class="hidden">
+                                <div class="debug-request-grid mt-4 mb-4">
+                                    <div class="flex items-center justify-between gap-3">
+                                        <div class="mono text-xs text-cyan-200/70">Quick actions</div>
+                                        <button type="button" class="collapse-toggle" data-collapse-target="x64dbg-request-compose-shell" aria-expanded="false" aria-controls="x64dbg-request-compose-shell">
+                                            <span class="collapse-chevron">▾</span>
+                                            <span>Compose Request</span>
+                                        </button>
+                                    </div>
+                                    <div class="flex flex-wrap gap-2">
+                                        <button type="button" class="prompt-chip debug-request-chip" data-action="set_breakpoint" data-address="0x401000" data-notes="Pause at the PE entry point and capture register state.">Entry Breakpoint</button>
+                                        <button type="button" class="prompt-chip debug-request-chip" data-action="trace_api" data-notes="Trace high-signal WinAPI calls around process creation, file writes, and registry changes.">Trace APIs</button>
+                                        <button type="button" class="prompt-chip debug-request-chip" data-action="dump_memory" data-notes="Capture a focused memory snapshot near the current region of interest.">Dump Memory</button>
+                                    </div>
+                                    <div id="x64dbg-request-compose-shell" class="hidden">
+                                        <form id="x64dbg-request-form" class="send-shell p-3 mt-4">
+                                            <div class="grid gap-3 md:grid-cols-[1fr_1fr]">
+                                                <div>
+                                                    <div class="mb-2 flex items-center gap-2">
+                                                        <label for="x64dbg-request-action" class="mono text-xs text-cyan-200/70">Action</label>
+                                                    </div>
+                                                    <input id="x64dbg-request-action" class="cyber-input mono rounded-xl px-4 py-3 focus:outline-none w-full" type="text" placeholder="Action (e.g. inspect_address)" />
+                                                </div>
+                                                <div>
+                                                    <div class="mb-2 flex items-center gap-2">
+                                                        <label for="x64dbg-request-address" class="mono text-xs text-cyan-200/70">Address or symbol</label>
+                                                    </div>
+                                                    <input id="x64dbg-request-address" class="cyber-input mono rounded-xl px-4 py-3 focus:outline-none w-full" type="text" placeholder="Address / symbol (optional)" />
+                                                </div>
+                                            </div>
+                                            <div class="mt-3">
+                                                <div class="mb-2 flex items-center gap-2">
+                                                    <label for="x64dbg-request-notes" class="mono text-xs text-cyan-200/70">Operator notes</label>
+                                                </div>
+                                                <textarea id="x64dbg-request-notes" class="cyber-input mono w-full rounded-xl p-4 focus:outline-none" rows="3" placeholder="Notes for the sandbox debugger bridge..."></textarea>
+                                            </div>
+                                            <div class="flex items-center justify-between gap-3 mt-3">
+                                                <div id="x64dbg-request-status" class="mono text-xs text-cyan-200/70">Queue a debugger task for the sandbox bridge.</div>
+                                                <button type="submit" class="neon-button rounded-xl px-5 py-3">Queue Request</button>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                <div id="x64dbg-requests-list" class="debug-log-list"></div>
+                            </div>
+                        </div>
+                        <div class="reconstruction-secondary-shell operator-console-section">
+                            <div class="reconstruction-secondary-header">
+                                <div>
+                                    <div class="eyebrow">Captured Findings</div>
+                                    <div class="reconstruction-secondary-copy">Open this when you want the concrete runtime evidence already captured by the debugger flow.</div>
+                                </div>
+                                <button type="button" class="collapse-toggle" data-collapse-target="x64dbg-findings-shell" aria-expanded="false" aria-controls="x64dbg-findings-shell">
+                                    <span class="collapse-chevron">▾</span>
+                                    <span>Details</span>
+                                </button>
+                            </div>
+                            <div id="x64dbg-findings-shell" class="hidden">
+                                <div id="x64dbg-findings-list" class="debug-log-list mt-4"></div>
+                            </div>
+                        </div>
+                        <div class="reconstruction-secondary-shell operator-console-section">
+                            <div class="reconstruction-secondary-header">
+                                <div>
+                                    <div class="eyebrow">Recovery and Lab Access</div>
+                                    <div class="reconstruction-secondary-copy">Use this only when bridge recovery or direct Windows access is actually needed.</div>
+                                </div>
+                                <button type="button" class="collapse-toggle" data-collapse-target="x64dbg-operations-shell" aria-expanded="false" aria-controls="x64dbg-operations-shell">
+                                    <span class="collapse-chevron">▾</span>
+                                    <span>Details</span>
+                                </button>
+                            </div>
+                            <div id="x64dbg-operations-shell" class="hidden mt-4 space-y-5">
+                                <div class="debug-command-shell operator-console-shell">
+                                    <div class="flex flex-wrap items-center justify-between gap-3">
+                                        <div>
+                                            <div class="eyebrow">Sandbox Bridge Recovery</div>
+                                            <div class="text-white text-sm font-semibold mt-2">Use this only if the bridge did not auto-start after sign-in</div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" class="collapse-toggle" data-collapse-target="x64dbg-bridge-shell" aria-expanded="false" aria-controls="x64dbg-bridge-shell">
+                                                <span class="collapse-chevron">▾</span>
+                                                <span>Recovery</span>
+                                            </button>
+                                            <button type="button" id="copy-x64dbg-bridge-command" class="prompt-chip">Copy Recovery Command</button>
+                                        </div>
+                                    </div>
+                                    <div id="x64dbg-bridge-shell" class="hidden">
+                                        <div id="x64dbg-bridge-command" class="mono text-sm text-cyan-100/80 mt-4 break-all">powershell -ExecutionPolicy Bypass -File "$env:USERPROFILE\Desktop\shared\bridge-tools\Start-X64dbgBridge.ps1"</div>
+                                        <div id="x64dbg-bridge-copy-status" class="mono text-xs text-cyan-200/60 mt-3">Manual recovery command for the guest-side watcher that syncs x64dbg state, findings, and pending requests.</div>
+                                    </div>
+                                </div>
+                                <div class="debug-command-shell operator-console-shell">
+                                    <div class="flex flex-wrap items-center justify-between gap-3">
+                                        <div>
+                                            <div class="eyebrow">Windows Lab Access</div>
+                                            <div class="text-white text-sm font-semibold mt-2">Generated credentials for the optional Windows sandbox profile</div>
+                                        </div>
+                                        <div class="flex items-center gap-2">
+                                            <button type="button" class="collapse-toggle" data-collapse-target="windows-lab-shell" aria-expanded="false" aria-controls="windows-lab-shell">
+                                                <span class="collapse-chevron">▾</span>
+                                                <span>Lab Access</span>
+                                            </button>
+                                            <button type="button" id="toggle-windows-lab-password" class="prompt-chip">Reveal Password</button>
+                                            <button type="button" id="copy-windows-lab-password" class="prompt-chip">Copy Password</button>
+                                        </div>
+                                    </div>
+                                    <div id="windows-lab-shell" class="hidden operator-lab-shell">
+                                        <div class="triage-meta-list mt-4">
+                                            <div>Username: <span id="windows-lab-username" class="mono">loading...</span></div>
+                                            <div>Password: <span id="windows-lab-password" class="mono">••••••••••••••••••••••••</span></div>
+                                            <div>VNC: <span id="windows-lab-vnc" class="mono">http://127.0.0.1:8006</span></div>
+                                            <div>RDP: <span id="windows-lab-rdp" class="mono">127.0.0.1:3389</span></div>
+                                            <div>SSH: <span id="windows-lab-ssh" class="mono">127.0.0.1:2222</span></div>
+                                        </div>
+                                        <div id="windows-lab-credentials-status" class="mono text-xs text-cyan-200/60 mt-3">Loading generated lab credentials...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div id="reconstruction-view" class="hidden flex-grow min-h-0 mb-4">
+                <div class="triage-shell w-full h-full overflow-y-auto p-5">
+                    <div class="pane-header">
+                        <div>
+                            <div class="eyebrow mb-2">Reconstruction Workspace</div>
+                            <div class="pane-title">Scoped Binary Recreation</div>
+                        </div>
+                    </div>
+                    <div class="context-help mb-4">
+                        <div class="context-help-title">How to use reconstruction well</div>
+                        <div class="context-help-copy">Start by generating targets from triage, narrow to one subsystem, review explicit hypotheses, then generate a readable draft package and a validation checklist. The goal is a disciplined engineering artifact, not a magic whole-binary clone.</div>
+                    </div>
+                    <div id="reconstruction-status" class="triage-status-card">
+                        <div class="section-heading">
+                            <div class="section-heading-main">
+                                <div class="eyebrow mb-2">Guided Workflow</div>
+                            </div>
+                        </div>
+                        <div class="text-white text-lg font-semibold">No reconstruction bundle loaded</div>
+                        <p class="mt-2 text-sm text-cyan-100/60">Choose an analysis job to load reconstruction targets, hypotheses, draft artifacts, and validation plans.</p>
+                    </div>
+                    <div id="reconstruction-content" class="hidden mt-5 space-y-5">
+                        <div id="reconstruction-stage-grid" class="reconstruction-stage-grid"></div>
+                        <div class="debug-command-shell">
+                            <div class="flex flex-wrap items-center justify-between gap-3">
+                                <div>
+                                    <div class="eyebrow">Primary Actions</div>
+                                    <div class="text-white text-sm font-semibold mt-2">Generate the next artifact in the workflow</div>
+                                </div>
+                                <div class="flex flex-wrap gap-2">
+                                    <button type="button" id="reconstruction-generate-targets" class="prompt-chip">Generate Targets</button>
+                                    <button type="button" id="reconstruction-generate-hypotheses" class="prompt-chip">Generate Hypotheses</button>
+                                    <button type="button" id="reconstruction-generate-drafts" class="prompt-chip">Generate Draft</button>
+                                    <button type="button" id="reconstruction-generate-validation" class="prompt-chip">Generate Validation</button>
+                                    <button type="button" id="reconstruction-export-draft" class="prompt-chip">Export Draft</button>
+                                </div>
+                            </div>
+                            <div id="reconstruction-status-line" class="mono text-xs text-cyan-200/60 mt-3">Generate or select a reconstruction target to begin.</div>
+                        </div>
+                        <div id="reconstruction-focus" class="reconstruction-focus-shell"></div>
+                        <div class="grid gap-5 xl:grid-cols-[0.9fr_1.1fr]">
+                            <div>
+                                <div class="eyebrow mb-3">Targets</div>
+                                <div id="reconstruction-targets-list" class="reconstruction-card-list"></div>
+                            </div>
+                            <div>
+                                <div class="eyebrow mb-3">Draft Preview</div>
+                                <div id="reconstruction-draft-preview" class="reconstruction-preview-shell"></div>
+                            </div>
+                        </div>
+                        <div class="reconstruction-secondary-shell">
+                            <div class="reconstruction-secondary-header">
+                                <div>
+                                    <div class="eyebrow">Hypotheses</div>
+                                    <div class="reconstruction-secondary-copy">Open these when you want the explicit claims and gaps behind the current target.</div>
+                                </div>
+                                <button type="button" class="collapse-toggle" data-collapse-target="reconstruction-hypotheses-shell" aria-expanded="false" aria-controls="reconstruction-hypotheses-shell">
+                                    <span class="collapse-chevron">▾</span>
+                                    <span>Details</span>
+                                </button>
+                            </div>
+                            <div id="reconstruction-hypotheses-shell" class="hidden">
+                                <div id="reconstruction-hypotheses-list" class="reconstruction-card-list mt-4"></div>
+                            </div>
+                        </div>
+                        <div class="reconstruction-secondary-shell">
+                            <div class="reconstruction-secondary-header">
+                                <div>
+                                    <div class="eyebrow">Draft Packages</div>
+                                    <div class="reconstruction-secondary-copy">Use this when you need to switch between generated packages or export a different draft.</div>
+                                </div>
+                                <button type="button" class="collapse-toggle" data-collapse-target="reconstruction-draft-list-shell" aria-expanded="false" aria-controls="reconstruction-draft-list-shell">
+                                    <span class="collapse-chevron">▾</span>
+                                    <span>Details</span>
+                                </button>
+                            </div>
+                            <div id="reconstruction-draft-list-shell" class="hidden">
+                                <div id="reconstruction-draft-list" class="reconstruction-card-list mt-4"></div>
+                            </div>
+                        </div>
+                        <div class="reconstruction-secondary-shell">
+                            <div class="reconstruction-secondary-header">
+                                <div>
+                                    <div class="eyebrow">Validation Plans</div>
+                                    <div class="reconstruction-secondary-copy">Open this when you are ready to turn the draft into concrete runtime checks.</div>
+                                </div>
+                                <button type="button" class="collapse-toggle" data-collapse-target="reconstruction-validation-shell" aria-expanded="false" aria-controls="reconstruction-validation-shell">
+                                    <span class="collapse-chevron">▾</span>
+                                    <span>Details</span>
+                                </button>
+                            </div>
+                            <div id="reconstruction-validation-shell" class="hidden">
+                                <div id="reconstruction-validation-list" class="reconstruction-card-list mt-4"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <form id="chat-form" class="send-shell flex items-end gap-3 p-3">
+                <textarea id="chat-input" class="cyber-input mono flex-grow rounded-xl p-4 focus:outline-none resize-none" placeholder="Inject command into the analysis stream..." rows="1" disabled></textarea>
+                <button type="submit" class="neon-button send-button rounded-xl py-4 px-6 transition self-stretch" disabled>Send</button>
+            </form>
+        </div>
+    </div>
+</div>
