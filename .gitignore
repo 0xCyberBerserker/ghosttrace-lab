@@ -18,3 +18,5 @@ sandbox/host-tools/ssh-helper-test.txt
 
 *.log
 sandbox/credentials/*.env
+
+ROADMAP.md

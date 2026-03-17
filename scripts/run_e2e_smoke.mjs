@@ -241,7 +241,9 @@ async function run() {
 
     recordStep("validate-lane", "started");
     await page.locator("button").filter({ hasText: "3. Validate" }).first().click();
-    await page.locator(".workspace-progress-card").filter({ hasText: "Validate" }).first().click();
+    // After switching to Validate mode, explicitly open the x64dbg tab instead of
+    // relying on the investigation path cards, which may be collapsed.
+    await page.locator(".workspace-tab").filter({ hasText: "x64dbg" }).first().click();
     await waitForViewActive(page, "#x64dbg-view", "x64dbg view");
     await waitForVisible(page, "#x64dbg-status", "x64dbg status");
 
