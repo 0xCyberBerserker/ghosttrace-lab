@@ -27,6 +27,8 @@
 
 GhostTrace ties together a cyberpunk operator UI, `Ghidraaas` for static analysis, `Ollama` for local reasoning, cached triage artifacts, and a reproducible Windows sandbox lab with SSH and debugger bridge support.
 
+Malware-analysis and reverse-engineering lab focused on safe, documented security research workflows.
+
 ### Highlights
 
 - Static-analysis-first workflow powered by `Ghidraaas`
@@ -44,6 +46,12 @@ GhostTrace is built for legitimate reverse engineering, malware analysis, DFIR, 
 Like any serious binary-analysis stack, it can be misused. That decision belongs to the operator, not the project. If you point GhostTrace at targets, software, or environments without proper authorization, you own the legal, ethical, and operational consequences. Use it smart. Use it lawfully. Good hands. Better judgment.
 
 Improvement ideas are always welcome, and thoughtful criticism will be taken seriously to keep sharpening the project.
+
+### Boundary
+
+This repository is for authorized research, defensive education, and controlled lab work only.
+
+It does not provide operational malware, persistence, evasion, credential theft, or unauthorized access tooling.
 
 ### Architecture
 
@@ -109,6 +117,8 @@ Core components:
   Windows sandbox provisioning, host-side SSH helpers, bridge tooling, and OEM automation.
 - `docs/`
   Public landing page for GitHub Pages.
+
+Publication readiness notes live in [`docs/publication-checklist.md`](./docs/publication-checklist.md).
 
 ### Quick Start
 
